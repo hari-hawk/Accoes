@@ -1,0 +1,169 @@
+export type UserRole = "owner" | "collaborator" | "reviewer";
+
+export type ProjectStatus =
+  | "draft"
+  | "active"
+  | "in_review"
+  | "complete"
+  | "archived";
+
+export type VersionStatus =
+  | "draft"
+  | "uploading"
+  | "processing"
+  | "in_review"
+  | "complete"
+  | "error";
+
+export type WorkflowStage =
+  | "project"
+  | "upload"
+  | "process"
+  | "review"
+  | "export";
+
+export type ValidationStatus =
+  | "pre_approved"
+  | "review_required"
+  | "action_mandatory";
+
+export type DecisionStatus =
+  | "pending"
+  | "approved"
+  | "approved_with_notes"
+  | "revision_requested"
+  | "rejected";
+
+export type DocumentType = "pdf" | "xlsx" | "docx";
+
+export type ExportFormat = "pdf" | "csv" | "xlsx";
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  role: UserRole;
+}
+
+export interface ConfidenceSummary {
+  preApproved: number;
+  reviewRequired: number;
+  actionMandatory: number;
+  total: number;
+  overallConfidence: number;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  client: string;
+  description: string;
+  status: ProjectStatus;
+  createdAt: string;
+  updatedAt: string;
+  ownerId: string;
+  memberIds: string[];
+  versionIds: string[];
+  latestVersionId: string;
+  totalDocuments: number;
+  confidenceSummary: ConfidenceSummary;
+}
+
+export interface ProcessingLogEntry {
+  timestamp: string;
+  message: string;
+  level: "info" | "warning" | "error" | "success";
+}
+
+export interface ProcessingProgress {
+  currentStep: string;
+  stepsCompleted: number;
+  totalSteps: number;
+  percentComplete: number;
+  estimatedTimeRemaining?: number;
+  log: ProcessingLogEntry[];
+}
+
+export interface Version {
+  id: string;
+  projectId: string;
+  name: string;
+  status: VersionStatus;
+  workflowStage: WorkflowStage;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  specificationRef: string;
+  documentIds: string[];
+  confidenceSummary: ConfidenceSummary;
+  processingProgress?: ProcessingProgress;
+}
+
+export interface Document {
+  id: string;
+  versionId: string;
+  fileName: string;
+  fileType: DocumentType;
+  fileSize: number;
+  uploadedAt: string;
+  uploadedBy: string;
+  specSection: string;
+  specSectionTitle: string;
+  previewUrl?: string;
+}
+
+export interface EvidenceItem {
+  id: string;
+  sourceDocumentId: string;
+  sourceFileName: string;
+  pageNumber?: number;
+  excerpt: string;
+  relevance: "supports" | "contradicts" | "neutral";
+  confidence: number;
+}
+
+export interface AiReasoning {
+  summary: string;
+  keyFindings: string[];
+  complianceAssessment: string;
+  recommendation: string;
+}
+
+export interface SpecReference {
+  sectionNumber: string;
+  sectionTitle: string;
+  requirements: string[];
+  sourceDocument: string;
+}
+
+export interface ValidationResult {
+  id: string;
+  documentId: string;
+  versionId: string;
+  status: ValidationStatus;
+  confidenceScore: number;
+  decision: DecisionStatus;
+  decisionBy?: string;
+  decisionAt?: string;
+  decisionNotes?: string;
+  evidenceItems: EvidenceItem[];
+  aiReasoning: AiReasoning;
+  specReference: SpecReference;
+}
+
+export interface Comment {
+  id: string;
+  validationResultId: string;
+  authorId: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface ReportConfig {
+  versionId: string;
+  format: ExportFormat;
+  includeEvidence: boolean;
+  includeComments: boolean;
+  includeAiReasoning: boolean;
+}

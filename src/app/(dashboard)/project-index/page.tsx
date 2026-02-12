@@ -591,7 +591,7 @@ export default function ProjectIndexPage() {
       {/*  Full-screen PDF Viewer Dialog                                      */}
       {/* ------------------------------------------------------------------ */}
       <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
-        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0">
+        <DialogContent className="max-w-[90vw] w-[90vw] h-[90vh] flex flex-col p-0 gap-0">
           {viewingFile && (
             <>
               {/* Viewer Header */}

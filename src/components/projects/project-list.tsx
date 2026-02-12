@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, FolderKanban, TrendingUp, Clock, FileCheck } from "lucide-react";
+import { Plus, FolderKanban, TrendingUp, FileCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ProjectCard } from "./project-card";
@@ -19,15 +19,14 @@ function HeroSection() {
   );
 
   return (
-    <div className="gradient-hero rounded-2xl p-8 text-white relative overflow-hidden">
+    <div className="gradient-hero rounded-2xl p-6 text-white relative overflow-hidden">
       {/* Decorative circles */}
-      <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/4" />
-      <div className="absolute bottom-0 left-1/3 w-48 h-48 rounded-full bg-white/3 translate-y-1/2" />
+      <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/4" />
 
       <div className="relative flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Welcome back, Sarah</h1>
-          <p className="text-white/70 mt-1 text-sm">
+          <h1 className="text-xl font-bold tracking-tight">Welcome back, Sarah</h1>
+          <p className="text-white/70 mt-0.5 text-sm">
             Here&apos;s an overview of your submittal validation projects
           </p>
         </div>
@@ -37,24 +36,23 @@ function HeroSection() {
         </Button>
       </div>
 
-      {/* Quick stats */}
-      <div className="relative grid grid-cols-4 gap-4 mt-6">
+      {/* Inline compact stats */}
+      <div className="relative flex items-center gap-6 mt-4 pt-4 border-t border-white/10">
         {[
-          { label: "Total Projects", value: mockProjects.length, icon: FolderKanban },
-          { label: "In Review", value: mockProjects.filter((p) => p.status === "in_review").length, icon: Clock },
+          { label: "Projects", value: mockProjects.length, icon: FolderKanban },
           { label: "Documents", value: totalDocs, icon: FileCheck },
           { label: "Avg Confidence", value: `${avgConf}%`, icon: TrendingUp },
         ].map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="rounded-xl bg-white/10 backdrop-blur-sm p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Icon className="h-4 w-4 text-nav-gold" />
-                <span className="text-xs text-white/60 font-medium uppercase tracking-wider">
+            <div key={stat.label} className="flex items-center gap-2.5">
+              <Icon className="h-4 w-4 text-nav-gold" />
+              <div>
+                <p className="text-lg font-bold leading-none">{stat.value}</p>
+                <p className="text-[10px] text-white/50 font-medium uppercase tracking-wider mt-0.5">
                   {stat.label}
-                </span>
+                </p>
               </div>
-              <p className="text-2xl font-bold">{stat.value}</p>
             </div>
           );
         })}

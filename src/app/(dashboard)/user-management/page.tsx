@@ -175,8 +175,8 @@ export default function UserManagementPage() {
         </Select>
       </div>
 
-      {/* Compact User Cards Grid — 4-5 columns */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
+      {/* User Cards Grid — 3 columns for more space */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filtered.map((user) => {
           const initials = getInitials(user.name);
           return (
@@ -184,8 +184,8 @@ export default function UserManagementPage() {
               key={user.id}
               className="relative rounded-xl border bg-card shadow-card p-4 hover:shadow-card-hover transition-shadow group"
             >
-              {/* Three-dot menu — top right */}
-              <div className="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Three-dot menu — top right, visible on hover */}
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-7 w-7">
@@ -203,10 +203,10 @@ export default function UserManagementPage() {
                 </DropdownMenu>
               </div>
 
-              {/* Profile image + Name + Email — horizontal layout */}
-              <div className="flex items-start gap-3">
+              {/* Profile image + Name + Role pill — horizontal layout */}
+              <div className="flex items-center gap-3">
                 {/* Avatar image */}
-                <div className="h-10 w-10 rounded-full shrink-0 overflow-hidden bg-muted">
+                <div className="h-11 w-11 rounded-full shrink-0 overflow-hidden bg-muted">
                   {user.avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -223,12 +223,18 @@ export default function UserManagementPage() {
                   )}
                 </div>
 
-                {/* Name + Email */}
+                {/* Name + Email + Role inline */}
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold truncate leading-tight">
                       {user.name}
                     </p>
+                    <Badge
+                      variant="secondary"
+                      className={`${roleColors[user.role]} text-[10px] font-medium shrink-0`}
+                    >
+                      {user.role}
+                    </Badge>
                     {user.isCurrentUser && (
                       <Badge
                         variant="secondary"
@@ -238,24 +244,14 @@ export default function UserManagementPage() {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">
                     {user.email}
                   </p>
                 </div>
               </div>
 
-              {/* Role pill */}
-              <div className="mt-3">
-                <Badge
-                  variant="secondary"
-                  className={`${roleColors[user.role]} text-[10px] font-medium`}
-                >
-                  {user.role}
-                </Badge>
-              </div>
-
               {/* Bottom row — created date + projects */}
-              <div className="flex items-center justify-between mt-3 text-[11px] text-muted-foreground">
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
                   {user.createdDate}

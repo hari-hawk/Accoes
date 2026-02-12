@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -15,6 +16,11 @@ import {
   User,
   Moon,
   Sun,
+  FileText,
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  X,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -26,6 +32,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { currentUser } from "@/data/mock-users";
 
@@ -43,9 +57,220 @@ const mainNavItems = [
   { title: "Project Index", href: "/project-index", icon: FileStack },
 ];
 
+/* -------------------------------------------------------------------------- */
+/*  Mock notifications                                                        */
+/* -------------------------------------------------------------------------- */
+
+interface Notification {
+  id: string;
+  title: string;
+  description: string;
+  time: string;
+  read: boolean;
+  type: "info" | "success" | "warning" | "review";
+}
+
+const mockNotifications: Notification[] = [
+  {
+    id: "n1",
+    title: "Conformance check complete",
+    description: "HVAC Equipment Schedule scored 96% compliance",
+    time: "2 min ago",
+    read: false,
+    type: "success",
+  },
+  {
+    id: "n2",
+    title: "Review requested",
+    description: "James Chen requested your review on Structural Steel drawings",
+    time: "15 min ago",
+    read: false,
+    type: "review",
+  },
+  {
+    id: "n3",
+    title: "Action required",
+    description: "Fire Protection System has items requiring mandatory action",
+    time: "1 hr ago",
+    read: false,
+    type: "warning",
+  },
+  {
+    id: "n4",
+    title: "New version uploaded",
+    description: "Harbor District Mixed Use — Resubmittal B uploaded by Maria Garcia",
+    time: "3 hrs ago",
+    read: true,
+    type: "info",
+  },
+  {
+    id: "n5",
+    title: "Export ready",
+    description: "Riverside Commercial Tower conformance report is ready for download",
+    time: "5 hrs ago",
+    read: true,
+    type: "success",
+  },
+  {
+    id: "n6",
+    title: "Member added",
+    description: "David Park was added to Metro Line Extension Phase 3",
+    time: "Yesterday",
+    read: true,
+    type: "info",
+  },
+];
+
+const notifIconMap = {
+  info: Info,
+  success: CheckCircle,
+  warning: AlertTriangle,
+  review: FileText,
+};
+
+const notifColorMap = {
+  info: "text-blue-500",
+  success: "text-status-pre-approved",
+  warning: "text-status-review-required",
+  review: "text-purple-500",
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Profile & Settings Dialogs                                                */
+/* -------------------------------------------------------------------------- */
+
+function ProfileDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Profile</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-5 py-2">
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 rounded-full gradient-accent flex items-center justify-center shadow-glow">
+              <span className="text-xl font-bold text-white">
+                {currentUser.name.split(" ").map((n) => n[0]).join("")}
+              </span>
+            </div>
+            <div>
+              <p className="text-lg font-semibold">{currentUser.name}</p>
+              <p className="text-sm text-muted-foreground">{currentUser.email}</p>
+              <Badge variant="secondary" className="mt-1 text-[10px] capitalize bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                {currentUser.role}
+              </Badge>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Full Name</span>
+              <span className="font-medium">{currentUser.name}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Email</span>
+              <span className="font-medium">{currentUser.email}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Role</span>
+              <span className="font-medium capitalize">{currentUser.role}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Member Since</span>
+              <span className="font-medium">Jan 5, 2026</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Projects</span>
+              <span className="font-medium">5 active</span>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Settings</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-5 py-2">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Email Notifications</p>
+                <p className="text-xs text-muted-foreground">Receive email alerts for reviews</p>
+              </div>
+              <div className="h-5 w-9 rounded-full bg-nav-accent relative cursor-pointer">
+                <div className="absolute right-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Push Notifications</p>
+                <p className="text-xs text-muted-foreground">Browser push for urgent items</p>
+              </div>
+              <div className="h-5 w-9 rounded-full bg-nav-accent relative cursor-pointer">
+                <div className="absolute right-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Auto-save Drafts</p>
+                <p className="text-xs text-muted-foreground">Save work automatically every 5 min</p>
+              </div>
+              <div className="h-5 w-9 rounded-full bg-muted relative cursor-pointer">
+                <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Default Export Format</p>
+                <p className="text-xs text-muted-foreground">Preferred report format</p>
+              </div>
+              <span className="text-sm font-medium text-muted-foreground">PDF</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Language</p>
+                <p className="text-xs text-muted-foreground">Interface language</p>
+              </div>
+              <span className="text-sm font-medium text-muted-foreground">English</span>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  TopNav component                                                          */
+/* -------------------------------------------------------------------------- */
+
 export function TopNav() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+
+  // Notification panel state
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState(mockNotifications);
+
+  // Profile & Settings dialog state
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const dismissNotif = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
 
   const initials = currentUser.name
     .split(" ")
@@ -53,161 +278,245 @@ export function TopNav() {
     .join("");
 
   return (
-    <header className="sticky top-0 z-50 w-full">
-      <div className="bg-nav">
-        <div className="flex h-14 items-center px-5 gap-6">
-          {/* Logo */}
-          <Link href="/projects" className="flex items-center gap-2.5 shrink-0 mr-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-gold shadow-gold">
-              <span className="text-xs font-extrabold text-white tracking-tight">A</span>
-            </div>
-            <span className="text-sm font-bold tracking-tight text-white">
-              Submittals AI
-            </span>
-          </Link>
+    <>
+      <header className="sticky top-0 z-50 w-full">
+        <div className="bg-nav">
+          <div className="flex h-14 items-center px-5 gap-6">
+            {/* Logo — "acco" brand mark */}
+            <Link href="/projects" className="flex items-center gap-2 shrink-0 mr-2">
+              <div className="flex items-center gap-0.5">
+                <span className="text-base font-extrabold text-nav-gold tracking-tight">
+                  acco
+                </span>
+              </div>
+              <span className="text-sm font-bold tracking-tight text-white">
+                Submittals AI
+              </span>
+            </Link>
 
-          {/* Nav items */}
-          <nav className="flex items-center gap-0.5 flex-1">
-            {mainNavItems.map((item) => {
-              const isActive =
-                pathname === item.href ||
-                pathname.startsWith(item.href + "/") ||
-                item.children?.some(
-                  (c) => pathname === c.href || pathname.startsWith(c.href + "/")
-                );
-              const Icon = item.icon;
+            {/* Nav items */}
+            <nav className="flex items-center gap-0.5 flex-1">
+              {mainNavItems.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  pathname.startsWith(item.href + "/") ||
+                  item.children?.some(
+                    (c) => pathname === c.href || pathname.startsWith(c.href + "/")
+                  );
+                const Icon = item.icon;
 
-              if (item.children) {
+                if (item.children) {
+                  return (
+                    <DropdownMenu key={item.href}>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className={cn(
+                            "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-all outline-none",
+                            isActive
+                              ? "bg-white/15 text-white"
+                              : "text-nav-foreground/60 hover:text-white hover:bg-white/8"
+                          )}
+                        >
+                          <Icon className="h-3.5 w-3.5" />
+                          <span>{item.title}</span>
+                          <ChevronDown className="h-3 w-3 opacity-50" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-52">
+                        <DropdownMenuItem asChild>
+                          <Link href={item.href} className="gap-2">
+                            <Icon className="h-4 w-4" />
+                            All {item.title}
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {item.children.map((child) => {
+                          const ChildIcon = child.icon;
+                          return (
+                            <DropdownMenuItem key={child.href} asChild>
+                              <Link href={child.href} className="gap-2">
+                                <ChildIcon className="h-4 w-4" />
+                                {child.title}
+                              </Link>
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                }
+
                 return (
-                  <DropdownMenu key={item.href}>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className={cn(
-                          "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-all outline-none",
-                          isActive
-                            ? "bg-white/15 text-white"
-                            : "text-nav-foreground/60 hover:text-white hover:bg-white/8"
-                        )}
-                      >
-                        <Icon className="h-3.5 w-3.5" />
-                        <span>{item.title}</span>
-                        <ChevronDown className="h-3 w-3 opacity-50" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-52">
-                      <DropdownMenuItem asChild>
-                        <Link href={item.href} className="gap-2">
-                          <Icon className="h-4 w-4" />
-                          All {item.title}
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {item.children.map((child) => {
-                        const ChildIcon = child.icon;
-                        return (
-                          <DropdownMenuItem key={child.href} asChild>
-                            <Link href={child.href} className="gap-2">
-                              <ChildIcon className="h-4 w-4" />
-                              {child.title}
-                            </Link>
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-all",
+                      isActive
+                        ? "bg-white/15 text-white"
+                        : "text-nav-foreground/60 hover:text-white hover:bg-white/8"
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{item.title}</span>
+                  </Link>
                 );
-              }
+              })}
+            </nav>
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-all",
-                    isActive
-                      ? "bg-white/15 text-white"
-                      : "text-nav-foreground/60 hover:text-white hover:bg-white/8"
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  <span>{item.title}</span>
-                </Link>
-              );
-            })}
-          </nav>
+            {/* Right side */}
+            <div className="flex items-center gap-1.5">
+              {/* Notifications */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative h-8 w-8 text-nav-foreground/60 hover:text-white hover:bg-white/10"
+                onClick={() => setNotifOpen(true)}
+              >
+                <Bell className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 h-4 w-4 rounded-full bg-nav-gold border border-nav flex items-center justify-center">
+                    <span className="text-[9px] font-bold text-white">{unreadCount}</span>
+                  </span>
+                )}
+              </Button>
 
-          {/* Right side */}
-          <div className="flex items-center gap-1.5">
-            {/* Notifications */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-8 w-8 text-nav-foreground/60 hover:text-white hover:bg-white/10"
-            >
-              <Bell className="h-4 w-4" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-nav-gold border border-nav" />
-            </Button>
+              {/* Theme toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-nav-foreground/60 hover:text-white hover:bg-white/10"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              >
+                <Sun className="h-4 w-4 rotate-0 scale-100 transition-transform dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
+              </Button>
 
-            {/* Theme toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-nav-foreground/60 hover:text-white hover:bg-white/10"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            >
-              <Sun className="h-4 w-4 rotate-0 scale-100 transition-transform dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
-            </Button>
+              {/* Divider */}
+              <div className="h-7 w-px bg-white/12 mx-1" />
 
-            {/* Divider */}
-            <div className="h-7 w-px bg-white/12 mx-1" />
-
-            {/* User menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-white/8 transition-colors outline-none">
-                  <Avatar className="h-7 w-7 border-2 border-nav-gold/40">
-                    <AvatarFallback className="text-[10px] font-bold gradient-gold text-white">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col text-left">
-                    <span className="text-[12px] font-semibold text-white leading-tight">
-                      {currentUser.name}
-                    </span>
-                    <span className="text-[10px] text-nav-gold leading-tight capitalize">
+              {/* User menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-white/8 transition-colors outline-none">
+                    <Avatar className="h-7 w-7 border-2 border-nav-gold/40">
+                      <AvatarFallback className="text-[10px] font-bold gradient-gold text-white">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col text-left">
+                      <span className="text-[12px] font-semibold text-white leading-tight">
+                        {currentUser.name}
+                      </span>
+                      <span className="text-[10px] text-nav-gold leading-tight capitalize">
+                        {currentUser.role}
+                      </span>
+                    </div>
+                    <ChevronDown className="h-3 w-3 text-nav-foreground/40" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-3 py-3 gradient-hero rounded-t-md -m-1 mb-1">
+                    <p className="text-sm font-bold text-white">{currentUser.name}</p>
+                    <p className="text-xs text-white/70">{currentUser.email}</p>
+                    <span className="inline-block mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider gradient-gold text-white">
                       {currentUser.role}
                     </span>
                   </div>
-                  <ChevronDown className="h-3 w-3 text-nav-foreground/40" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="px-3 py-3 gradient-hero rounded-t-md -m-1 mb-1">
-                  <p className="text-sm font-bold text-white">{currentUser.name}</p>
-                  <p className="text-xs text-white/70">{currentUser.email}</p>
-                  <span className="inline-block mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider gradient-gold text-white">
-                    {currentUser.role}
-                  </span>
-                </div>
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuItem onClick={() => setProfileOpen(true)}>
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Notification Panel Dialog */}
+      <Dialog open={notifOpen} onOpenChange={setNotifOpen}>
+        <DialogContent className="sm:max-w-md p-0 gap-0">
+          <DialogHeader className="px-5 pt-5 pb-3 border-b">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-base">Notifications</DialogTitle>
+              {unreadCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs h-7 text-nav-accent"
+                  onClick={markAllRead}
+                >
+                  Mark all read
+                </Button>
+              )}
+            </div>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            <div className="divide-y">
+              {notifications.length === 0 ? (
+                <div className="py-12 text-center">
+                  <Bell className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No notifications</p>
+                </div>
+              ) : (
+                notifications.map((notif) => {
+                  const NIcon = notifIconMap[notif.type];
+                  return (
+                    <div
+                      key={notif.id}
+                      className={cn(
+                        "flex gap-3 px-5 py-3.5 transition-colors relative group",
+                        !notif.read && "bg-nav-accent/5"
+                      )}
+                    >
+                      <div className={cn("mt-0.5 shrink-0", notifColorMap[notif.type])}>
+                        <NIcon className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className={cn("text-sm leading-tight", !notif.read && "font-semibold")}>
+                            {notif.title}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => dismissNotif(notif.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                          {notif.description}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground/70 mt-1">{notif.time}</p>
+                      </div>
+                      {!notif.read && (
+                        <div className="absolute left-1.5 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-nav-accent" />
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Profile Dialog */}
+      <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
+
+      {/* Settings Dialog */}
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+    </>
   );
 }

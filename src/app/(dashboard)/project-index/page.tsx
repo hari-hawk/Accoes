@@ -12,6 +12,10 @@ import {
   FileSpreadsheet,
   FileType,
   File,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,13 +34,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                     */
@@ -219,11 +228,14 @@ export default function ProjectIndexPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Dialog state
-  const [filesDialogOpen, setFilesDialogOpen] = useState(false);
+  // Sheet state — right side panel for files
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectIndexItem | null>(null);
-  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+
+  // Full-screen PDF viewer dialog
+  const [viewerOpen, setViewerOpen] = useState(false);
   const [viewingFile, setViewingFile] = useState<ProjectFile | null>(null);
+  const [viewerFiles, setViewerFiles] = useState<ProjectFile[]>([]);
 
   const filtered = mockProjectIndex.filter((item) => {
     const matchSearch =
@@ -234,20 +246,34 @@ export default function ProjectIndexPage() {
     return matchSearch && matchStatus;
   });
 
-  const openFilesDialog = (project: ProjectIndexItem) => {
+  const handleCardClick = (project: ProjectIndexItem) => {
     setSelectedProject(project);
-    setSelectedFileId(project.files[0]?.id ?? null);
-    setViewingFile(null);
-    setFilesDialogOpen(true);
+    setSheetOpen(true);
   };
 
-  const handleViewFile = (file: ProjectFile) => {
+  const handleViewFile = (file: ProjectFile, files: ProjectFile[]) => {
     setViewingFile(file);
+    setViewerFiles(files);
+    setViewerOpen(true);
   };
 
-  const handleBackToList = () => {
-    setViewingFile(null);
+  const handlePrevFile = () => {
+    if (!viewingFile || viewerFiles.length === 0) return;
+    const idx = viewerFiles.findIndex((f) => f.id === viewingFile.id);
+    const prevIdx = idx <= 0 ? viewerFiles.length - 1 : idx - 1;
+    setViewingFile(viewerFiles[prevIdx]);
   };
+
+  const handleNextFile = () => {
+    if (!viewingFile || viewerFiles.length === 0) return;
+    const idx = viewerFiles.findIndex((f) => f.id === viewingFile.id);
+    const nextIdx = idx >= viewerFiles.length - 1 ? 0 : idx + 1;
+    setViewingFile(viewerFiles[nextIdx]);
+  };
+
+  const currentFileIndex = viewingFile
+    ? viewerFiles.findIndex((f) => f.id === viewingFile.id)
+    : -1;
 
   return (
     <div className="px-6 py-6 space-y-6 max-w-[1400px] mx-auto">
@@ -326,7 +352,16 @@ export default function ProjectIndexPage() {
           return (
             <div
               key={item.id}
-              className="rounded-xl border bg-card shadow-card overflow-hidden transition-shadow hover:shadow-md"
+              className="rounded-xl border bg-card shadow-card overflow-hidden transition-shadow hover:shadow-md cursor-pointer"
+              onClick={() => handleCardClick(item)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleCardClick(item);
+                }
+              }}
             >
               <div className="flex">
                 {/* Left section — main info */}
@@ -365,7 +400,11 @@ export default function ProjectIndexPage() {
                 </div>
 
                 {/* Right section — team, docs, actions */}
-                <div className="flex flex-col items-end justify-between p-5 pl-0 shrink-0">
+                <div
+                  className="flex flex-col items-end justify-between p-5 pl-0 shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                >
                   {/* Actions dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -394,17 +433,13 @@ export default function ProjectIndexPage() {
                     ))}
                   </div>
 
-                  {/* Document count — clickable */}
-                  <button
-                    type="button"
-                    onClick={() => openFilesDialog(item)}
-                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-nav-accent transition-colors cursor-pointer group"
-                  >
-                    <FileText className="h-3.5 w-3.5 group-hover:text-nav-accent" />
+                  {/* Document count */}
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <FileText className="h-3.5 w-3.5" />
                     <span className="font-medium">
                       {item.documentsCount} docs
                     </span>
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -420,171 +455,308 @@ export default function ProjectIndexPage() {
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/*  File Overlay Dialog                                                */}
+      {/*  Right-Side Sheet — Project Files Panel                            */}
       {/* ------------------------------------------------------------------ */}
-      <Dialog open={filesDialogOpen} onOpenChange={setFilesDialogOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>
-              Project Files &mdash; {selectedProject?.projectName}
-            </DialogTitle>
-            <DialogDescription>
-              Browse and view documents associated with this project.
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedProject && !viewingFile && (
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="right" className="sm:max-w-xl w-full flex flex-col p-0">
+          {selectedProject && (
             <>
-              {/* File tab selector */}
-              <div className="flex gap-1 overflow-x-auto border-b pb-0">
-                {selectedProject.files.map((file) => (
-                  <button
-                    key={file.id}
-                    type="button"
-                    onClick={() => setSelectedFileId(file.id)}
-                    className={`px-3 py-2 text-xs font-medium whitespace-nowrap rounded-t-lg border-b-2 transition-colors cursor-pointer ${
-                      selectedFileId === file.id
-                        ? "border-nav-accent text-nav-accent bg-nav-accent/5"
-                        : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    }`}
+              <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-sm font-bold text-nav-accent">
+                    {selectedProject.projectCode}
+                  </span>
+                  <Badge
+                    variant="secondary"
+                    className={statusConfig[selectedProject.status].color}
                   >
-                    {file.name.length > 28
-                      ? file.name.slice(0, 28) + "..."
-                      : file.name}
-                  </button>
-                ))}
-              </div>
+                    {statusConfig[selectedProject.status].label}
+                  </Badge>
+                </div>
+                <SheetTitle className="text-lg">
+                  {selectedProject.projectName}
+                </SheetTitle>
+                <SheetDescription className="text-sm">
+                  {selectedProject.client} &middot; {selectedProject.location}
+                </SheetDescription>
+              </SheetHeader>
 
-              {/* File list */}
-              <div className="flex-1 overflow-y-auto space-y-2 py-2">
-                {selectedProject.files.map((file) => {
-                  const ftConfig = fileTypeConfig[file.type];
-                  const FileIcon = ftConfig.icon;
-                  const isSelected = selectedFileId === file.id;
+              <ScrollArea className="flex-1">
+                <div className="p-6 space-y-6">
+                  {/* Project meta info */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="rounded-lg bg-muted/40 p-3 text-center">
+                      <p className="text-lg font-bold">{selectedProject.documentsCount}</p>
+                      <p className="text-[11px] text-muted-foreground">Documents</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/40 p-3 text-center">
+                      <p className="text-lg font-bold">{selectedProject.files.length}</p>
+                      <p className="text-[11px] text-muted-foreground">Files</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/40 p-3 text-center">
+                      <p className="text-lg font-bold">{selectedProject.team.length}</p>
+                      <p className="text-[11px] text-muted-foreground">Members</p>
+                    </div>
+                  </div>
 
-                  return (
-                    <div
-                      key={file.id}
-                      className={`flex items-center gap-4 p-4 rounded-xl border transition-colors ${
-                        isSelected
-                          ? "border-nav-accent/30 bg-nav-accent/5"
-                          : "border-border bg-card hover:bg-muted/30"
-                      }`}
-                      onClick={() => setSelectedFileId(file.id)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") setSelectedFileId(file.id);
-                      }}
-                    >
-                      {/* File icon */}
-                      <div className="h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                        <FileIcon className="h-5 w-5 text-muted-foreground" />
-                      </div>
-
-                      {/* File info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {file.name}
-                        </p>
-                        <div className="flex items-center gap-3 mt-1">
-                          <Badge
-                            variant="secondary"
-                            className={`text-[10px] px-1.5 py-0 ${ftConfig.color}`}
-                          >
-                            {ftConfig.label}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {file.size}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {file.uploadDate}
+                  {/* Team */}
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                      Team
+                    </p>
+                    <div className="flex -space-x-2">
+                      {selectedProject.team.map((initials, i) => (
+                        <div
+                          key={`sheet-team-${i}`}
+                          className="h-8 w-8 rounded-full gradient-accent border-2 border-card flex items-center justify-center"
+                        >
+                          <span className="text-[11px] font-bold text-white">
+                            {initials}
                           </span>
                         </div>
-                      </div>
-
-                      {/* View button */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="shrink-0 gap-1.5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewFile(file);
-                        }}
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        View
-                      </Button>
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
 
-              {/* Upload button */}
-              <DialogFooter className="border-t pt-4">
-                <Button variant="outline" className="gap-2">
-                  <Upload className="h-4 w-4" />
-                  Upload Additional Files
-                </Button>
-              </DialogFooter>
+                  {/* Files list */}
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                      Project Files
+                    </p>
+                    <div className="space-y-2">
+                      {selectedProject.files.map((file) => {
+                        const ftConfig = fileTypeConfig[file.type];
+                        const FileIcon = ftConfig.icon;
+                        return (
+                          <div
+                            key={file.id}
+                            className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors cursor-pointer group"
+                            onClick={() => handleViewFile(file, selectedProject.files)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                handleViewFile(file, selectedProject.files);
+                              }
+                            }}
+                          >
+                            <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+                              <FileIcon className="h-4.5 w-4.5 text-muted-foreground" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate group-hover:text-nav-accent transition-colors">
+                                {file.name}
+                              </p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <Badge
+                                  variant="secondary"
+                                  className={`text-[10px] px-1.5 py-0 ${ftConfig.color}`}
+                                >
+                                  {ftConfig.label}
+                                </Badge>
+                                <span className="text-[11px] text-muted-foreground">
+                                  {file.size}
+                                </span>
+                                <span className="text-[11px] text-muted-foreground">
+                                  {file.uploadDate}
+                                </span>
+                              </div>
+                            </div>
+                            <Eye className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Upload zone */}
+                  <div className="rounded-xl border-2 border-dashed border-border p-6 text-center hover:border-nav-accent/40 transition-colors">
+                    <Upload className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+                    <p className="text-sm font-medium">
+                      Drop files here to upload
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      or click to browse &middot; PDF, XLSX, DOCX
+                    </p>
+                  </div>
+                </div>
+              </ScrollArea>
             </>
           )}
+        </SheetContent>
+      </Sheet>
 
-          {/* File viewer */}
-          {selectedProject && viewingFile && (
+      {/* ------------------------------------------------------------------ */}
+      {/*  Full-screen PDF Viewer Dialog                                      */}
+      {/* ------------------------------------------------------------------ */}
+      <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0">
+          {viewingFile && (
             <>
-              {/* Back button + filename */}
-              <div className="flex items-center gap-3 border-b pb-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleBackToList}
-                  className="gap-1.5"
-                >
-                  &larr; Back to files
-                </Button>
-                <div className="flex items-center gap-2 min-w-0">
+              {/* Viewer Header */}
+              <div className="flex items-center justify-between px-5 py-3 border-b shrink-0 bg-card">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   <Badge
                     variant="secondary"
                     className={`text-[10px] px-1.5 py-0 shrink-0 ${fileTypeConfig[viewingFile.type].color}`}
                   >
                     {fileTypeConfig[viewingFile.type].label}
                   </Badge>
-                  <span className="text-sm font-medium truncate">
-                    {viewingFile.name}
+
+                  {/* File switcher dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 text-sm font-semibold hover:text-nav-accent transition-colors min-w-0 cursor-pointer"
+                      >
+                        <span className="truncate">{viewingFile.name}</span>
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-80">
+                      {viewerFiles.map((f, i) => {
+                        const ft = fileTypeConfig[f.type];
+                        const FIcon = ft.icon;
+                        return (
+                          <DropdownMenuItem
+                            key={f.id}
+                            className={
+                              f.id === viewingFile.id
+                                ? "bg-nav-accent/10 text-nav-accent"
+                                : ""
+                            }
+                            onClick={() => setViewingFile(f)}
+                          >
+                            <FIcon className="h-4 w-4 mr-2 shrink-0" />
+                            <span className="truncate">{f.name}</span>
+                            <span className="ml-auto text-[10px] text-muted-foreground pl-2 shrink-0">
+                              {i + 1}/{viewerFiles.length}
+                            </span>
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0 ml-4">
+                  <span className="text-xs text-muted-foreground mr-2">
+                    {currentFileIndex + 1} / {viewerFiles.length}
                   </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={handlePrevFile}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={handleNextFile}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <DialogTitle className="sr-only">
+                    Document Viewer — {viewingFile.name}
+                  </DialogTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 ml-1"
+                    onClick={() => setViewerOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
-              {/* Mock PDF viewer area */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="rounded-xl bg-muted/40 border border-dashed border-border min-h-[320px] flex flex-col items-center justify-center gap-4 p-8">
-                  <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center">
-                    <File className="h-8 w-8 text-muted-foreground/60" />
-                  </div>
-                  <p className="text-sm font-semibold text-foreground">
-                    PDF Viewer &mdash; {viewingFile.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground text-center max-w-sm">
-                    Document preview will render here. This is a placeholder for
-                    the integrated file viewer.
-                  </p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
-                    <span>{viewingFile.size}</span>
-                    <span>Uploaded {viewingFile.uploadDate}</span>
-                  </div>
+              {/* Viewer body — thumbnail sidebar + main view */}
+              <div className="flex flex-1 overflow-hidden">
+                {/* Thumbnail sidebar */}
+                <div className="w-48 border-r bg-muted/20 shrink-0 hidden md:block">
+                  <ScrollArea className="h-full">
+                    <div className="p-3 space-y-2">
+                      {viewerFiles.map((f) => {
+                        const ft = fileTypeConfig[f.type];
+                        const FIcon = ft.icon;
+                        const isActive = f.id === viewingFile.id;
+                        return (
+                          <button
+                            key={f.id}
+                            type="button"
+                            onClick={() => setViewingFile(f)}
+                            className={`w-full rounded-lg border p-2.5 text-left transition-all cursor-pointer ${
+                              isActive
+                                ? "border-nav-accent bg-nav-accent/5 ring-1 ring-nav-accent/30"
+                                : "border-border bg-card hover:bg-muted/30"
+                            }`}
+                          >
+                            <div className="aspect-[4/3] rounded bg-muted/40 flex items-center justify-center mb-2">
+                              <FIcon
+                                className={`h-6 w-6 ${
+                                  isActive
+                                    ? "text-nav-accent"
+                                    : "text-muted-foreground/50"
+                                }`}
+                              />
+                            </div>
+                            <p
+                              className={`text-[11px] font-medium truncate ${
+                                isActive ? "text-nav-accent" : "text-foreground"
+                              }`}
+                            >
+                              {f.name}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              {f.size}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+                </div>
 
-                  {/* Mock page representation */}
-                  <div className="w-full max-w-md mt-4 space-y-3">
-                    <div className="bg-background rounded-lg border shadow-sm p-6 space-y-3">
-                      <div className="h-3 w-3/4 bg-muted rounded" />
-                      <div className="h-2 w-full bg-muted/70 rounded" />
-                      <div className="h-2 w-full bg-muted/70 rounded" />
-                      <div className="h-2 w-5/6 bg-muted/70 rounded" />
-                      <div className="h-16 w-full bg-muted/40 rounded mt-4" />
-                      <div className="h-2 w-full bg-muted/70 rounded" />
-                      <div className="h-2 w-2/3 bg-muted/70 rounded" />
+                {/* Main viewer area */}
+                <div className="flex-1 overflow-y-auto bg-muted/10">
+                  <div className="min-h-full flex flex-col items-center justify-center p-8">
+                    <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+                      <File className="h-8 w-8 text-muted-foreground/60" />
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {viewingFile.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground text-center max-w-sm mt-2">
+                      Document preview will render here. This is a placeholder
+                      for the integrated file viewer.
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-3">
+                      <span>{viewingFile.size}</span>
+                      <span>Uploaded {viewingFile.uploadDate}</span>
+                    </div>
+
+                    {/* Mock page representation */}
+                    <div className="w-full max-w-lg mt-6 space-y-3">
+                      <div className="bg-background rounded-lg border shadow-sm p-6 space-y-3">
+                        <div className="h-3 w-3/4 bg-muted rounded" />
+                        <div className="h-2 w-full bg-muted/70 rounded" />
+                        <div className="h-2 w-full bg-muted/70 rounded" />
+                        <div className="h-2 w-5/6 bg-muted/70 rounded" />
+                        <div className="h-20 w-full bg-muted/40 rounded mt-4" />
+                        <div className="h-2 w-full bg-muted/70 rounded" />
+                        <div className="h-2 w-2/3 bg-muted/70 rounded" />
+                      </div>
+                      <div className="bg-background rounded-lg border shadow-sm p-6 space-y-3">
+                        <div className="h-3 w-1/2 bg-muted rounded" />
+                        <div className="h-2 w-full bg-muted/70 rounded" />
+                        <div className="h-2 w-4/5 bg-muted/70 rounded" />
+                        <div className="h-16 w-full bg-muted/40 rounded mt-4" />
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -29,7 +29,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 
 interface UserRow {
   id: string;
@@ -39,14 +38,18 @@ interface UserRow {
   createdDate: string;
   projects: string;
   isCurrentUser?: boolean;
+  avatarUrl?: string;
 }
 
 const mockUserData: UserRow[] = [
-  { id: "u1", name: "Alex Thompson", email: "alexthompson@domain.com", role: "Admin", createdDate: "Jan 5, 2026", projects: "All" },
-  { id: "u2", name: "Ethan Parker", email: "ethanparker@domain.com", role: "User", createdDate: "Jan 10, 2026", projects: "All", isCurrentUser: true },
-  { id: "u3", name: "David Lee", email: "davidlee@domain.com", role: "Reviewer", createdDate: "Jan 15, 2026", projects: "All" },
-  { id: "u4", name: "Emily Carter", email: "emilycarter@domain.com", role: "Reviewer", createdDate: "Jan 20, 2026", projects: "dcjc" },
-  { id: "u5", name: "Sophia Thompson", email: "sophiajohnson@domain.com", role: "User", createdDate: "Jan 25, 2026", projects: "dcjc, lawa +3" },
+  { id: "u1", name: "Alex Thompson", email: "alexthompson@domain.com", role: "Admin", createdDate: "Jan 5, 2026", projects: "All", avatarUrl: "https://i.pravatar.cc/150?u=alex" },
+  { id: "u2", name: "Ethan Parker", email: "ethanparker@domain.com", role: "User", createdDate: "Jan 10, 2026", projects: "All", isCurrentUser: true, avatarUrl: "https://i.pravatar.cc/150?u=ethan" },
+  { id: "u3", name: "David Lee", email: "davidlee@domain.com", role: "Reviewer", createdDate: "Jan 15, 2026", projects: "All", avatarUrl: "https://i.pravatar.cc/150?u=david" },
+  { id: "u4", name: "Emily Carter", email: "emilycarter@domain.com", role: "Reviewer", createdDate: "Jan 20, 2026", projects: "dcjc", avatarUrl: "https://i.pravatar.cc/150?u=emily" },
+  { id: "u5", name: "Sophia Johnson", email: "sophiajohnson@domain.com", role: "User", createdDate: "Jan 25, 2026", projects: "dcjc, lawa +3", avatarUrl: "https://i.pravatar.cc/150?u=sophia" },
+  { id: "u6", name: "James Chen", email: "jameschen@domain.com", role: "Admin", createdDate: "Feb 1, 2026", projects: "All", avatarUrl: "https://i.pravatar.cc/150?u=james" },
+  { id: "u7", name: "Maria Garcia", email: "mariagarcia@domain.com", role: "Reviewer", createdDate: "Feb 3, 2026", projects: "All", avatarUrl: "https://i.pravatar.cc/150?u=maria" },
+  { id: "u8", name: "David Park", email: "davidpark@domain.com", role: "User", createdDate: "Feb 5, 2026", projects: "dcjc, lawa", avatarUrl: "https://i.pravatar.cc/150?u=park" },
 ];
 
 const roleColors: Record<string, string> = {
@@ -127,7 +130,28 @@ export default function UserManagementPage() {
         </Button>
       </div>
 
-      {/* Filters */}
+      {/* Summary Cards — consistent: metrics first */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {summaryCards.map((card) => {
+          const IconComp = card.icon;
+          return (
+            <div
+              key={card.label}
+              className="rounded-xl border bg-card shadow-card p-4 flex items-center gap-4"
+            >
+              <div className={`h-10 w-10 rounded-lg ${card.bg} flex items-center justify-center shrink-0`}>
+                <IconComp className={`h-5 w-5 ${card.color}`} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold leading-none">{card.count}</p>
+                <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Search + Filters — consistent: below metrics */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -151,42 +175,21 @@ export default function UserManagementPage() {
         </Select>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {summaryCards.map((card) => {
-          const IconComp = card.icon;
-          return (
-            <div
-              key={card.label}
-              className="rounded-xl border bg-card shadow-card p-4 flex items-center gap-4"
-            >
-              <div className={`h-10 w-10 rounded-lg ${card.bg} flex items-center justify-center shrink-0`}>
-                <IconComp className={`h-5 w-5 ${card.color}`} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold leading-none">{card.count}</p>
-                <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* User Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {/* Compact User Cards Grid — 4-5 columns */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
         {filtered.map((user) => {
           const initials = getInitials(user.name);
           return (
             <div
               key={user.id}
-              className="relative rounded-xl border bg-card shadow-card p-6 hover:shadow-card-hover transition-shadow"
+              className="relative rounded-xl border bg-card shadow-card p-4 hover:shadow-card-hover transition-shadow group"
             >
-              {/* Actions dropdown - top right */}
-              <div className="absolute top-4 right-4">
+              {/* Three-dot menu — top right */}
+              <div className="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreVertical className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <MoreVertical className="h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -200,58 +203,67 @@ export default function UserManagementPage() {
                 </DropdownMenu>
               </div>
 
-              {/* Avatar */}
-              <div className="flex flex-col items-center">
-                <div className="h-16 w-16 rounded-full gradient-accent flex items-center justify-center shadow-glow">
-                  <span className="text-lg font-semibold text-white">
-                    {initials}
-                  </span>
-                </div>
-
-                {/* Name */}
-                <div className="mt-3 flex items-center gap-2">
-                  <p className="text-base font-semibold text-center">
-                    {user.name}
-                  </p>
-                  {user.isCurrentUser && (
-                    <Badge
-                      variant="secondary"
-                      className="text-[10px] px-1.5 py-0 font-medium"
-                    >
-                      You
-                    </Badge>
+              {/* Profile image + Name + Email — horizontal layout */}
+              <div className="flex items-start gap-3">
+                {/* Avatar image */}
+                <div className="h-10 w-10 rounded-full shrink-0 overflow-hidden bg-muted">
+                  {user.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full gradient-accent flex items-center justify-center">
+                      <span className="text-xs font-semibold text-white">
+                        {initials}
+                      </span>
+                    </div>
                   )}
                 </div>
 
-                {/* Email */}
-                <p className="text-sm text-muted-foreground mt-1 text-center truncate max-w-full">
-                  {user.email}
-                </p>
+                {/* Name + Email */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-semibold truncate leading-tight">
+                      {user.name}
+                    </p>
+                    {user.isCurrentUser && (
+                      <Badge
+                        variant="secondary"
+                        className="text-[9px] px-1 py-0 font-medium shrink-0"
+                      >
+                        You
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                    {user.email}
+                  </p>
+                </div>
               </div>
 
-              {/* Divider */}
-              <Separator className="my-4" />
-
-              {/* Role Badge - centered */}
-              <div className="flex justify-center">
+              {/* Role pill */}
+              <div className="mt-3">
                 <Badge
                   variant="secondary"
-                  className={`${roleColors[user.role]} font-medium`}
+                  className={`${roleColors[user.role]} text-[10px] font-medium`}
                 >
                   {user.role}
                 </Badge>
               </div>
 
-              {/* Stats Row */}
-              <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5" />
-                  <span>{user.createdDate}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <FolderOpen className="h-3.5 w-3.5" />
-                  <span>{user.projects}</span>
-                </div>
+              {/* Bottom row — created date + projects */}
+              <div className="flex items-center justify-between mt-3 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  {user.createdDate}
+                </span>
+                <span className="flex items-center gap-1 truncate ml-2">
+                  <FolderOpen className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{user.projects}</span>
+                </span>
               </div>
             </div>
           );

@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   ChevronDown,
   Users,
-  Play,
   FileBarChart,
   ArrowUpRight,
   TrendingUp,
@@ -152,10 +151,6 @@ export function ProjectCard({
               <ArrowUpRight className="mr-1 h-3.5 w-3.5" />
               Open
             </Link>
-          </Button>
-          <Button variant="ghost" size="sm" className="text-xs h-8 rounded-lg">
-            <Play className="mr-1 h-3.5 w-3.5" />
-            New Run
           </Button>
           <Button
             variant="ghost"

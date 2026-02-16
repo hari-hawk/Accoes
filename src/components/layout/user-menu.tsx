@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronUp, LogOut, Settings, User } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +30,9 @@ export function UserMenu() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg">
               <Avatar className="h-7 w-7">
+                {currentUser.avatarUrl && (
+                  <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
+                )}
                 <AvatarFallback className="text-xs bg-primary text-primary-foreground">
                   {initials}
                 </AvatarFallback>

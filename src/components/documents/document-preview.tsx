@@ -1,6 +1,6 @@
 "use client";
 
-import { ZoomIn, ZoomOut, Download, FileText, FileSpreadsheet, File } from "lucide-react";
+import { ZoomIn, ZoomOut, Download, FileSpreadsheet, File } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -17,40 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatFileSize } from "@/lib/format";
 import type { Document as DocType } from "@/data/types";
-
-function PdfViewer({ document }: { document: DocType }) {
-  return (
-    <div className="flex flex-col items-center justify-center h-full bg-muted/30 rounded-lg p-8">
-      <FileText className="h-16 w-16 text-muted-foreground mb-4" />
-      <h3 className="text-lg font-medium">{document.fileName}</h3>
-      <p className="text-sm text-muted-foreground mt-1">
-        PDF Preview ({formatFileSize(document.fileSize)})
-      </p>
-      <div className="mt-6 space-y-2 w-full max-w-md">
-        {/* Simulated PDF page content */}
-        <div className="rounded border bg-white dark:bg-card p-6 shadow-sm space-y-3">
-          <div className="h-3 bg-muted rounded w-3/4" />
-          <div className="h-3 bg-muted rounded w-full" />
-          <div className="h-3 bg-muted rounded w-5/6" />
-          <div className="h-8" />
-          <div className="h-3 bg-muted rounded w-full" />
-          <div className="h-3 bg-muted rounded w-2/3" />
-          <div className="h-3 bg-muted rounded w-4/5" />
-          <div className="h-3 bg-muted rounded w-full" />
-          <div className="h-8" />
-          <div className="h-3 bg-muted rounded w-1/2" />
-          <div className="h-3 bg-muted rounded w-full" />
-          <div className="h-3 bg-muted rounded w-3/4" />
-        </div>
-        <p className="text-xs text-muted-foreground text-center">
-          Page 1 of 12 (simulated preview)
-        </p>
-      </div>
-    </div>
-  );
-}
+import { FullScreenPdfViewer } from "./full-screen-pdf-viewer";
 
 function SpreadsheetViewer({ document }: { document: DocType }) {
   const mockData = [
@@ -139,9 +107,22 @@ export function DocumentPreview({
 }) {
   if (!document) return null;
 
+  // PDF files use the full-screen dialog viewer
+  if (document.fileType === "pdf") {
+    return (
+      <FullScreenPdfViewer
+        open={open}
+        onOpenChange={onOpenChange}
+        title={document.fileName}
+        subtitle={document.specSectionTitle}
+      />
+    );
+  }
+
+  // XLSX and DOCX use the wider Sheet-based viewer
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl p-0">
+      <SheetContent side="right" className="w-full sm:max-w-[85vw] p-0">
         <SheetHeader className="flex flex-row items-center justify-between border-b px-4 py-3 space-y-0">
           <SheetTitle className="text-sm font-medium truncate pr-4">
             {document.fileName}
@@ -159,7 +140,6 @@ export function DocumentPreview({
           </div>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-60px)]">
-          {document.fileType === "pdf" && <PdfViewer document={document} />}
           {document.fileType === "xlsx" && (
             <SpreadsheetViewer document={document} />
           )}

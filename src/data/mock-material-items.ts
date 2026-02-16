@@ -16,6 +16,10 @@ export const mockMaterialItems: MaterialItem[] = [
     comments: [
       { id: "c-1", authorId: "user-3", content: "Mill cert verified — approved.", createdAt: "2025-12-14T10:30:00Z" },
     ],
+    psScore: 98,
+    piScore: 74,
+    documentRef: "PHD - Structural Steel Fig 5000-6040",
+    size: "W14x90",
   },
   {
     id: "mi-2",
@@ -30,6 +34,10 @@ export const mockMaterialItems: MaterialItem[] = [
     confidenceScore: 95,
     aiReason: "Grade C exceeds minimum Grade B requirement. Certification provided.",
     comments: [],
+    psScore: 98,
+    piScore: 92,
+    documentRef: "PHD - Structural Steel Fig 5000-6040",
+    size: "HSS 8x8x1/2",
   },
   {
     id: "mi-3",
@@ -47,6 +55,10 @@ export const mockMaterialItems: MaterialItem[] = [
       { id: "c-2", authorId: "user-3", content: "Zinc plating is not acceptable — spec clearly requires hot-dip galvanized. Resubmit required.", createdAt: "2025-12-15T09:00:00Z" },
       { id: "c-3", authorId: "user-2", content: "Notified supplier. Will resubmit with correct coating.", createdAt: "2025-12-15T14:00:00Z" },
     ],
+    psScore: 76,
+    piScore: 44,
+    documentRef: "PHD - Anchor Bolt Fig 3200-1100",
+    size: "3/4\" dia",
   },
   {
     id: "mi-4",
@@ -61,6 +73,9 @@ export const mockMaterialItems: MaterialItem[] = [
     confidenceScore: 96,
     aiReason: "E7018 falls within E70XX series. Low-hydrogen designation confirmed with H4R suffix indicating <=4ml/100g diffusible hydrogen.",
     comments: [],
+    psScore: 98,
+    piScore: 74,
+    documentRef: "PHD - Welding Materials Fig 5000-6040",
   },
   {
     id: "mi-5",
@@ -77,6 +92,10 @@ export const mockMaterialItems: MaterialItem[] = [
     comments: [
       { id: "c-4", authorId: "user-3", content: "Acceptable if cert confirms F3125 compliance. Request updated cert.", createdAt: "2025-12-16T11:00:00Z" },
     ],
+    psScore: 98,
+    piScore: 74,
+    documentRef: "PHD - Fastener Fig 5000-6040",
+    size: "3/4\" dia",
   },
   {
     id: "mi-6",
@@ -91,6 +110,10 @@ export const mockMaterialItems: MaterialItem[] = [
     confidenceScore: 94,
     aiReason: "Nelson S3L studs meet ASTM A108 and AWS D1.1 Chapter 7 requirements. Dimensions match specification.",
     comments: [],
+    psScore: 98,
+    piScore: 74,
+    documentRef: "PHD - Composite Deck Fig 5000-6040",
+    size: "3/4\"x4-1/2\"",
   },
   {
     id: "mi-7",
@@ -105,6 +128,9 @@ export const mockMaterialItems: MaterialItem[] = [
     confidenceScore: 58,
     aiReason: "Product density of 14 pcf is below spec minimum of 15 pcf. UL classification confirmed but density discrepancy needs engineer review.",
     comments: [],
+    psScore: 76,
+    piScore: 44,
+    documentRef: "PHD - Fireproofing Fig 7800-2100",
   },
   {
     id: "mi-8",
@@ -119,6 +145,10 @@ export const mockMaterialItems: MaterialItem[] = [
     confidenceScore: 98,
     aiReason: "Type L copper meets specification allowance for Type L or K. Manufacturer certification provided.",
     comments: [],
+    psScore: 98,
+    piScore: 74,
+    documentRef: "PHD - Plumbing Piping Fig 2200-1100",
+    size: "1/2\" & 3/4\"",
   },
   {
     id: "mi-9",
@@ -135,6 +165,10 @@ export const mockMaterialItems: MaterialItem[] = [
     comments: [
       { id: "c-5", authorId: "user-3", content: "Rejected — 18 gauge is minimum for main trunks. Branch ducts can be 20ga.", createdAt: "2025-12-18T10:00:00Z" },
     ],
+    psScore: 98,
+    piScore: 74,
+    documentRef: "PHD - HVAC Ductwork Fig 2300-3100",
+    size: "20 gauge",
   },
   {
     id: "mi-10",
@@ -149,6 +183,9 @@ export const mockMaterialItems: MaterialItem[] = [
     confidenceScore: 93,
     aiReason: "UL 797 listing confirms ANSI C80.3 compliance. Both standards referenced in spec are satisfied.",
     comments: [],
+    psScore: 98,
+    piScore: 74,
+    documentRef: "PHD - Electrical Conduit Fig 2600-5300",
   },
   {
     id: "mi-11",
@@ -163,6 +200,10 @@ export const mockMaterialItems: MaterialItem[] = [
     confidenceScore: 96,
     aiReason: "T6 temper meets specification allowance for T5 or T6. Kawneer system is a recognized manufacturer.",
     comments: [],
+    psScore: 98,
+    piScore: 74,
+    documentRef: "PHD - Curtain Wall Fig 0844-2100",
+    size: "6063-T6",
   },
   {
     id: "mi-12",
@@ -177,6 +218,10 @@ export const mockMaterialItems: MaterialItem[] = [
     confidenceScore: 65,
     aiReason: "U-value of 0.27 meets 0.30 max requirement. However, spec calls for argon fill while matrix lists air fill. Submittal shows argon — verify matrix is outdated.",
     comments: [],
+    psScore: 76,
+    piScore: 44,
+    documentRef: "PHD - Glazing Fig 0844-2300",
+    size: "1\" IGU",
   },
 ];
 

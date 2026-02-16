@@ -203,4 +203,8 @@ export interface MaterialItem {
   confidenceScore: number;
   aiReason: string;
   comments: ItemComment[];
+  psScore: number;
+  piScore: number;
+  documentRef: string;
+  size?: string;
 }

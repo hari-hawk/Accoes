@@ -1,9 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, MousePointerClick } from "lucide-react";
+import {
+  CheckCircle2,
+  MousePointerClick,
+  MessageSquare,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -16,7 +29,7 @@ import { useMaterials } from "@/hooks/use-materials";
 
 
 export default function ReviewPage() {
-  const { version } = useWorkspace();
+  const { project, version } = useWorkspace();
   const searchParams = useSearchParams();
   const initialItemId = searchParams.get("item");
 
@@ -39,6 +52,15 @@ export default function ReviewPage() {
     setActiveCategory,
   } = useMaterials(version.id);
 
+  // Batch action dialog state
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [commentDialogOpen, setCommentDialogOpen] = useState(false);
+  const [approvePS, setApprovePS] = useState(true);
+  const [approvePI, setApprovePI] = useState(true);
+  const [commentPS, setCommentPS] = useState(true);
+  const [commentPI, setCommentPI] = useState(true);
+  const [commentText, setCommentText] = useState("");
+
   // Auto-select: prioritize query param, otherwise first material
   useEffect(() => {
     if (initialItemId && materials.some((m) => m.document.id === initialItemId)) {
@@ -47,6 +69,28 @@ export default function ReviewPage() {
       setSelectedId(materials[0].document.id);
     }
   }, [materials, selectedId, setSelectedId, initialItemId]);
+
+  // Default to PS tab
+  useEffect(() => {
+    if (activeCategory === "overall") {
+      setActiveCategory("project_assets");
+    }
+  }, [activeCategory, setActiveCategory]);
+
+  const handleBatchApprove = () => {
+    batchApprove();
+    setApproveDialogOpen(false);
+    setApprovePS(true);
+    setApprovePI(true);
+  };
+
+  const handleBatchComment = () => {
+    // Mock — in production this would send the comment
+    setCommentDialogOpen(false);
+    setCommentText("");
+    setCommentPS(true);
+    setCommentPI(true);
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -57,9 +101,17 @@ export default function ReviewPage() {
             {checkedIds.size} item{checkedIds.size !== 1 ? "s" : ""} selected
           </span>
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={batchApprove}>
+            <Button size="sm" onClick={() => setApproveDialogOpen(true)}>
               <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-              Approve All Selected
+              Approve
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setCommentDialogOpen(true)}
+            >
+              <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+              Add Comment
             </Button>
             <Button size="sm" variant="ghost" onClick={clearChecks}>
               Clear
@@ -95,6 +147,7 @@ export default function ReviewPage() {
               }
               activeCategory={activeCategory}
               onCategoryChange={setActiveCategory}
+              projectId={project.id}
             />
           ) : (
             <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
@@ -104,6 +157,110 @@ export default function ReviewPage() {
           )}
         </ResizablePanel>
       </ResizablePanelGroup>
+
+      {/* Approve Dialog */}
+      <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Approve {checkedIds.size} Items</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              Select which validations to approve for the selected items:
+            </p>
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <Checkbox
+                  checked={approvePS}
+                  onCheckedChange={(v) => setApprovePS(!!v)}
+                />
+                <span className="text-sm font-medium">
+                  Project Specification (PS)
+                </span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <Checkbox
+                  checked={approvePI}
+                  onCheckedChange={(v) => setApprovePI(!!v)}
+                />
+                <span className="text-sm font-medium">
+                  Project Index (PI)
+                </span>
+              </label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setApproveDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleBatchApprove}
+              disabled={!approvePS && !approvePI}
+            >
+              <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+              Approve
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Comment Dialog */}
+      <Dialog open={commentDialogOpen} onOpenChange={setCommentDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Comment to {checkedIds.size} Items</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              Select which validations to comment on:
+            </p>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={commentPS}
+                  onCheckedChange={(v) => setCommentPS(!!v)}
+                />
+                <span className="text-sm font-medium">PS</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={commentPI}
+                  onCheckedChange={(v) => setCommentPI(!!v)}
+                />
+                <span className="text-sm font-medium">PI</span>
+              </label>
+            </div>
+            <Input
+              placeholder="Type your comment..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCommentDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleBatchComment}
+              disabled={(!commentPS && !commentPI) || !commentText.trim()}
+            >
+              <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+              Send Comment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

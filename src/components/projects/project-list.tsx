@@ -3,11 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Plus, FolderKanban, Activity, Eye, ShieldCheck, FileBarChart } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatusIndicator } from "@/components/shared/status-indicator";
 import { PROJECT_STAGE_CONFIG } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import { ProjectCard } from "./project-card";
 import { ProjectFilters } from "./project-filters";
 import { ProjectDetailSheet } from "./project-detail-sheet";
@@ -115,13 +115,11 @@ function ProjectListRow({
       </div>
 
       {/* Stage */}
-      <div className="shrink-0 hidden md:block">
-        <Badge
-          variant="secondary"
-          className={`text-[10px] ${stageConfig.color} ${stageConfig.bgColor}`}
-        >
+      <div className="shrink-0 hidden md:block text-xs">
+        <span className="text-muted-foreground">Stage: </span>
+        <span className={cn("font-medium", stageConfig.color)}>
           {stageConfig.label}
-        </Badge>
+        </span>
       </div>
 
       {/* Confidence */}
@@ -154,7 +152,7 @@ function ProjectListRow({
             <Link
               href={`/projects/${project.id}/versions/${project.latestVersionId}/review`}
               className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-nav-accent hover:bg-muted/50 transition-colors"
-              title="Check Conformance"
+              title="Conformance"
             >
               <ShieldCheck className="h-4 w-4" />
             </Link>
@@ -171,7 +169,7 @@ function ProjectListRow({
             <span className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/30 cursor-not-allowed" title="Overview">
               <Eye className="h-4 w-4" />
             </span>
-            <span className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/30 cursor-not-allowed" title="Check Conformance">
+            <span className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/30 cursor-not-allowed" title="Conformance">
               <ShieldCheck className="h-4 w-4" />
             </span>
             <span className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/30 cursor-not-allowed" title="Report">

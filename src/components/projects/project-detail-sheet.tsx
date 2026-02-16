@@ -17,6 +17,10 @@ import {
   Share2,
   MapPin,
   Briefcase,
+  Activity,
+  MessageSquare,
+  Send,
+  MoreHorizontal,
 } from "lucide-react";
 import {
   Sheet,
@@ -36,12 +40,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -53,6 +70,8 @@ import { StatusIndicator } from "@/components/shared/status-indicator";
 import { mockUsers, currentUser } from "@/data/mock-users";
 import { getVersionsByProject } from "@/data/mock-versions";
 import { getDocumentsByVersion } from "@/data/mock-documents";
+import { getActivityLogsByProject } from "@/data/mock-activity-logs";
+import { getProjectComments } from "@/data/mock-project-comments";
 import { cn } from "@/lib/utils";
 import type { Project, Document as DocType, ProjectStatus } from "@/data/types";
 
@@ -96,6 +115,16 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
+function formatRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
 const statusOptions: { value: ProjectStatus; label: string }[] = [
   { value: "in_progress", label: "In Progress" },
   { value: "active", label: "Active" },
@@ -125,7 +154,111 @@ const roleConfig: Record<string, { label: string; color: string }> = {
 };
 
 /* -------------------------------------------------------------------------- */
-/*  Component                                                                  */
+/*  Share Access Dialog                                                        */
+/* -------------------------------------------------------------------------- */
+
+function ShareAccessDialog({
+  members,
+}: {
+  members: typeof mockUsers;
+}) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="shrink-0 gap-1.5">
+          <Share2 className="h-3.5 w-3.5" />
+          Share
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Share2 className="h-4 w-4 text-primary" />
+            Share Access
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* Add member input */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 relative">
+            <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Add by name or email..."
+              className="pl-9"
+            />
+          </div>
+          <Select defaultValue="submitter">
+            <SelectTrigger className="w-[130px] shrink-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="submitter">Submitter</SelectItem>
+              <SelectItem value="reviewer">Reviewer</SelectItem>
+              <SelectItem value="global_viewer">Global Viewer</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button size="sm" className="shrink-0">
+            Add
+          </Button>
+        </div>
+
+        {/* Who has access */}
+        <div className="mt-4 space-y-1">
+          <h4 className="text-sm font-medium text-muted-foreground">Who has access</h4>
+          <div className="space-y-2 mt-2">
+            {members.map((user) => {
+              const rc = roleConfig[user.role] ?? {
+                label: user.role,
+                color: "bg-muted text-muted-foreground",
+              };
+              return (
+                <div
+                  key={user.id}
+                  className="flex items-center gap-3 py-2"
+                >
+                  <Avatar className="h-8 w-8 shrink-0">
+                    {user.avatarUrl && (
+                      <AvatarImage src={user.avatarUrl} alt={user.name} />
+                    )}
+                    <AvatarFallback className="text-[11px] font-bold gradient-accent text-white">
+                      {getInitials(user.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {user.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user.email}
+                    </p>
+                  </div>
+                  <Badge
+                    variant="secondary"
+                    className={cn("text-[10px] shrink-0", rc.color)}
+                  >
+                    {rc.label}
+                  </Badge>
+                  {user.role !== "admin" && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 text-muted-foreground"
+                    >
+                      <MoreHorizontal className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Main Component                                                             */
 /* -------------------------------------------------------------------------- */
 
 export function ProjectDetailSheet({
@@ -144,6 +277,7 @@ export function ProjectDetailSheet({
   const [editLocation, setEditLocation] = useState("");
   const [editStatus, setEditStatus] = useState<ProjectStatus>("in_progress");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [commentText, setCommentText] = useState("");
 
   const isAdmin = currentUser.role === "admin";
 
@@ -159,6 +293,10 @@ export function ProjectDetailSheet({
   const members = project.memberIds
     .map((id) => mockUsers.find((u) => u.id === id))
     .filter(Boolean) as typeof mockUsers;
+
+  // Activity logs and comments
+  const activityLogs = getActivityLogsByProject(project.id);
+  const projectComments = getProjectComments(project.id);
 
   const startEdit = () => {
     setEditName(project.name);
@@ -185,7 +323,7 @@ export function ProjectDetailSheet({
         className="sm:max-w-xl w-full flex flex-col p-0"
       >
         {/* Header */}
-        <SheetHeader className="px-6 pt-6 pb-4 border-b pr-12">
+        <SheetHeader className="px-6 pt-6 pb-4 border-b pr-12 shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -199,21 +337,24 @@ export function ProjectDetailSheet({
               </SheetDescription>
             </div>
           </div>
-          {!editing && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0 gap-1.5 w-fit"
-              onClick={startEdit}
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              Edit
-            </Button>
-          )}
+          <div className="flex items-center gap-2 w-fit">
+            {!editing && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-1.5"
+                onClick={startEdit}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </Button>
+            )}
+            <ShareAccessDialog members={members} />
+          </div>
         </SheetHeader>
 
         {/* Scrollable content */}
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="p-6 space-y-6">
             {/* ============================================================ */}
             {/*  Section: Project Information                                 */}
@@ -352,167 +493,185 @@ export function ProjectDetailSheet({
             <Separator />
 
             {/* ============================================================ */}
-            {/*  Section: Material Files                                      */}
+            {/*  Tabs: Material Files | Activity Logs | Comments              */}
             {/* ============================================================ */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-primary" />
+            <Tabs defaultValue="files" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="files" className="text-xs gap-1.5">
+                  <FileText className="h-3.5 w-3.5" />
                   Material Files
-                </h4>
-                <Badge variant="secondary" className="text-xs">
-                  {allDocs.length} files
-                </Badge>
-              </div>
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="text-xs gap-1.5">
+                  <Activity className="h-3.5 w-3.5" />
+                  Activity Logs
+                </TabsTrigger>
+                <TabsTrigger value="comments" className="text-xs gap-1.5">
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Comments
+                </TabsTrigger>
+              </TabsList>
 
-              {allDocs.length > 0 ? (
-                <div className="space-y-2">
-                  {allDocs.map((doc) => {
-                    const ftConfig = fileTypeConfig[doc.fileType] ?? {
-                      label: doc.fileType.toUpperCase(),
-                      color: "bg-muted text-muted-foreground",
-                      icon: FileText,
-                    };
-                    const FileIcon = ftConfig.icon;
-                    return (
-                      <div
-                        key={doc.id}
-                        className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
-                      >
-                        <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                          <FileIcon className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {doc.fileName}
-                          </p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <Badge
-                              variant="secondary"
-                              className={cn(
-                                "text-[10px] px-1.5 py-0",
-                                ftConfig.color
-                              )}
-                            >
-                              {ftConfig.label}
-                            </Badge>
-                            <span className="text-[11px] text-muted-foreground">
-                              {formatFileSize(doc.fileSize)}
-                            </span>
-                            <span className="text-[11px] font-mono text-muted-foreground">
-                              {doc.specSection}
-                            </span>
+              {/* --- Material Files Tab --- */}
+              <TabsContent value="files" className="mt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Badge variant="secondary" className="text-xs">
+                    {allDocs.length} files
+                  </Badge>
+                </div>
+
+                {allDocs.length > 0 ? (
+                  <div className="space-y-2">
+                    {allDocs.map((doc) => {
+                      const ftConfig = fileTypeConfig[doc.fileType] ?? {
+                        label: doc.fileType.toUpperCase(),
+                        color: "bg-muted text-muted-foreground",
+                        icon: FileText,
+                      };
+                      const FileIcon = ftConfig.icon;
+                      return (
+                        <div
+                          key={doc.id}
+                          className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
+                        >
+                          <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+                            <FileIcon className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {doc.fileName}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <Badge
+                                variant="secondary"
+                                className={cn(
+                                  "text-[10px] px-1.5 py-0",
+                                  ftConfig.color
+                                )}
+                              >
+                                {ftConfig.label}
+                              </Badge>
+                              <span className="text-[11px] text-muted-foreground">
+                                {formatFileSize(doc.fileSize)}
+                              </span>
+                              <span className="text-[11px] font-mono text-muted-foreground">
+                                {doc.specSection}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    No files uploaded yet
+                  </div>
+                )}
+
+                {/* Upload drop zone */}
+                <div className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-6 text-center hover:border-nav-accent/40 transition-colors cursor-pointer">
+                  <div className="mx-auto w-10 h-10 rounded-lg bg-muted flex items-center justify-center mb-3">
+                    <Upload className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium">
+                    Drop material matrix files here
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PDF, XLSX, DOCX up to 50MB each
+                  </p>
                 </div>
-              ) : (
-                <div className="py-8 text-center text-sm text-muted-foreground">
-                  No files uploaded yet
-                </div>
-              )}
+              </TabsContent>
 
-              {/* Upload drop zone */}
-              <div className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-6 text-center hover:border-nav-accent/40 transition-colors cursor-pointer">
-                <div className="mx-auto w-10 h-10 rounded-lg bg-muted flex items-center justify-center mb-3">
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <p className="text-sm font-medium">
-                  Drop material matrix files here
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  PDF, XLSX, DOCX up to 50MB each
-                </p>
-              </div>
-            </div>
+              {/* --- Activity Logs Tab --- */}
+              <TabsContent value="activity" className="mt-4">
+                {activityLogs.length > 0 ? (
+                  <div className="space-y-3">
+                    {activityLogs.map((log) => {
+                      const user = mockUsers.find((u) => u.id === log.userId);
+                      return (
+                        <div key={log.id} className="flex gap-3">
+                          <Avatar className="h-7 w-7 shrink-0 mt-0.5">
+                            {user?.avatarUrl && (
+                              <AvatarImage src={user.avatarUrl} alt={user.name} />
+                            )}
+                            <AvatarFallback className="text-[9px] font-bold">
+                              {user ? getInitials(user.name) : "?"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium">{user?.name ?? "Unknown"}</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {formatRelativeTime(log.timestamp)}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {log.description}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    No activity yet
+                  </div>
+                )}
+              </TabsContent>
 
-            <Separator />
+              {/* --- Comments Tab --- */}
+              <TabsContent value="comments" className="mt-4">
+                {projectComments.length > 0 ? (
+                  <div className="space-y-3">
+                    {projectComments.map((comment) => {
+                      const user = mockUsers.find((u) => u.id === comment.authorId);
+                      return (
+                        <div key={comment.id} className="flex gap-3">
+                          <Avatar className="h-7 w-7 shrink-0 mt-0.5">
+                            {user?.avatarUrl && (
+                              <AvatarImage src={user.avatarUrl} alt={user?.name ?? ""} />
+                            )}
+                            <AvatarFallback className="text-[9px] font-bold">
+                              {user ? getInitials(user.name) : "?"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium">{user?.name ?? "Unknown"}</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {formatRelativeTime(comment.createdAt)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {comment.content}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    No comments yet
+                  </div>
+                )}
 
-            {/* ============================================================ */}
-            {/*  Section: Share Access                                        */}
-            {/* ============================================================ */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-semibold flex items-center gap-2">
-                <Share2 className="h-4 w-4 text-primary" />
-                Share Access
-              </h4>
-
-              {/* Current members */}
-              <div className="space-y-2">
-                {members.map((user) => {
-                  const rc = roleConfig[user.role] ?? {
-                    label: user.role,
-                    color: "bg-muted text-muted-foreground",
-                  };
-                  return (
-                    <div
-                      key={user.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border"
-                    >
-                      <Avatar className="h-8 w-8 shrink-0">
-                        <AvatarFallback className="text-[11px] font-bold gradient-accent text-white">
-                          {getInitials(user.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {user.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {user.email}
-                        </p>
-                      </div>
-                      <Badge
-                        variant="secondary"
-                        className={cn("text-[10px] shrink-0", rc.color)}
-                      >
-                        {rc.label}
-                      </Badge>
-                      {user.role !== "admin" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Add member */}
-              <div className="flex items-center gap-2">
-                <div className="flex-1 relative">
-                  <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                {/* Comment input */}
+                <div className="flex items-center gap-2 mt-4 pt-3 border-t">
                   <Input
-                    placeholder="Add by name or email..."
-                    className="pl-9"
+                    placeholder="Write a comment..."
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    className="flex-1 text-sm"
                   />
+                  <Button size="sm" className="shrink-0 gap-1.5">
+                    <Send className="h-3.5 w-3.5" />
+                    Send
+                  </Button>
                 </div>
-                <Select defaultValue="submitter">
-                  <SelectTrigger className="w-[130px] shrink-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="submitter">Submitter</SelectItem>
-                    <SelectItem value="reviewer">Reviewer</SelectItem>
-                    <SelectItem value="global_viewer">Global Viewer</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button size="sm" className="shrink-0">
-                  Add
-                </Button>
-              </div>
-
-              <p className="text-xs text-muted-foreground">
-                Submitters can upload files and edit project details.
-                Reviewers can view and approve submittals.
-              </p>
-            </div>
+              </TabsContent>
+            </Tabs>
 
             {/* ============================================================ */}
             {/*  Section: Danger Zone (Admin Only)                           */}

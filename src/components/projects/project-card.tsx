@@ -12,10 +12,10 @@ import {
   AlertTriangle,
   XCircle,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import {
   Avatar,
   AvatarFallback,
+  AvatarImage,
   AvatarGroup,
   AvatarGroupCount,
 } from "@/components/ui/avatar";
@@ -124,23 +124,22 @@ export function ProjectCard({
           </div>
         </div>
 
-        {/* Row 3: Stage badge + Avatar stack */}
+        {/* Row 3: Stage as text field + Avatar stack */}
         <div className="mt-3 flex items-center justify-between gap-3">
-          <Badge
-            variant="secondary"
-            className={cn(
-              "text-[10px] font-semibold shrink-0",
-              stageConfig.color,
-              stageConfig.bgColor
-            )}
-          >
-            {stageConfig.label}
-          </Badge>
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="text-muted-foreground">Stage:</span>
+            <span className={cn("font-medium", stageConfig.color)}>
+              {stageConfig.label}
+            </span>
+          </div>
 
-          {/* Avatar stack */}
+          {/* Avatar stack with mock profile images */}
           <AvatarGroup>
             {visibleMembers.map((user) => (
               <Avatar key={user!.id} size="sm">
+                {user!.avatarUrl && (
+                  <AvatarImage src={user!.avatarUrl} alt={user!.name} />
+                )}
                 <AvatarFallback className="text-[9px] font-medium">
                   {getInitials(user!.name)}
                 </AvatarFallback>
@@ -209,7 +208,7 @@ export function ProjectCard({
                 className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-nav-accent transition-colors font-medium"
               >
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Check Conformance
+                Conformance
               </Link>
               <Link
                 href={reportHref}
@@ -227,7 +226,7 @@ export function ProjectCard({
               </span>
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground/50 font-medium cursor-not-allowed">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Check Conformance
+                Conformance
               </span>
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground/50 font-medium cursor-not-allowed">
                 <FileBarChart className="h-3.5 w-3.5" />

@@ -1,0 +1,77 @@
+import type { DescriptiveReport } from "./types";
+
+export const mockDRs: DescriptiveReport[] = [
+  {
+    id: "dr-1",
+    projectId: "proj-1",
+    name: "Structural Steel DR",
+    purpose: "Validate structural steel submittals against project specifications",
+    status: "ready_for_review",
+    createdAt: "2025-09-10T10:00:00Z",
+    updatedAt: "2025-12-15T14:30:00Z",
+    createdBy: "user-1",
+    materialMatrixFile: "RCT_Material_Matrix_v3.xlsx",
+    projectSpecFile: "RCT_Structural_Spec.pdf",
+  },
+  {
+    id: "dr-2",
+    projectId: "proj-1",
+    name: "MEP Systems DR",
+    purpose: "Review mechanical, electrical, and plumbing submittal compliance",
+    status: "ready_for_review",
+    createdAt: "2025-10-05T09:00:00Z",
+    updatedAt: "2025-12-18T11:00:00Z",
+    createdBy: "user-2",
+    materialMatrixFile: "RCT_MEP_Matrix.xlsx",
+    projectSpecFile: "RCT_MEP_Spec.pdf",
+  },
+  {
+    id: "dr-3",
+    projectId: "proj-2",
+    name: "Facade Materials DR",
+    purpose: "Verify facade and curtain wall material compliance",
+    status: "processing",
+    createdAt: "2025-11-20T08:30:00Z",
+    updatedAt: "2026-01-10T16:00:00Z",
+    createdBy: "user-1",
+    materialMatrixFile: "HDM_Facade_Matrix.xlsx",
+    projectSpecFile: "HDM_Facade_Spec.pdf",
+  },
+  {
+    id: "dr-4",
+    projectId: "proj-2",
+    name: "Interior Finishes DR",
+    purpose: "Check interior material submittals against design intent documents",
+    status: "not_started",
+    createdAt: "2026-01-05T10:00:00Z",
+    updatedAt: "2026-01-05T10:00:00Z",
+    createdBy: "user-2",
+  },
+  {
+    id: "dr-5",
+    projectId: "proj-3",
+    name: "Tunnel Lining DR",
+    purpose: "Validate tunnel lining material specifications and compliance",
+    status: "processing",
+    createdAt: "2025-12-01T09:00:00Z",
+    updatedAt: "2026-01-28T15:00:00Z",
+    createdBy: "user-2",
+    materialMatrixFile: "MLE_Tunnel_Matrix.xlsx",
+  },
+  {
+    id: "dr-6",
+    projectId: "proj-5",
+    name: "HVAC Equipment DR",
+    purpose: "Review HVAC equipment submittals for renovation compliance",
+    status: "ready_for_review",
+    createdAt: "2025-07-15T08:00:00Z",
+    updatedAt: "2025-10-20T12:00:00Z",
+    createdBy: "user-4",
+    materialMatrixFile: "DOR_HVAC_Matrix.xlsx",
+    projectSpecFile: "DOR_HVAC_Spec.pdf",
+  },
+];
+
+export function getDRsByProject(projectId: string): DescriptiveReport[] {
+  return mockDRs.filter((dr) => dr.projectId === projectId);
+}

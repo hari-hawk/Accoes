@@ -193,8 +193,11 @@ export default function DesignSystemPage() {
             <Badge variant="destructive">Destructive</Badge>
           </div>
           <div className="flex flex-wrap gap-3">
-            <StatusIndicator status="draft" />
+            <StatusIndicator status="planning" />
             <StatusIndicator status="active" />
+            <StatusIndicator status="on_hold" />
+            <StatusIndicator status="completed" />
+            <StatusIndicator status="draft" />
             <StatusIndicator status="in_review" />
             <StatusIndicator status="complete" />
             <StatusIndicator status="error" />
@@ -205,9 +208,10 @@ export default function DesignSystemPage() {
             <StatusClassification status="action_mandatory" />
           </div>
           <div className="flex flex-wrap gap-3">
-            <RoleBadge role="owner" />
-            <RoleBadge role="collaborator" />
+            <RoleBadge role="admin" />
+            <RoleBadge role="submitter" />
             <RoleBadge role="reviewer" />
+            <RoleBadge role="global_viewer" />
           </div>
         </div>
 

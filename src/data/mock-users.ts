@@ -5,13 +5,13 @@ export const mockUsers: User[] = [
     id: "user-1",
     name: "Sarah Mitchell",
     email: "sarah.mitchell@accoes.com",
-    role: "owner",
+    role: "admin",
   },
   {
     id: "user-2",
     name: "James Chen",
     email: "james.chen@accoes.com",
-    role: "collaborator",
+    role: "submitter",
   },
   {
     id: "user-3",
@@ -23,7 +23,7 @@ export const mockUsers: User[] = [
     id: "user-4",
     name: "David Park",
     email: "david.park@accoes.com",
-    role: "collaborator",
+    role: "global_viewer",
   },
 ];
 

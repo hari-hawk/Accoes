@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   ChevronDown,
-  FileText,
   Users,
   Play,
   FileBarChart,
@@ -95,11 +94,6 @@ export function ProjectCard({
           <StatusIndicator status={project.status} />
         </div>
 
-        {/* Description */}
-        <p className="mt-3 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-          {project.description}
-        </p>
-
         {/* Confidence bar — always shown */}
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs mb-1.5">
@@ -137,10 +131,6 @@ export function ProjectCard({
 
         {/* Stats row */}
         <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <FileText className="h-3.5 w-3.5" />
-            <span>{project.totalDocuments} docs</span>
-          </div>
           <div className="flex items-center gap-1.5">
             <Users className="h-3.5 w-3.5" />
             <span>{project.memberIds.length} members</span>

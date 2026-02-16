@@ -1,11 +1,10 @@
-export type UserRole = "owner" | "collaborator" | "reviewer";
+export type UserRole = "admin" | "global_viewer" | "submitter" | "reviewer";
 
 export type ProjectStatus =
-  | "draft"
+  | "planning"
   | "active"
-  | "in_review"
-  | "complete"
-  | "archived";
+  | "on_hold"
+  | "completed";
 
 export type VersionStatus =
   | "draft"
@@ -34,6 +33,8 @@ export type DecisionStatus =
   | "revision_requested"
   | "rejected";
 
+export type DRStatus = "not_started" | "processing" | "ready_for_review";
+
 export type DocumentType = "pdf" | "xlsx" | "docx";
 
 export type ExportFormat = "pdf" | "csv" | "xlsx";
@@ -58,7 +59,8 @@ export interface Project {
   id: string;
   name: string;
   client: string;
-  description: string;
+  jobId: string;
+  location: string;
   status: ProjectStatus;
   createdAt: string;
   updatedAt: string;
@@ -166,4 +168,44 @@ export interface ReportConfig {
   includeEvidence: boolean;
   includeComments: boolean;
   includeAiReasoning: boolean;
+}
+
+export interface DescriptiveReport {
+  id: string;
+  projectId: string;
+  name: string;
+  purpose: string;
+  status: DRStatus;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  materialMatrixFile?: string;
+  projectSpecFile?: string;
+}
+
+export type DiscrepancyStatus =
+  | "pre_approved"
+  | "review_required"
+  | "action_mandatory";
+
+export interface ItemComment {
+  id: string;
+  authorId: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface MaterialItem {
+  id: string;
+  drId: string;
+  itemName: string;
+  description: string;
+  specSection: string;
+  materialMatrixValue: string;
+  projectSpecValue: string;
+  projectIndexValue: string;
+  status: DiscrepancyStatus;
+  confidenceScore: number;
+  aiReason: string;
+  comments: ItemComment[];
 }

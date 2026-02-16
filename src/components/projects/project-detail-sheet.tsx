@@ -15,6 +15,8 @@ import {
   Calendar,
   Building2,
   Share2,
+  MapPin,
+  Briefcase,
 } from "lucide-react";
 import {
   Sheet,
@@ -26,7 +28,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -85,27 +86,30 @@ function getInitials(name: string): string {
 }
 
 const statusOptions: { value: ProjectStatus; label: string }[] = [
-  { value: "draft", label: "Draft" },
+  { value: "planning", label: "Planning" },
   { value: "active", label: "Active" },
-  { value: "in_review", label: "In Review" },
-  { value: "complete", label: "Complete" },
-  { value: "archived", label: "Archived" },
+  { value: "on_hold", label: "On Hold" },
+  { value: "completed", label: "Completed" },
 ];
 
 const roleConfig: Record<string, { label: string; color: string }> = {
-  owner: {
-    label: "Owner",
+  admin: {
+    label: "Admin",
     color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   },
-  collaborator: {
-    label: "Collaborator",
+  global_viewer: {
+    label: "Global Viewer",
     color:
-      "bg-status-pre-approved-bg text-status-pre-approved",
+      "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  },
+  submitter: {
+    label: "Submitter",
+    color: "bg-status-pre-approved-bg text-status-pre-approved",
   },
   reviewer: {
     label: "Reviewer",
     color:
-      "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+      "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
   },
 };
 
@@ -125,8 +129,9 @@ export function ProjectDetailSheet({
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editClient, setEditClient] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editStatus, setEditStatus] = useState<ProjectStatus>("draft");
+  const [editJobId, setEditJobId] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editStatus, setEditStatus] = useState<ProjectStatus>("planning");
 
   if (!project) return null;
 
@@ -144,7 +149,8 @@ export function ProjectDetailSheet({
   const startEdit = () => {
     setEditName(project.name);
     setEditClient(project.client);
-    setEditDescription(project.description);
+    setEditJobId(project.jobId);
+    setEditLocation(project.location);
     setEditStatus(project.status);
     setEditing(true);
   };
@@ -220,15 +226,25 @@ export function ProjectDetailSheet({
                       onChange={(e) => setEditClient(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">
-                      Description
-                    </label>
-                    <Textarea
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      rows={3}
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Job ID
+                      </label>
+                      <Input
+                        value={editJobId}
+                        onChange={(e) => setEditJobId(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Location
+                      </label>
+                      <Input
+                        value={editLocation}
+                        onChange={(e) => setEditLocation(e.target.value)}
+                      />
+                    </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground">
@@ -273,10 +289,15 @@ export function ProjectDetailSheet({
                   <Building2 className="h-4 w-4 text-primary" />
                   Project Information
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {project.description}
-                </p>
                 <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Briefcase className="h-3.5 w-3.5" />
+                    <span>{project.jobId}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span>{project.location}</span>
+                  </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />
                     <span>
@@ -287,10 +308,6 @@ export function ProjectDetailSheet({
                         year: "numeric",
                       })}
                     </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <FileText className="h-3.5 w-3.5" />
-                    <span>{project.totalDocuments} documents</span>
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-3.5 w-3.5" />
@@ -411,7 +428,10 @@ export function ProjectDetailSheet({
               {/* Current members */}
               <div className="space-y-2">
                 {members.map((user) => {
-                  const rc = roleConfig[user.role];
+                  const rc = roleConfig[user.role] ?? {
+                    label: user.role,
+                    color: "bg-muted text-muted-foreground",
+                  };
                   return (
                     <div
                       key={user.id}
@@ -436,7 +456,7 @@ export function ProjectDetailSheet({
                       >
                         {rc.label}
                       </Badge>
-                      {user.role !== "owner" && (
+                      {user.role !== "admin" && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -459,13 +479,14 @@ export function ProjectDetailSheet({
                     className="pl-9"
                   />
                 </div>
-                <Select defaultValue="collaborator">
+                <Select defaultValue="submitter">
                   <SelectTrigger className="w-[130px] shrink-0">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="collaborator">Collaborator</SelectItem>
+                    <SelectItem value="submitter">Submitter</SelectItem>
                     <SelectItem value="reviewer">Reviewer</SelectItem>
+                    <SelectItem value="global_viewer">Global Viewer</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button size="sm" className="shrink-0">
@@ -474,7 +495,7 @@ export function ProjectDetailSheet({
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Collaborators can upload files and edit project details.
+                Submitters can upload files and edit project details.
                 Reviewers can view and approve submittals.
               </p>
             </div>

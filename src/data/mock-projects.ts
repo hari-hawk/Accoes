@@ -22,6 +22,7 @@ export const mockProjects: Project[] = [
       total: 34,
       overallConfidence: 92,
     },
+    stage: "approved",
   },
   {
     id: "proj-2",
@@ -44,6 +45,7 @@ export const mockProjects: Project[] = [
       total: 22,
       overallConfidence: 78,
     },
+    stage: "action_mandatory",
   },
   {
     id: "proj-3",
@@ -66,6 +68,7 @@ export const mockProjects: Project[] = [
       total: 15,
       overallConfidence: 0,
     },
+    stage: "review_required",
   },
   {
     id: "proj-4",
@@ -73,7 +76,7 @@ export const mockProjects: Project[] = [
     client: "KPMG LLP",
     jobId: "KPMG-2026-007",
     location: "New York, NY",
-    status: "planning",
+    status: "in_progress",
     createdAt: "2026-01-20T09:00:00Z",
     updatedAt: "2026-01-20T09:00:00Z",
     ownerId: "user-1",
@@ -88,6 +91,7 @@ export const mockProjects: Project[] = [
       total: 4,
       overallConfidence: 0,
     },
+    stage: "pre_approved",
   },
   {
     id: "proj-5",
@@ -110,6 +114,7 @@ export const mockProjects: Project[] = [
       total: 18,
       overallConfidence: 88,
     },
+    stage: "pre_approved",
   },
   {
     id: "proj-6",
@@ -132,6 +137,7 @@ export const mockProjects: Project[] = [
       total: 12,
       overallConfidence: 81,
     },
+    stage: "review_required",
   },
   {
     id: "proj-7",
@@ -154,6 +160,7 @@ export const mockProjects: Project[] = [
       total: 20,
       overallConfidence: 85,
     },
+    stage: "pre_approved",
   },
   {
     id: "proj-8",
@@ -176,6 +183,7 @@ export const mockProjects: Project[] = [
       total: 26,
       overallConfidence: 91,
     },
+    stage: "approved",
   },
   {
     id: "proj-9",
@@ -183,7 +191,7 @@ export const mockProjects: Project[] = [
     client: "Internal Testing",
     jobId: "TEST-2026-001",
     location: "Remote",
-    status: "planning",
+    status: "in_progress",
     createdAt: "2026-02-01T09:00:00Z",
     updatedAt: "2026-02-01T09:00:00Z",
     ownerId: "user-1",
@@ -198,6 +206,7 @@ export const mockProjects: Project[] = [
       total: 0,
       overallConfidence: 0,
     },
+    stage: "pre_approved",
   },
   {
     id: "proj-10",
@@ -205,7 +214,7 @@ export const mockProjects: Project[] = [
     client: "Los Angeles World Airports",
     jobId: "LAWA-2026-002",
     location: "Los Angeles, CA",
-    status: "planning",
+    status: "in_progress",
     createdAt: "2026-02-05T10:00:00Z",
     updatedAt: "2026-02-05T10:00:00Z",
     ownerId: "user-2",
@@ -220,5 +229,6 @@ export const mockProjects: Project[] = [
       total: 0,
       overallConfidence: 0,
     },
+    stage: "pre_approved",
   },
 ];

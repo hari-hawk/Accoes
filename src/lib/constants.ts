@@ -1,11 +1,11 @@
 import type {
   WorkflowStage,
   ProjectStatus,
+  ProjectStage,
   VersionStatus,
   ValidationStatus,
   DecisionStatus,
   UserRole,
-  DRStatus,
   DiscrepancyStatus,
 } from "@/data/types";
 
@@ -45,7 +45,7 @@ export const PROJECT_STATUS_CONFIG: Record<
   ProjectStatus,
   { label: string; color: string }
 > = {
-  planning: { label: "Planning", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  in_progress: { label: "In Progress", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
   active: { label: "Active", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
   on_hold: { label: "On Hold", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
   completed: { label: "Completed", color: "bg-status-pre-approved-bg text-status-pre-approved" },
@@ -95,6 +95,32 @@ export const DECISION_STATUS_CONFIG: Record<
   rejected: { label: "Rejected", color: "bg-status-action-mandatory-bg text-status-action-mandatory" },
 };
 
+export const PROJECT_STAGE_CONFIG: Record<
+  ProjectStage,
+  { label: string; color: string; bgColor: string }
+> = {
+  review_required: {
+    label: "Review Required",
+    color: "text-status-review-required",
+    bgColor: "bg-status-review-required-bg",
+  },
+  action_mandatory: {
+    label: "Action Mandatory",
+    color: "text-status-action-mandatory",
+    bgColor: "bg-status-action-mandatory-bg",
+  },
+  pre_approved: {
+    label: "Pre-Approved",
+    color: "text-status-pre-approved",
+    bgColor: "bg-status-pre-approved-bg",
+  },
+  approved: {
+    label: "Approved",
+    color: "text-status-pre-approved",
+    bgColor: "bg-status-pre-approved-bg",
+  },
+};
+
 export const ROLE_CONFIG: Record<
   UserRole,
   { label: string; color: string }
@@ -103,15 +129,6 @@ export const ROLE_CONFIG: Record<
   global_viewer: { label: "Global Viewer", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
   submitter: { label: "Submitter", color: "bg-status-pre-approved-bg text-status-pre-approved" },
   reviewer: { label: "Reviewer", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-};
-
-export const DR_STATUS_CONFIG: Record<
-  DRStatus,
-  { label: string; color: string }
-> = {
-  not_started: { label: "Not Started", color: "bg-muted text-muted-foreground" },
-  processing: { label: "Processing", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-  ready_for_review: { label: "Ready for Review", color: "bg-status-pre-approved-bg text-status-pre-approved" },
 };
 
 export const DISCREPANCY_STATUS_CONFIG: Record<

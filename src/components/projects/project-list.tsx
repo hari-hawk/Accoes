@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, FolderKanban, Activity, Users, ArrowUpRight } from "lucide-react";
+import { Plus, FolderKanban, Activity, Eye, ShieldCheck, FileBarChart } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatusIndicator } from "@/components/shared/status-indicator";
-import { DateDisplay } from "@/components/shared/date-display";
+import { PROJECT_STAGE_CONFIG } from "@/lib/constants";
 import { ProjectCard } from "./project-card";
 import { ProjectFilters } from "./project-filters";
 import { ProjectDetailSheet } from "./project-detail-sheet";
@@ -86,6 +87,9 @@ function ProjectListRow({
           ? "text-status-action-mandatory"
           : "text-muted-foreground";
 
+  const stageConfig = PROJECT_STAGE_CONFIG[project.stage];
+  const hasVersions = !!project.latestVersionId;
+
   return (
     <div
       className="flex items-center gap-4 px-4 py-3 border-b last:border-b-0 hover:bg-muted/30 transition-colors cursor-pointer"
@@ -99,10 +103,10 @@ function ProjectListRow({
         }
       }}
     >
-      {/* Name + Client */}
+      {/* Name + Job ID */}
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold truncate">{project.name}</p>
-        <p className="text-xs text-muted-foreground truncate">{project.client}</p>
+        <p className="text-xs font-mono text-muted-foreground truncate">{project.jobId}</p>
       </div>
 
       {/* Status */}
@@ -110,10 +114,14 @@ function ProjectListRow({
         <StatusIndicator status={project.status} />
       </div>
 
-      {/* Members */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0 w-20">
-        <Users className="h-3.5 w-3.5" />
-        <span>{project.memberIds.length}</span>
+      {/* Stage */}
+      <div className="shrink-0 hidden md:block">
+        <Badge
+          variant="secondary"
+          className={`text-[10px] ${stageConfig.color} ${stageConfig.bgColor}`}
+        >
+          {stageConfig.label}
+        </Badge>
       </div>
 
       {/* Confidence */}
@@ -123,18 +131,54 @@ function ProjectListRow({
         </span>
       </div>
 
-      {/* Updated */}
-      <div className="shrink-0 w-24 text-right">
-        <DateDisplay date={project.updatedAt} />
+      {/* Created date */}
+      <div className="shrink-0 w-24 text-right text-xs text-muted-foreground hidden lg:block">
+        {new Date(project.createdAt).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })}
       </div>
 
-      {/* Open link */}
-      <div className="shrink-0" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-          <Link href={project.latestVersionId ? `/projects/${project.id}/versions/${project.latestVersionId}` : `/projects/${project.id}`}>
-            <ArrowUpRight className="h-4 w-4" />
-          </Link>
-        </Button>
+      {/* 3 action icons */}
+      <div className="shrink-0 flex items-center gap-1" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+        {hasVersions ? (
+          <>
+            <Link
+              href={`/projects/${project.id}/versions/${project.latestVersionId}`}
+              className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-nav-accent hover:bg-muted/50 transition-colors"
+              title="Overview"
+            >
+              <Eye className="h-4 w-4" />
+            </Link>
+            <Link
+              href={`/projects/${project.id}/versions/${project.latestVersionId}/review`}
+              className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-nav-accent hover:bg-muted/50 transition-colors"
+              title="Check Conformance"
+            >
+              <ShieldCheck className="h-4 w-4" />
+            </Link>
+            <Link
+              href={`/projects/${project.id}/versions/${project.latestVersionId}/export`}
+              className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-nav-accent hover:bg-muted/50 transition-colors"
+              title="Report"
+            >
+              <FileBarChart className="h-4 w-4" />
+            </Link>
+          </>
+        ) : (
+          <>
+            <span className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/30 cursor-not-allowed" title="Overview">
+              <Eye className="h-4 w-4" />
+            </span>
+            <span className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/30 cursor-not-allowed" title="Check Conformance">
+              <ShieldCheck className="h-4 w-4" />
+            </span>
+            <span className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/30 cursor-not-allowed" title="Report">
+              <FileBarChart className="h-4 w-4" />
+            </span>
+          </>
+        )}
       </div>
     </div>
   );
@@ -222,11 +266,11 @@ export function ProjectList() {
           {/* List header */}
           <div className="flex items-center gap-4 px-4 py-2.5 border-b bg-muted/30 text-xs font-medium text-muted-foreground">
             <div className="flex-1">Project</div>
-            <div className="shrink-0 w-20">Status</div>
-            <div className="shrink-0 w-20">Members</div>
+            <div className="shrink-0">Status</div>
+            <div className="shrink-0 hidden md:block">Stage</div>
             <div className="shrink-0 w-16 text-right">Conf.</div>
-            <div className="shrink-0 w-24 text-right">Updated</div>
-            <div className="shrink-0 w-8" />
+            <div className="shrink-0 w-24 text-right hidden lg:block">Created</div>
+            <div className="shrink-0 w-[104px]" />
           </div>
           {projects.map((project) => (
             <ProjectListRow

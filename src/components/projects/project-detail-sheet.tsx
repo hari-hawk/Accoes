@@ -25,6 +25,17 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +50,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusIndicator } from "@/components/shared/status-indicator";
-import { mockUsers } from "@/data/mock-users";
+import { mockUsers, currentUser } from "@/data/mock-users";
 import { getVersionsByProject } from "@/data/mock-versions";
 import { getDocumentsByVersion } from "@/data/mock-documents";
 import { cn } from "@/lib/utils";
@@ -86,7 +97,7 @@ function getInitials(name: string): string {
 }
 
 const statusOptions: { value: ProjectStatus; label: string }[] = [
-  { value: "planning", label: "Planning" },
+  { value: "in_progress", label: "In Progress" },
   { value: "active", label: "Active" },
   { value: "on_hold", label: "On Hold" },
   { value: "completed", label: "Completed" },
@@ -131,7 +142,10 @@ export function ProjectDetailSheet({
   const [editClient, setEditClient] = useState("");
   const [editJobId, setEditJobId] = useState("");
   const [editLocation, setEditLocation] = useState("");
-  const [editStatus, setEditStatus] = useState<ProjectStatus>("planning");
+  const [editStatus, setEditStatus] = useState<ProjectStatus>("in_progress");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  const isAdmin = currentUser.role === "admin";
 
   if (!project) return null;
 
@@ -499,6 +513,58 @@ export function ProjectDetailSheet({
                 Reviewers can view and approve submittals.
               </p>
             </div>
+
+            {/* ============================================================ */}
+            {/*  Section: Danger Zone (Admin Only)                           */}
+            {/* ============================================================ */}
+            {isAdmin && (
+              <>
+                <Separator />
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-destructive flex items-center gap-2">
+                    <Trash2 className="h-4 w-4" />
+                    Danger Zone
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    Permanently delete this project and all associated versions,
+                    documents, and validation data. This action cannot be undone.
+                  </p>
+                  <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="gap-1.5"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete Project
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete &quot;{project.name}&quot;?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete the project, all {versions.length} version{versions.length !== 1 ? "s" : ""}, and {allDocs.length} document{allDocs.length !== 1 ? "s" : ""}. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={() => {
+                            // Mock delete — in production this would call an API
+                            setDeleteConfirmOpen(false);
+                            onOpenChange(false);
+                          }}
+                        >
+                          Delete Project
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </>
+            )}
           </div>
         </ScrollArea>
       </SheetContent>

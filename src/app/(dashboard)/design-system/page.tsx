@@ -193,7 +193,7 @@ export default function DesignSystemPage() {
             <Badge variant="destructive">Destructive</Badge>
           </div>
           <div className="flex flex-wrap gap-3">
-            <StatusIndicator status="planning" />
+            <StatusIndicator status="in_progress" />
             <StatusIndicator status="active" />
             <StatusIndicator status="on_hold" />
             <StatusIndicator status="completed" />

@@ -5,8 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   FolderKanban,
-  CheckCircle2,
-  ShieldCheck,
   Users,
   FileStack,
   Bell,
@@ -46,8 +44,6 @@ import { currentUser } from "@/data/mock-users";
 
 const mainNavItems = [
   { title: "Projects", href: "/projects", icon: FolderKanban },
-  { title: "Descriptive Reports", href: "/dr", icon: CheckCircle2 },
-  { title: "Discrepancy Report", href: "/discrepancy-report", icon: ShieldCheck },
   { title: "User Management", href: "/user-management", icon: Users },
   { title: "Project Index", href: "/project-index", icon: FileStack },
 ];
@@ -68,8 +64,8 @@ interface Notification {
 const mockNotifications: Notification[] = [
   {
     id: "n1",
-    title: "DR ready for review",
-    description: "Structural Steel DR is now ready for review on Riverside Commercial Tower",
+    title: "Submittal ready for review",
+    description: "Structural Steel submittal is now ready for review on Riverside Commercial Tower",
     time: "2 min ago",
     read: false,
     type: "success",
@@ -100,8 +96,8 @@ const mockNotifications: Notification[] = [
   },
   {
     id: "n5",
-    title: "DR ready for review",
-    description: "HVAC Equipment DR is now ready for review on Downtown Office Renovation",
+    title: "Submittal ready for review",
+    description: "HVAC Equipment submittal is now ready for review on Downtown Office Renovation",
     time: "5 hrs ago",
     read: true,
     type: "success",

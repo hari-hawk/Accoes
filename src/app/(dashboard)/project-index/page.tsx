@@ -81,7 +81,7 @@ interface ProjectIndexItem {
   projectName: string;
   client: string;
   location: string;
-  status: "planning" | "active" | "on_hold" | "completed";
+  status: "in_progress" | "active" | "on_hold" | "completed";
   documentsCount: number;
   startDate: string;
   team: string[];
@@ -445,7 +445,7 @@ export default function ProjectIndexPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="planning">Planning</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="on_hold">On Hold</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>

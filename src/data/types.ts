@@ -1,7 +1,7 @@
 export type UserRole = "admin" | "global_viewer" | "submitter" | "reviewer";
 
 export type ProjectStatus =
-  | "planning"
+  | "in_progress"
   | "active"
   | "on_hold"
   | "completed";
@@ -33,7 +33,11 @@ export type DecisionStatus =
   | "revision_requested"
   | "rejected";
 
-export type DRStatus = "not_started" | "processing" | "ready_for_review";
+export type ProjectStage =
+  | "review_required"
+  | "action_mandatory"
+  | "pre_approved"
+  | "approved";
 
 export type DocumentType = "pdf" | "xlsx" | "docx";
 
@@ -70,6 +74,7 @@ export interface Project {
   latestVersionId: string;
   totalDocuments: number;
   confidenceSummary: ConfidenceSummary;
+  stage: ProjectStage;
 }
 
 export interface ProcessingLogEntry {
@@ -173,19 +178,6 @@ export interface ReportConfig {
   includeAiReasoning: boolean;
 }
 
-export interface DescriptiveReport {
-  id: string;
-  projectId: string;
-  name: string;
-  purpose: string;
-  status: DRStatus;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-  materialMatrixFile?: string;
-  projectSpecFile?: string;
-}
-
 export type DiscrepancyStatus =
   | "pre_approved"
   | "review_required"
@@ -200,7 +192,7 @@ export interface ItemComment {
 
 export interface MaterialItem {
   id: string;
-  drId: string;
+  projectId: string;
   itemName: string;
   description: string;
   specSection: string;

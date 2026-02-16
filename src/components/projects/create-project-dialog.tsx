@@ -79,7 +79,7 @@ export function CreateProjectDialog({
   const [jobId, setJobId] = useState("");
   const [location, setLocation] = useState("");
   const [client, setClient] = useState("");
-  const [status, setStatus] = useState<ProjectStatus>("planning");
+  const [status, setStatus] = useState<ProjectStatus>("in_progress");
 
   // Step 3: Share access
   const [members, setMembers] = useState<MemberEntry[]>([]);
@@ -123,7 +123,7 @@ export function CreateProjectDialog({
     setJobId("");
     setLocation("");
     setClient("");
-    setStatus("planning");
+    setStatus("in_progress");
     setMembers([]);
   };
 
@@ -286,7 +286,7 @@ export function CreateProjectDialog({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="planning">Planning</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
                       <SelectItem value="active">Active</SelectItem>
                     </SelectContent>
                   </Select>
@@ -406,7 +406,7 @@ export function CreateProjectDialog({
                 <p className="text-sm text-muted-foreground">{client}</p>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">
-                    {status === "planning" ? "Planning" : "Active"}
+                    {status === "in_progress" ? "In Progress" : "Active"}
                   </Badge>
                   {uploadedFile && (
                     <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">

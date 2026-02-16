@@ -3,7 +3,7 @@ import type { MaterialItem } from "./types";
 export const mockMaterialItems: MaterialItem[] = [
   {
     id: "mi-1",
-    drId: "dr-1",
+    projectId: "proj-1",
     itemName: "Structural Steel - W14x90",
     description: "Wide flange beam for primary structural frame",
     specSection: "05 12 00 - 2.1.A",
@@ -19,7 +19,7 @@ export const mockMaterialItems: MaterialItem[] = [
   },
   {
     id: "mi-2",
-    drId: "dr-1",
+    projectId: "proj-1",
     itemName: "Structural Steel - HSS 8x8x1/2",
     description: "Hollow structural section for column connections",
     specSection: "05 12 00 - 2.1.B",
@@ -33,7 +33,7 @@ export const mockMaterialItems: MaterialItem[] = [
   },
   {
     id: "mi-3",
-    drId: "dr-1",
+    projectId: "proj-1",
     itemName: "Anchor Bolts - F1554 Gr 55",
     description: "Anchor bolts for base plate connections",
     specSection: "05 12 00 - 2.3.A",
@@ -50,7 +50,7 @@ export const mockMaterialItems: MaterialItem[] = [
   },
   {
     id: "mi-4",
-    drId: "dr-1",
+    projectId: "proj-1",
     itemName: "Welding Electrodes - E70XX",
     description: "Electrodes for structural steel welding",
     specSection: "05 12 00 - 2.5.A",
@@ -64,7 +64,7 @@ export const mockMaterialItems: MaterialItem[] = [
   },
   {
     id: "mi-5",
-    drId: "dr-1",
+    projectId: "proj-1",
     itemName: "High-Strength Bolts - A325",
     description: "Structural bolts for beam-to-column connections",
     specSection: "05 12 00 - 2.4.A",
@@ -80,7 +80,7 @@ export const mockMaterialItems: MaterialItem[] = [
   },
   {
     id: "mi-6",
-    drId: "dr-1",
+    projectId: "proj-1",
     itemName: "Shear Studs - AWS D1.1",
     description: "Nelson studs for composite deck attachment",
     specSection: "05 12 00 - 2.6.A",
@@ -94,7 +94,7 @@ export const mockMaterialItems: MaterialItem[] = [
   },
   {
     id: "mi-7",
-    drId: "dr-1",
+    projectId: "proj-1",
     itemName: "Fireproofing - SFRM",
     description: "Spray-applied fire-resistive material for steel columns",
     specSection: "07 81 00 - 2.1.A",
@@ -108,7 +108,7 @@ export const mockMaterialItems: MaterialItem[] = [
   },
   {
     id: "mi-8",
-    drId: "dr-2",
+    projectId: "proj-1",
     itemName: "Copper Piping - Type L",
     description: "Domestic water distribution piping",
     specSection: "22 11 00 - 2.1.A",
@@ -122,7 +122,7 @@ export const mockMaterialItems: MaterialItem[] = [
   },
   {
     id: "mi-9",
-    drId: "dr-2",
+    projectId: "proj-1",
     itemName: "Ductwork - Galvanized Steel",
     description: "HVAC supply duct main trunk lines",
     specSection: "23 31 00 - 2.1.A",
@@ -138,7 +138,7 @@ export const mockMaterialItems: MaterialItem[] = [
   },
   {
     id: "mi-10",
-    drId: "dr-2",
+    projectId: "proj-1",
     itemName: "Electrical Conduit - EMT",
     description: "Electrical metallic tubing for branch circuits",
     specSection: "26 05 33 - 2.1.A",
@@ -152,7 +152,7 @@ export const mockMaterialItems: MaterialItem[] = [
   },
   {
     id: "mi-11",
-    drId: "dr-3",
+    projectId: "proj-2",
     itemName: "Curtain Wall Mullions - 6063-T6",
     description: "Aluminum extrusion for curtain wall framing system",
     specSection: "08 44 00 - 2.1.A",
@@ -166,7 +166,7 @@ export const mockMaterialItems: MaterialItem[] = [
   },
   {
     id: "mi-12",
-    drId: "dr-3",
+    projectId: "proj-2",
     itemName: "Insulated Glass Unit",
     description: "Double-pane IGU for curtain wall vision panels",
     specSection: "08 44 00 - 2.3.A",
@@ -180,8 +180,8 @@ export const mockMaterialItems: MaterialItem[] = [
   },
 ];
 
-export function getMaterialItemsByDR(drId: string): MaterialItem[] {
-  return mockMaterialItems.filter((item) => item.drId === drId);
+export function getMaterialItemsByProject(projectId: string): MaterialItem[] {
+  return mockMaterialItems.filter((item) => item.projectId === projectId);
 }
 
 export function getMaterialItemById(id: string): MaterialItem | undefined {

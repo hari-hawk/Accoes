@@ -1,29 +1,38 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import {
-  ChevronDown,
-  Users,
+  Eye,
+  ShieldCheck,
   FileBarChart,
-  ArrowUpRight,
+  MapPin,
+  Calendar,
   TrendingUp,
   CheckCircle2,
   AlertTriangle,
   XCircle,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+  Avatar,
+  AvatarFallback,
+  AvatarGroup,
+  AvatarGroupCount,
+} from "@/components/ui/avatar";
 import { StatusIndicator } from "@/components/shared/status-indicator";
-import { ConfidenceSummary } from "@/components/shared/confidence-summary";
-import { DateDisplay } from "@/components/shared/date-display";
-import { getVersionsByProject } from "@/data/mock-versions";
+import { PROJECT_STAGE_CONFIG } from "@/lib/constants";
+import { mockUsers } from "@/data/mock-users";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/data/types";
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
 
 export function ProjectCard({
   project,
@@ -32,9 +41,6 @@ export function ProjectCard({
   project: Project;
   onCardClick?: (project: Project) => void;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const versions = getVersionsByProject(project.id);
-
   const confidence = project.confidenceSummary.overallConfidence;
   const confidenceColor =
     confidence >= 80
@@ -54,15 +60,20 @@ export function ProjectCard({
           ? "bg-status-action-mandatory"
           : "bg-muted-foreground/30";
 
-  const hasVersions = project.latestVersionId && versions.length > 0;
+  const hasVersions = !!project.latestVersionId;
+  const stageConfig = PROJECT_STAGE_CONFIG[project.stage];
 
-  const openHref = hasVersions
-    ? `/projects/${project.id}/versions/${project.latestVersionId}`
-    : "#";
+  // Resolve member IDs to user objects (show max 3)
+  const members = project.memberIds
+    .map((id) => mockUsers.find((u) => u.id === id))
+    .filter(Boolean);
+  const visibleMembers = members.slice(0, 3);
+  const overflowCount = members.length - visibleMembers.length;
 
-  const reportHref = hasVersions
-    ? `/projects/${project.id}/versions/${project.latestVersionId}/export`
-    : "#";
+  // Action link hrefs
+  const overviewHref = `/projects/${project.id}/versions/${project.latestVersionId}`;
+  const conformanceHref = `/projects/${project.id}/versions/${project.latestVersionId}/review`;
+  const reportHref = `/projects/${project.id}/versions/${project.latestVersionId}/export`;
 
   return (
     <div className="group relative rounded-xl border bg-card shadow-card transition-all duration-300 hover:shadow-card-hover hover-lift overflow-hidden animate-fade-up">
@@ -82,20 +93,68 @@ export function ProjectCard({
           }
         }}
       >
-        {/* Header */}
+        {/* Row 1: Name + Status */}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-semibold truncate group-hover:text-nav-accent transition-colors">
               {project.name}
             </h3>
-            <p className="mt-0.5 text-sm text-muted-foreground truncate">
-              {project.client}
+            <p className="mt-0.5 text-xs font-mono text-muted-foreground">
+              {project.jobId}
             </p>
           </div>
           <StatusIndicator status={project.status} />
         </div>
 
-        {/* Confidence bar — always shown */}
+        {/* Row 2: Location + Created date */}
+        <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5 min-w-0 truncate">
+            <MapPin className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{project.location}</span>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>
+              {new Date(project.createdAt).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })}
+            </span>
+          </div>
+        </div>
+
+        {/* Row 3: Stage badge + Avatar stack */}
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <Badge
+            variant="secondary"
+            className={cn(
+              "text-[10px] font-semibold shrink-0",
+              stageConfig.color,
+              stageConfig.bgColor
+            )}
+          >
+            {stageConfig.label}
+          </Badge>
+
+          {/* Avatar stack */}
+          <AvatarGroup>
+            {visibleMembers.map((user) => (
+              <Avatar key={user!.id} size="sm">
+                <AvatarFallback className="text-[9px] font-medium">
+                  {getInitials(user!.name)}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+            {overflowCount > 0 && (
+              <AvatarGroupCount className="text-[9px]">
+                +{overflowCount}
+              </AvatarGroupCount>
+            )}
+          </AvatarGroup>
+        </div>
+
+        {/* Row 4: Confidence bar */}
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs mb-1.5">
             <span className="text-muted-foreground font-medium flex items-center gap-1">
@@ -114,7 +173,7 @@ export function ProjectCard({
           </div>
         </div>
 
-        {/* Breakdown mini-badges — always shown */}
+        {/* Row 5: Breakdown mini-badges */}
         <div className="mt-3 flex items-center gap-3 text-[11px]">
           <div className="flex items-center gap-1 text-status-pre-approved">
             <CheckCircle2 className="h-3 w-3" />
@@ -130,116 +189,54 @@ export function ProjectCard({
           </div>
         </div>
 
-        {/* Stats row */}
-        <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <Users className="h-3.5 w-3.5" />
-            <span>{project.memberIds.length} members</span>
-          </div>
-          <div className="ml-auto">
-            <DateDisplay date={project.updatedAt} />
-          </div>
-        </div>
-
-        {/* Actions — stop propagation so card click doesn't trigger */}
-        <div className="mt-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+        {/* Row 6: 3 icon+text action links */}
+        <div
+          className="mt-4 pt-3 border-t flex items-center gap-4"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           {hasVersions ? (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="text-xs h-8 rounded-lg"
+              <Link
+                href={overviewHref}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-nav-accent transition-colors font-medium"
               >
-                <Link href={openHref}>
-                  <ArrowUpRight className="mr-1 h-3.5 w-3.5" />
-                  Open
-                </Link>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="text-xs h-8 rounded-lg"
+                <Eye className="h-3.5 w-3.5" />
+                Overview
+              </Link>
+              <Link
+                href={conformanceHref}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-nav-accent transition-colors font-medium"
               >
-                <Link href={reportHref}>
-                  <FileBarChart className="mr-1 h-3.5 w-3.5" />
-                  Report
-                </Link>
-              </Button>
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Check Conformance
+              </Link>
+              <Link
+                href={reportHref}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-nav-accent transition-colors font-medium"
+              >
+                <FileBarChart className="h-3.5 w-3.5" />
+                Report
+              </Link>
             </>
           ) : (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled
-                className="text-xs h-8 rounded-lg"
-              >
-                <ArrowUpRight className="mr-1 h-3.5 w-3.5" />
-                Open
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled
-                className="text-xs h-8 rounded-lg"
-              >
-                <FileBarChart className="mr-1 h-3.5 w-3.5" />
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground/50 font-medium cursor-not-allowed">
+                <Eye className="h-3.5 w-3.5" />
+                Overview
+              </span>
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground/50 font-medium cursor-not-allowed">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Check Conformance
+              </span>
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground/50 font-medium cursor-not-allowed">
+                <FileBarChart className="h-3.5 w-3.5" />
                 Report
-              </Button>
+              </span>
             </>
           )}
         </div>
       </div>
-
-      {/* Version History */}
-      {versions.length > 0 ? (
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <CollapsibleTrigger asChild>
-            <button className="flex w-full items-center justify-between border-t px-5 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors">
-              <span>
-                {versions.length} version{versions.length !== 1 ? "s" : ""}
-              </span>
-              <ChevronDown
-                className={cn(
-                  "h-3.5 w-3.5 transition-transform",
-                  isOpen && "rotate-180"
-                )}
-              />
-            </button>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="border-t">
-              {versions.map((version) => (
-                <Link
-                  key={version.id}
-                  href={`/projects/${project.id}/versions/${version.id}`}
-                  className="flex items-center justify-between px-5 py-2.5 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{version.name}</span>
-                    <StatusIndicator status={version.status} />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {version.confidenceSummary.total > 0 && (
-                      <ConfidenceSummary
-                        data={version.confidenceSummary}
-                        size="sm"
-                      />
-                    )}
-                    <DateDisplay date={version.createdAt} />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      ) : (
-        <div className="border-t px-5 py-2.5 text-xs text-muted-foreground">
-          0 versions
-        </div>
-      )}
     </div>
   );
 }

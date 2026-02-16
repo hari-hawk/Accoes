@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { CheckCircle2, MousePointerClick } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,9 @@ import { useMaterials } from "@/hooks/use-materials";
 
 export default function ReviewPage() {
   const { version } = useWorkspace();
+  const searchParams = useSearchParams();
+  const initialItemId = searchParams.get("item");
+
   const {
     materials,
     search,
@@ -35,12 +39,14 @@ export default function ReviewPage() {
     setActiveCategory,
   } = useMaterials(version.id);
 
-  // Auto-select first material
+  // Auto-select: prioritize query param, otherwise first material
   useEffect(() => {
-    if (!selectedId && materials.length > 0) {
+    if (initialItemId && materials.some((m) => m.document.id === initialItemId)) {
+      setSelectedId(initialItemId);
+    } else if (!selectedId && materials.length > 0) {
       setSelectedId(materials[0].document.id);
     }
-  }, [materials, selectedId, setSelectedId]);
+  }, [materials, selectedId, setSelectedId, initialItemId]);
 
   return (
     <div className="flex h-full flex-col">

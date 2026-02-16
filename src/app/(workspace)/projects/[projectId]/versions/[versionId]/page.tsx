@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   FileText,
@@ -15,14 +16,29 @@ import {
   Calendar,
   Shield,
   FileSpreadsheet,
+  Search,
+  ShieldCheck,
+  Table2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useWorkspace } from "@/providers/workspace-provider";
 import { formatPercentage } from "@/lib/format";
 import { getDocumentsByVersion } from "@/data/mock-documents";
 import { getValidationsByVersion } from "@/data/mock-validations";
+import { getMaterialItemsByProject } from "@/data/mock-material-items";
+import { DiscrepancyTable } from "@/components/discrepancy-report/discrepancy-table";
+import { ItemDetailPanel } from "@/components/discrepancy-report/item-detail-panel";
 import { cn } from "@/lib/utils";
+import type { MaterialItem, DiscrepancyStatus } from "@/data/types";
 
 const statusConfig = {
   pre_approved: { label: "Pre-Approved", color: "bg-status-pre-approved-bg text-status-pre-approved", icon: CheckCircle2 },
@@ -58,6 +74,69 @@ export default function VersionOverviewPage() {
   const documents = getDocumentsByVersion(version.id);
   const validations = getValidationsByVersion(version.id);
 
+  // --- Material items state ---
+  const allMaterialItems = getMaterialItemsByProject(project.id);
+  const [materialSearch, setMaterialSearch] = useState("");
+  const [materialStatusFilter, setMaterialStatusFilter] = useState<string>("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [detailItem, setDetailItem] = useState<MaterialItem | null>(null);
+  const [materialItems, setMaterialItems] = useState<MaterialItem[]>(allMaterialItems);
+
+  const filteredMaterials = useMemo(() => {
+    return materialItems.filter((item) => {
+      const matchesSearch =
+        !materialSearch ||
+        item.itemName.toLowerCase().includes(materialSearch.toLowerCase()) ||
+        item.specSection.toLowerCase().includes(materialSearch.toLowerCase()) ||
+        item.description.toLowerCase().includes(materialSearch.toLowerCase());
+      const matchesStatus =
+        materialStatusFilter === "all" || item.status === materialStatusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [materialItems, materialSearch, materialStatusFilter]);
+
+  // Material summary counts
+  const materialSummary = useMemo(() => {
+    const total = materialItems.length;
+    const preApproved = materialItems.filter((i) => i.status === "pre_approved").length;
+    const reviewRequired = materialItems.filter((i) => i.status === "review_required").length;
+    const actionMandatory = materialItems.filter((i) => i.status === "action_mandatory").length;
+    return { total, preApproved, reviewRequired, actionMandatory };
+  }, [materialItems]);
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleToggleAll = () => {
+    if (selectedIds.size === filteredMaterials.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredMaterials.map((i) => i.id)));
+    }
+  };
+
+  const handleBulkStatusChange = (status: DiscrepancyStatus) => {
+    setMaterialItems((prev) =>
+      prev.map((item) => (selectedIds.has(item.id) ? { ...item, status } : item))
+    );
+    setSelectedIds(new Set());
+  };
+
+  const handleItemStatusChange = (id: string, status: DiscrepancyStatus) => {
+    setMaterialItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, status } : item))
+    );
+    if (detailItem?.id === id) {
+      setDetailItem((prev) => (prev ? { ...prev, status } : null));
+    }
+  };
+
   const confidence = confidenceSummary.overallConfidence;
   const confidenceColor =
     confidence >= 80
@@ -87,7 +166,7 @@ export default function VersionOverviewPage() {
             >
               <Link href={`/projects/${project.id}/versions/${version.id}/review`}>
                 <ArrowUpRight className="mr-1.5 h-4 w-4" />
-                Open Review
+                Open Check Conformance
               </Link>
             </Button>
           </div>
@@ -98,7 +177,7 @@ export default function VersionOverviewPage() {
               <div className="flex items-center gap-1.5 mb-1">
                 <FileText className="h-3.5 w-3.5 text-nav-gold" />
                 <span className="text-[11px] text-white/60 font-medium uppercase tracking-wider">
-                  Documents
+                  Conformance Records
                 </span>
               </div>
               <p className="text-xl font-bold">{confidenceSummary.total}</p>
@@ -141,12 +220,12 @@ export default function VersionOverviewPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Documents — card-based list (replaces Table) */}
+        {/* Check Conformance — card-based list */}
         <div className="lg:col-span-2 rounded-xl border bg-card shadow-card overflow-hidden">
           <div className="px-5 py-4 border-b flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-primary" />
-              <h3 className="font-semibold text-sm">Documents</h3>
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <h3 className="font-semibold text-sm">Check Conformance</h3>
             </div>
             <Badge variant="secondary" className="text-xs">
               {documents.length} files
@@ -161,9 +240,10 @@ export default function VersionOverviewPage() {
                 const StatusIcon = config?.icon;
                 const FileIcon = fileIconMap[doc.fileType] ?? FileText;
                 return (
-                  <div
+                  <Link
                     key={doc.id}
-                    className="flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors"
+                    href={`/projects/${project.id}/versions/${version.id}/review?item=${doc.id}`}
+                    className="flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors cursor-pointer group/doc"
                   >
                     <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
                       <FileIcon className="h-4 w-4 text-muted-foreground" />
@@ -201,8 +281,9 @@ export default function VersionOverviewPage() {
                       ) : (
                         <span className="text-xs text-muted-foreground min-w-[3ch] text-right">—</span>
                       )}
+                      <ArrowUpRight className="h-4 w-4 text-muted-foreground/0 group-hover/doc:text-muted-foreground transition-colors" />
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
@@ -295,6 +376,88 @@ export default function VersionOverviewPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Material Conformance Section ── */}
+      {materialItems.length > 0 && (
+        <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+          <div className="px-5 py-4 border-b">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Table2 className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold text-sm">Material Conformance</h3>
+                <Badge variant="secondary" className="text-xs ml-1">
+                  {materialSummary.total} items
+                </Badge>
+              </div>
+            </div>
+
+            {/* Summary mini-cards */}
+            <div className="grid grid-cols-4 gap-3 mt-4">
+              <div className="rounded-lg border p-3 text-center">
+                <p className="text-lg font-bold">{materialSummary.total}</p>
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Total</p>
+              </div>
+              <div className="rounded-lg border p-3 text-center bg-status-pre-approved-bg/30">
+                <p className="text-lg font-bold text-status-pre-approved">{materialSummary.preApproved}</p>
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Pre-Approved</p>
+              </div>
+              <div className="rounded-lg border p-3 text-center bg-status-review-required-bg/30">
+                <p className="text-lg font-bold text-status-review-required">{materialSummary.reviewRequired}</p>
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Review Req.</p>
+              </div>
+              <div className="rounded-lg border p-3 text-center bg-status-action-mandatory-bg/30">
+                <p className="text-lg font-bold text-status-action-mandatory">{materialSummary.actionMandatory}</p>
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Action Req.</p>
+              </div>
+            </div>
+
+            {/* Search + Filter */}
+            <div className="flex items-center gap-3 mt-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search material items..."
+                  value={materialSearch}
+                  onChange={(e) => setMaterialSearch(e.target.value)}
+                  className="pl-9 h-9 text-xs"
+                />
+              </div>
+              <Select value={materialStatusFilter} onValueChange={setMaterialStatusFilter}>
+                <SelectTrigger className="w-[180px] h-9 text-xs">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pre_approved">Pre-Approved</SelectItem>
+                  <SelectItem value="review_required">Review Required</SelectItem>
+                  <SelectItem value="action_mandatory">Action Mandatory</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="p-5">
+            <DiscrepancyTable
+              items={filteredMaterials}
+              selectedIds={selectedIds}
+              onToggleSelect={handleToggleSelect}
+              onToggleAll={handleToggleAll}
+              onItemClick={setDetailItem}
+              onBulkStatusChange={handleBulkStatusChange}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Item Detail Panel */}
+      {detailItem && (
+        <ItemDetailPanel
+          item={detailItem}
+          onClose={() => setDetailItem(null)}
+          onStatusChange={handleItemStatusChange}
+        />
+      )}
 
       {/* Processing Progress — show only when version is processing */}
       {version.processingProgress && (

@@ -101,31 +101,31 @@ const mockProjectIndex: ProjectIndexItem[] = [
     location: "Downtown Riverside",
     status: "completed",
     documentsCount: 34,
-    startDate: "Aug 2025",
+    startDate: "01/08/2025",
     team: ["SM", "JC", "MG"],
     versions: [
       {
-        id: "pi1-v1", versionNumber: 1, label: "v1.0", status: "archived", createdAt: "Sep 2025",
+        id: "pi1-v1", versionNumber: 1, label: "v1.0", status: "archived", createdAt: "01/09/2025",
         files: [
-          { id: "f1a-v1", name: "Structural Steel Shop Drawings.pdf", type: "pdf", size: "4.2 MB", uploadDate: "Sep 05, 2025" },
-          { id: "f1b-v1", name: "HVAC Equipment Schedule.xlsx", type: "xlsx", size: "1.0 MB", uploadDate: "Sep 10, 2025" },
+          { id: "f1a-v1", name: "Structural Steel Shop Drawings.pdf", type: "pdf", size: "4.2 MB", uploadDate: "05/09/2025" },
+          { id: "f1b-v1", name: "HVAC Equipment Schedule.xlsx", type: "xlsx", size: "1.0 MB", uploadDate: "10/09/2025" },
         ],
       },
       {
-        id: "pi1-v2", versionNumber: 2, label: "v2.0", status: "archived", createdAt: "Oct 2025",
+        id: "pi1-v2", versionNumber: 2, label: "v2.0", status: "archived", createdAt: "01/10/2025",
         files: [
-          { id: "f1a-v2", name: "Structural Steel Shop Drawings Rev2.pdf", type: "pdf", size: "4.5 MB", uploadDate: "Oct 01, 2025" },
-          { id: "f1b-v2", name: "HVAC Equipment Schedule.xlsx", type: "xlsx", size: "1.2 MB", uploadDate: "Oct 05, 2025" },
-          { id: "f1c-v2", name: "Electrical Riser Diagram.pdf", type: "pdf", size: "2.1 MB", uploadDate: "Oct 03, 2025" },
+          { id: "f1a-v2", name: "Structural Steel Shop Drawings Rev2.pdf", type: "pdf", size: "4.5 MB", uploadDate: "01/10/2025" },
+          { id: "f1b-v2", name: "HVAC Equipment Schedule.xlsx", type: "xlsx", size: "1.2 MB", uploadDate: "05/10/2025" },
+          { id: "f1c-v2", name: "Electrical Riser Diagram.pdf", type: "pdf", size: "2.1 MB", uploadDate: "03/10/2025" },
         ],
       },
       {
-        id: "pi1-v3", versionNumber: 3, label: "v3.0", status: "active", createdAt: "Nov 2025",
+        id: "pi1-v3", versionNumber: 3, label: "v3.0", status: "active", createdAt: "01/11/2025",
         files: [
-          { id: "f1a", name: "Structural Steel Shop Drawings Rev3.pdf", type: "pdf", size: "4.8 MB", uploadDate: "Nov 12, 2025" },
-          { id: "f1b", name: "HVAC Equipment Schedule.xlsx", type: "xlsx", size: "1.2 MB", uploadDate: "Nov 20, 2025" },
-          { id: "f1c", name: "Electrical Riser Diagram.pdf", type: "pdf", size: "2.1 MB", uploadDate: "Oct 03, 2025" },
-          { id: "f1d", name: "Fire Protection Narrative.docx", type: "docx", size: "820 KB", uploadDate: "Nov 15, 2025" },
+          { id: "f1a", name: "Structural Steel Shop Drawings Rev3.pdf", type: "pdf", size: "4.8 MB", uploadDate: "12/11/2025" },
+          { id: "f1b", name: "HVAC Equipment Schedule.xlsx", type: "xlsx", size: "1.2 MB", uploadDate: "20/11/2025" },
+          { id: "f1c", name: "Electrical Riser Diagram.pdf", type: "pdf", size: "2.1 MB", uploadDate: "03/10/2025" },
+          { id: "f1d", name: "Fire Protection Narrative.docx", type: "docx", size: "820 KB", uploadDate: "15/11/2025" },
         ],
       },
     ],
@@ -138,21 +138,21 @@ const mockProjectIndex: ProjectIndexItem[] = [
     location: "Harbor District",
     status: "active",
     documentsCount: 22,
-    startDate: "Oct 2025",
+    startDate: "01/10/2025",
     team: ["SM", "JC", "DP"],
     versions: [
       {
-        id: "pi2-v1", versionNumber: 1, label: "v1.0", status: "archived", createdAt: "Nov 2025",
+        id: "pi2-v1", versionNumber: 1, label: "v1.0", status: "archived", createdAt: "01/11/2025",
         files: [
-          { id: "f2a-v1", name: "Foundation Plan Rev 1.pdf", type: "pdf", size: "3.0 MB", uploadDate: "Nov 01, 2025" },
+          { id: "f2a-v1", name: "Foundation Plan Rev 1.pdf", type: "pdf", size: "3.0 MB", uploadDate: "01/11/2025" },
         ],
       },
       {
-        id: "pi2-v2", versionNumber: 2, label: "v2.0", status: "active", createdAt: "Dec 2025",
+        id: "pi2-v2", versionNumber: 2, label: "v2.0", status: "active", createdAt: "01/12/2025",
         files: [
-          { id: "f2a", name: "Foundation Plan Rev 3.pdf", type: "pdf", size: "3.4 MB", uploadDate: "Dec 05, 2025" },
-          { id: "f2b", name: "Plumbing Fixture Schedule.xlsx", type: "xlsx", size: "640 KB", uploadDate: "Dec 18, 2025" },
-          { id: "f2c", name: "Curtain Wall Details.pdf", type: "pdf", size: "5.2 MB", uploadDate: "Dec 02, 2025" },
+          { id: "f2a", name: "Foundation Plan Rev 3.pdf", type: "pdf", size: "3.4 MB", uploadDate: "05/12/2025" },
+          { id: "f2b", name: "Plumbing Fixture Schedule.xlsx", type: "xlsx", size: "640 KB", uploadDate: "18/12/2025" },
+          { id: "f2c", name: "Curtain Wall Details.pdf", type: "pdf", size: "5.2 MB", uploadDate: "02/12/2025" },
         ],
       },
     ],
@@ -165,14 +165,14 @@ const mockProjectIndex: ProjectIndexItem[] = [
     location: "Metro Area",
     status: "active",
     documentsCount: 15,
-    startDate: "Nov 2025",
+    startDate: "01/11/2025",
     team: ["SM", "JC"],
     versions: [
       {
-        id: "pi3-v1", versionNumber: 1, label: "v1.0", status: "active", createdAt: "Dec 2025",
+        id: "pi3-v1", versionNumber: 1, label: "v1.0", status: "active", createdAt: "01/12/2025",
         files: [
-          { id: "f3a", name: "Track Alignment Survey.pdf", type: "pdf", size: "6.1 MB", uploadDate: "Dec 10, 2025" },
-          { id: "f3b", name: "Signal Systems Specification.docx", type: "docx", size: "1.8 MB", uploadDate: "Dec 22, 2025" },
+          { id: "f3a", name: "Track Alignment Survey.pdf", type: "pdf", size: "6.1 MB", uploadDate: "10/12/2025" },
+          { id: "f3b", name: "Signal Systems Specification.docx", type: "docx", size: "1.8 MB", uploadDate: "22/12/2025" },
         ],
       },
     ],
@@ -185,14 +185,14 @@ const mockProjectIndex: ProjectIndexItem[] = [
     location: "Parkview",
     status: "on_hold",
     documentsCount: 0,
-    startDate: "Jan 2026",
+    startDate: "01/01/2026",
     team: ["SM"],
     versions: [
       {
-        id: "pi4-v1", versionNumber: 1, label: "v1.0", status: "active", createdAt: "Jan 2026",
+        id: "pi4-v1", versionNumber: 1, label: "v1.0", status: "active", createdAt: "01/01/2026",
         files: [
-          { id: "f4a", name: "Site Grading Plan.pdf", type: "pdf", size: "2.4 MB", uploadDate: "Jan 08, 2026" },
-          { id: "f4b", name: "Unit Mix Summary.xlsx", type: "xlsx", size: "340 KB", uploadDate: "Jan 12, 2026" },
+          { id: "f4a", name: "Site Grading Plan.pdf", type: "pdf", size: "2.4 MB", uploadDate: "08/01/2026" },
+          { id: "f4b", name: "Unit Mix Summary.xlsx", type: "xlsx", size: "340 KB", uploadDate: "12/01/2026" },
         ],
       },
     ],
@@ -205,23 +205,23 @@ const mockProjectIndex: ProjectIndexItem[] = [
     location: "Downtown",
     status: "completed",
     documentsCount: 18,
-    startDate: "Jun 2025",
+    startDate: "01/06/2025",
     team: ["SM", "MG", "DP"],
     versions: [
       {
-        id: "pi5-v1", versionNumber: 1, label: "v1.0", status: "archived", createdAt: "Jul 2025",
+        id: "pi5-v1", versionNumber: 1, label: "v1.0", status: "archived", createdAt: "01/07/2025",
         files: [
-          { id: "f5a-v1", name: "Demolition Plan.pdf", type: "pdf", size: "1.9 MB", uploadDate: "Jul 14, 2025" },
-          { id: "f5b-v1", name: "MEP Coordination Drawings.pdf", type: "pdf", size: "7.3 MB", uploadDate: "Aug 02, 2025" },
+          { id: "f5a-v1", name: "Demolition Plan.pdf", type: "pdf", size: "1.9 MB", uploadDate: "14/07/2025" },
+          { id: "f5b-v1", name: "MEP Coordination Drawings.pdf", type: "pdf", size: "7.3 MB", uploadDate: "02/08/2025" },
         ],
       },
       {
-        id: "pi5-v2", versionNumber: 2, label: "v2.0", status: "active", createdAt: "Sep 2025",
+        id: "pi5-v2", versionNumber: 2, label: "v2.0", status: "active", createdAt: "01/09/2025",
         files: [
-          { id: "f5a", name: "Demolition Plan Rev 2.pdf", type: "pdf", size: "1.9 MB", uploadDate: "Sep 01, 2025" },
-          { id: "f5b", name: "MEP Coordination Drawings.pdf", type: "pdf", size: "7.3 MB", uploadDate: "Aug 02, 2025" },
-          { id: "f5c", name: "Finish Schedule.xlsx", type: "xlsx", size: "510 KB", uploadDate: "Sep 20, 2025" },
-          { id: "f5d", name: "Occupancy Permit Application.docx", type: "docx", size: "420 KB", uploadDate: "Sep 05, 2025" },
+          { id: "f5a", name: "Demolition Plan Rev 2.pdf", type: "pdf", size: "1.9 MB", uploadDate: "01/09/2025" },
+          { id: "f5b", name: "MEP Coordination Drawings.pdf", type: "pdf", size: "7.3 MB", uploadDate: "02/08/2025" },
+          { id: "f5c", name: "Finish Schedule.xlsx", type: "xlsx", size: "510 KB", uploadDate: "20/09/2025" },
+          { id: "f5d", name: "Occupancy Permit Application.docx", type: "docx", size: "420 KB", uploadDate: "05/09/2025" },
         ],
       },
     ],
@@ -234,15 +234,15 @@ const mockProjectIndex: ProjectIndexItem[] = [
     location: "University District",
     status: "active",
     documentsCount: 8,
-    startDate: "Feb 2026",
+    startDate: "01/02/2026",
     team: ["JC", "MG"],
     versions: [
       {
-        id: "pi6-v1", versionNumber: 1, label: "v1.0", status: "active", createdAt: "Feb 2026",
+        id: "pi6-v1", versionNumber: 1, label: "v1.0", status: "active", createdAt: "01/02/2026",
         files: [
-          { id: "f6a", name: "Classroom Wing Floor Plans.pdf", type: "pdf", size: "3.6 MB", uploadDate: "Feb 05, 2026" },
-          { id: "f6b", name: "AV Systems Requirements.docx", type: "docx", size: "960 KB", uploadDate: "Feb 08, 2026" },
-          { id: "f6c", name: "Energy Model Report.pdf", type: "pdf", size: "2.8 MB", uploadDate: "Feb 10, 2026" },
+          { id: "f6a", name: "Classroom Wing Floor Plans.pdf", type: "pdf", size: "3.6 MB", uploadDate: "05/02/2026" },
+          { id: "f6b", name: "AV Systems Requirements.docx", type: "docx", size: "960 KB", uploadDate: "08/02/2026" },
+          { id: "f6c", name: "Energy Model Report.pdf", type: "pdf", size: "2.8 MB", uploadDate: "10/02/2026" },
         ],
       },
     ],
@@ -596,7 +596,7 @@ export default function ProjectIndexPage() {
         <SheetContent side="right" className="sm:max-w-xl w-full flex flex-col p-0">
           {selectedProject && selectedVersion && (
             <>
-              <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+              <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0 pr-12">
                 <div className="flex items-center gap-3">
                   <span className="font-mono text-sm font-bold text-nav-accent">
                     {selectedProject.projectCode}

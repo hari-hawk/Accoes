@@ -44,15 +44,9 @@ import { cn } from "@/lib/utils";
 import { currentUser } from "@/data/mock-users";
 
 const mainNavItems = [
-  {
-    title: "Projects",
-    href: "/projects",
-    icon: FolderKanban,
-    children: [
-      { title: "Descriptive Reports", href: "/dr", icon: CheckCircle2 },
-      { title: "Discrepancy Report", href: "/discrepancy-report", icon: ShieldCheck },
-    ],
-  },
+  { title: "Projects", href: "/projects", icon: FolderKanban },
+  { title: "Descriptive Reports", href: "/dr", icon: CheckCircle2 },
+  { title: "Discrepancy Report", href: "/discrepancy-report", icon: ShieldCheck },
   { title: "User Management", href: "/user-management", icon: Users },
   { title: "Project Index", href: "/project-index", icon: FileStack },
 ];
@@ -176,7 +170,7 @@ function ProfileDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Member Since</span>
-              <span className="font-medium">Jan 5, 2026</span>
+              <span className="font-medium">05/01/2026</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Projects</span>
@@ -299,52 +293,8 @@ export function TopNav() {
               {mainNavItems.map((item) => {
                 const isActive =
                   pathname === item.href ||
-                  pathname.startsWith(item.href + "/") ||
-                  item.children?.some(
-                    (c) => pathname === c.href || pathname.startsWith(c.href + "/")
-                  );
+                  pathname.startsWith(item.href + "/");
                 const Icon = item.icon;
-
-                if (item.children) {
-                  return (
-                    <DropdownMenu key={item.href}>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className={cn(
-                            "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-all outline-none",
-                            isActive
-                              ? "bg-white/15 text-white"
-                              : "text-nav-foreground/60 hover:text-white hover:bg-white/8"
-                          )}
-                        >
-                          <Icon className="h-3.5 w-3.5" />
-                          <span>{item.title}</span>
-                          <ChevronDown className="h-3 w-3 opacity-50" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="w-52">
-                        <DropdownMenuItem asChild>
-                          <Link href={item.href} className="gap-2">
-                            <Icon className="h-4 w-4" />
-                            All {item.title}
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {item.children.map((child) => {
-                          const ChildIcon = child.icon;
-                          return (
-                            <DropdownMenuItem key={child.href} asChild>
-                              <Link href={child.href} className="gap-2">
-                                <ChildIcon className="h-4 w-4" />
-                                {child.title}
-                              </Link>
-                            </DropdownMenuItem>
-                          );
-                        })}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  );
-                }
 
                 return (
                   <Link

@@ -1,11 +1,11 @@
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 
 export function formatDate(dateString: string): string {
-  return format(parseISO(dateString), "MMM d, yyyy");
+  return format(parseISO(dateString), "dd/MM/yyyy");
 }
 
 export function formatDateTime(dateString: string): string {
-  return format(parseISO(dateString), "MMM d, yyyy 'at' h:mm a");
+  return format(parseISO(dateString), "dd/MM/yyyy 'at' h:mm a");
 }
 
 export function formatRelativeTime(dateString: string): string {

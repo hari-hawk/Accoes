@@ -171,7 +171,7 @@ export function ProjectDetailSheet({
         className="sm:max-w-xl w-full flex flex-col p-0"
       >
         {/* Header */}
-        <SheetHeader className="px-6 pt-6 pb-4 border-b">
+        <SheetHeader className="px-6 pt-6 pb-4 border-b pr-12">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -184,18 +184,18 @@ export function ProjectDetailSheet({
                 {project.client}
               </SheetDescription>
             </div>
-            {!editing && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="shrink-0 gap-1.5"
-                onClick={startEdit}
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                Edit
-              </Button>
-            )}
           </div>
+          {!editing && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1.5 w-fit"
+              onClick={startEdit}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </Button>
+          )}
         </SheetHeader>
 
         {/* Scrollable content */}
@@ -302,9 +302,9 @@ export function ProjectDetailSheet({
                     <Calendar className="h-3.5 w-3.5" />
                     <span>
                       Created{" "}
-                      {new Date(project.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
+                      {new Date(project.createdAt).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit",
                         year: "numeric",
                       })}
                     </span>

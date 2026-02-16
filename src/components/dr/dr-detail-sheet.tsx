@@ -72,7 +72,7 @@ export function DRDetailSheet({
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="sm:max-w-xl w-full flex flex-col p-0">
-          <SheetHeader className="px-6 pt-6 pb-4 border-b">
+          <SheetHeader className="px-6 pt-6 pb-4 border-b pr-12">
             <SheetTitle>Create New DR</SheetTitle>
             <SheetDescription>
               Set up a new Descriptive Report for a project
@@ -212,7 +212,7 @@ export function DRDetailSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="sm:max-w-xl w-full flex flex-col p-0">
-        <SheetHeader className="px-6 pt-6 pb-4 border-b">
+        <SheetHeader className="px-6 pt-6 pb-4 border-b pr-12">
           <div className="flex items-center gap-2">
             <SheetTitle className="text-lg truncate">{dr.name}</SheetTitle>
             <Badge variant="secondary" className={`text-xs shrink-0 ${statusConfig.color}`}>
@@ -247,9 +247,9 @@ export function DRDetailSheet({
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="h-3.5 w-3.5" />
                 <span>
-                  {new Date(dr.createdAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
+                  {new Date(dr.createdAt).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
                     year: "numeric",
                   })}
                 </span>
@@ -294,9 +294,9 @@ export function DRDetailSheet({
                   <div className="h-2 w-2 rounded-full bg-muted-foreground/40" />
                   <span>
                     Created on{" "}
-                    {new Date(dr.createdAt).toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
+                    {new Date(dr.createdAt).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
                       year: "numeric",
                     })}
                   </span>
@@ -306,9 +306,9 @@ export function DRDetailSheet({
                     <div className="h-2 w-2 rounded-full bg-nav-accent" />
                     <span>
                       Last updated{" "}
-                      {new Date(dr.updatedAt).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
+                      {new Date(dr.updatedAt).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit",
                         year: "numeric",
                       })}
                     </span>

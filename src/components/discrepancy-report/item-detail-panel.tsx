@@ -184,9 +184,10 @@ export function ItemDetailPanel({
                       {author?.name ?? "Unknown"}
                     </span>
                     <span className="text-[10px] text-muted-foreground">
-                      {new Date(comment.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
+                      {new Date(comment.createdAt).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
                       })}
                     </span>
                   </div>

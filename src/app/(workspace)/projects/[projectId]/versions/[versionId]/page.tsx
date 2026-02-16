@@ -230,7 +230,7 @@ export default function VersionOverviewPage() {
                   Created
                 </span>
                 <span className="font-medium">
-                  {new Date(version.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  {new Date(version.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -239,7 +239,7 @@ export default function VersionOverviewPage() {
                   Last Updated
                 </span>
                 <span className="font-medium">
-                  {new Date(version.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  {new Date(version.updatedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
                 </span>
               </div>
               <div className="flex items-center justify-between">

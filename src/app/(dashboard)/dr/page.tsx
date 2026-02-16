@@ -221,9 +221,9 @@ export default function DRPage() {
               <div className="mt-3 pt-3 border-t flex items-center justify-between text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
-                  {new Date(dr.updatedAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
+                  {new Date(dr.updatedAt).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
                     year: "numeric",
                   })}
                 </span>

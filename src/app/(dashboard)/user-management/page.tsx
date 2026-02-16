@@ -56,14 +56,14 @@ interface UserRow {
 }
 
 const mockUserData: UserRow[] = [
-  { id: "u1", name: "Sarah Mitchell", email: "sarah.mitchell@accoes.com", role: "Admin", createdDate: "Jan 5, 2026", projects: "All", avatarUrl: "https://i.pravatar.cc/150?u=sarah" },
-  { id: "u2", name: "James Chen", email: "james.chen@accoes.com", role: "Submitter", createdDate: "Jan 10, 2026", projects: "RCT, HDM, MLE", isCurrentUser: true, avatarUrl: "https://i.pravatar.cc/150?u=james" },
-  { id: "u3", name: "Maria Garcia", email: "maria.garcia@accoes.com", role: "Reviewer", createdDate: "Jan 15, 2026", projects: "RCT, DOR", avatarUrl: "https://i.pravatar.cc/150?u=maria" },
-  { id: "u4", name: "David Park", email: "david.park@accoes.com", role: "Global Viewer", createdDate: "Jan 20, 2026", projects: "All", avatarUrl: "https://i.pravatar.cc/150?u=david" },
-  { id: "u5", name: "Emily Carter", email: "emily.carter@accoes.com", role: "Reviewer", createdDate: "Jan 25, 2026", projects: "HDM, PRC", avatarUrl: "https://i.pravatar.cc/150?u=emily" },
-  { id: "u6", name: "Sophia Johnson", email: "sophia.johnson@accoes.com", role: "Submitter", createdDate: "Feb 1, 2026", projects: "MLE, CCA", avatarUrl: "https://i.pravatar.cc/150?u=sophia" },
-  { id: "u7", name: "Alex Thompson", email: "alex.thompson@accoes.com", role: "Admin", createdDate: "Feb 3, 2026", projects: "All", avatarUrl: "https://i.pravatar.cc/150?u=alex" },
-  { id: "u8", name: "Rachel Kim", email: "rachel.kim@accoes.com", role: "Global Viewer", createdDate: "Feb 5, 2026", projects: "All", avatarUrl: "https://i.pravatar.cc/150?u=rachel" },
+  { id: "u1", name: "Sarah Mitchell", email: "sarah.mitchell@accoes.com", role: "Admin", createdDate: "05/01/2026", projects: "All", avatarUrl: "https://i.pravatar.cc/150?u=sarah" },
+  { id: "u2", name: "James Chen", email: "james.chen@accoes.com", role: "Submitter", createdDate: "10/01/2026", projects: "RCT, HDM, MLE", isCurrentUser: true, avatarUrl: "https://i.pravatar.cc/150?u=james" },
+  { id: "u3", name: "Maria Garcia", email: "maria.garcia@accoes.com", role: "Reviewer", createdDate: "15/01/2026", projects: "RCT, DOR", avatarUrl: "https://i.pravatar.cc/150?u=maria" },
+  { id: "u4", name: "David Park", email: "david.park@accoes.com", role: "Global Viewer", createdDate: "20/01/2026", projects: "All", avatarUrl: "https://i.pravatar.cc/150?u=david" },
+  { id: "u5", name: "Emily Carter", email: "emily.carter@accoes.com", role: "Reviewer", createdDate: "25/01/2026", projects: "HDM, PRC", avatarUrl: "https://i.pravatar.cc/150?u=emily" },
+  { id: "u6", name: "Sophia Johnson", email: "sophia.johnson@accoes.com", role: "Submitter", createdDate: "01/02/2026", projects: "MLE, CCA", avatarUrl: "https://i.pravatar.cc/150?u=sophia" },
+  { id: "u7", name: "Alex Thompson", email: "alex.thompson@accoes.com", role: "Admin", createdDate: "03/02/2026", projects: "All", avatarUrl: "https://i.pravatar.cc/150?u=alex" },
+  { id: "u8", name: "Rachel Kim", email: "rachel.kim@accoes.com", role: "Global Viewer", createdDate: "05/02/2026", projects: "All", avatarUrl: "https://i.pravatar.cc/150?u=rachel" },
 ];
 
 const roleColors: Record<UserRoleLabel, string> = {

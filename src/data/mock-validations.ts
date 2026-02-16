@@ -1,4 +1,4 @@
-import type { ValidationResult } from "./types";
+import type { ValidationResult, ValidationCategory } from "./types";
 
 export const mockValidations: ValidationResult[] = [
   {
@@ -579,10 +579,386 @@ export const mockValidations: ValidationResult[] = [
   },
 ];
 
+/* -------------------------------------------------------------------------- */
+/*  PA (Project Assets) Validations                                           */
+/* -------------------------------------------------------------------------- */
+
+export const paValidations: ValidationResult[] = [
+  {
+    id: "pa-val-1",
+    documentId: "doc-28",
+    versionId: "ver-5",
+    category: "project_assets",
+    status: "pre_approved",
+    confidenceScore: 92,
+    decision: "pending",
+    evidenceItems: [
+      {
+        id: "pa-ev-1",
+        sourceDocumentId: "doc-28",
+        sourceFileName: "Fire-Rated Gypsum Board - Product Data.pdf",
+        pageNumber: 2,
+        excerpt: "Product data sheet revision date matches current project specification version. Document control reference PA-GYP-001.",
+        relevance: "supports",
+        confidence: 94,
+      },
+    ],
+    aiReasoning: {
+      summary: "Project asset documentation for gypsum board is complete and properly referenced.",
+      keyFindings: [
+        "Document control number properly assigned",
+        "Revision date aligns with current spec version",
+        "All required data sheets included in asset package",
+        "Cross-references to related submittals are valid",
+      ],
+      complianceAssessment: "Project asset requirements are fully met. Document is properly cataloged and cross-referenced within the project asset management system.",
+      recommendation: "Approve for project asset inclusion.",
+    },
+    specReference: {
+      sectionNumber: "09 29 00",
+      sectionTitle: "Gypsum Board — Project Asset Review",
+      requirements: [
+        "Document control number assigned",
+        "Revision tracking up to date",
+        "Cross-references validated",
+        "Filed in project asset system",
+      ],
+      sourceDocument: "Harbor District PA Standards",
+    },
+  },
+  {
+    id: "pa-val-2",
+    documentId: "doc-29",
+    versionId: "ver-5",
+    category: "project_assets",
+    status: "review_required",
+    confidenceScore: 68,
+    decision: "pending",
+    evidenceItems: [
+      {
+        id: "pa-ev-2",
+        sourceDocumentId: "doc-29",
+        sourceFileName: "Structural Steel Shop Drawings - Set A.pdf",
+        pageNumber: 1,
+        excerpt: "Drawing set revision log shows gap between Rev C and Rev E. Rev D not accounted for in project asset records.",
+        relevance: "contradicts",
+        confidence: 82,
+      },
+    ],
+    aiReasoning: {
+      summary: "Structural steel drawing set has a revision gap in the project asset tracking system.",
+      keyFindings: [
+        "Revision D is missing from asset records",
+        "Drawing numbering sequence appears incomplete",
+        "Engineer stamp dates need verification against asset log",
+        "Transmittal records show partial coverage",
+      ],
+      complianceAssessment: "The project asset tracking for this drawing set is incomplete. The missing revision creates a documentation gap that should be resolved.",
+      recommendation: "Review required. Locate Rev D or document the revision skip with engineer justification.",
+    },
+    specReference: {
+      sectionNumber: "05 12 00",
+      sectionTitle: "Structural Steel — Project Asset Review",
+      requirements: [
+        "Complete revision history required",
+        "All revisions cataloged in asset system",
+        "Engineer stamp verification",
+        "Transmittal documentation complete",
+      ],
+      sourceDocument: "Harbor District PA Standards",
+    },
+  },
+  {
+    id: "pa-val-3",
+    documentId: "doc-30",
+    versionId: "ver-5",
+    category: "project_assets",
+    status: "action_mandatory",
+    confidenceScore: 41,
+    decision: "pending",
+    evidenceItems: [
+      {
+        id: "pa-ev-3",
+        sourceDocumentId: "doc-30",
+        sourceFileName: "HVAC Equipment Schedule.xlsx",
+        excerpt: "Equipment schedule file format is .xlsx but project asset system requires .pdf conversion for archival. No PDF version found.",
+        relevance: "contradicts",
+        confidence: 90,
+      },
+    ],
+    aiReasoning: {
+      summary: "HVAC equipment schedule is missing the required PDF archival version in the project asset system.",
+      keyFindings: [
+        "Only Excel format exists in asset system",
+        "PDF archival copy not generated",
+        "File naming convention not followed",
+        "Asset metadata fields incomplete",
+      ],
+      complianceAssessment: "The project asset requirements are not met. The document must be converted to PDF for archival and properly cataloged.",
+      recommendation: "Action mandatory. Generate PDF archival copy and complete asset metadata fields.",
+    },
+    specReference: {
+      sectionNumber: "23 05 00",
+      sectionTitle: "HVAC — Project Asset Review",
+      requirements: [
+        "PDF archival copy required for all documents",
+        "File naming convention per PA-NOM-001",
+        "Complete metadata fields",
+        "Cross-reference to specification section",
+      ],
+      sourceDocument: "Harbor District PA Standards",
+    },
+  },
+  {
+    id: "pa-val-4",
+    documentId: "doc-31",
+    versionId: "ver-5",
+    category: "project_assets",
+    status: "pre_approved",
+    confidenceScore: 95,
+    decision: "pending",
+    evidenceItems: [
+      {
+        id: "pa-ev-4",
+        sourceDocumentId: "doc-31",
+        sourceFileName: "Concrete Mix Design Report.pdf",
+        pageNumber: 1,
+        excerpt: "Document properly stamped, dated, and filed with project asset reference PA-CON-003.",
+        relevance: "supports",
+        confidence: 97,
+      },
+    ],
+    aiReasoning: {
+      summary: "Concrete mix design report is properly managed within the project asset system.",
+      keyFindings: [
+        "Document control reference PA-CON-003 assigned",
+        "All required stamps and dates present",
+        "Laboratory accreditation documentation linked",
+        "Version history complete",
+      ],
+      complianceAssessment: "Full compliance with project asset management requirements.",
+      recommendation: "Approve for project asset inclusion.",
+    },
+    specReference: {
+      sectionNumber: "03 30 00",
+      sectionTitle: "Concrete — Project Asset Review",
+      requirements: [
+        "Document control reference assigned",
+        "Stamps and dates verified",
+        "Lab accreditation linked",
+        "Version history maintained",
+      ],
+      sourceDocument: "Harbor District PA Standards",
+    },
+  },
+];
+
+/* -------------------------------------------------------------------------- */
+/*  PI (Performance Index) Validations                                        */
+/* -------------------------------------------------------------------------- */
+
+export const piValidations: ValidationResult[] = [
+  {
+    id: "pi-val-1",
+    documentId: "doc-28",
+    versionId: "ver-5",
+    category: "performance_index",
+    status: "pre_approved",
+    confidenceScore: 98,
+    decision: "pending",
+    evidenceItems: [
+      {
+        id: "pi-ev-1",
+        sourceDocumentId: "doc-28",
+        sourceFileName: "Fire-Rated Gypsum Board - Product Data.pdf",
+        pageNumber: 3,
+        excerpt: "Performance index score 98/100. Fire resistance rating 60 min exceeds baseline 45 min. Acoustic STC 52 exceeds baseline 45.",
+        relevance: "supports",
+        confidence: 98,
+      },
+    ],
+    aiReasoning: {
+      summary: "Gypsum board exceeds all performance index baselines with excellent margins.",
+      keyFindings: [
+        "Fire resistance: 60 min vs 45 min baseline (+33%)",
+        "Acoustic STC: 52 vs 45 baseline (+16%)",
+        "Thermal R-value meets requirements",
+        "Durability index: A rating",
+      ],
+      complianceAssessment: "All performance metrics exceed baseline requirements. This product scores in the top tier of the performance index.",
+      recommendation: "Approve. Exceeds performance index baselines.",
+    },
+    specReference: {
+      sectionNumber: "09 29 00",
+      sectionTitle: "Gypsum Board — Performance Index",
+      requirements: [
+        "Fire resistance: minimum 45 min",
+        "Acoustic STC: minimum 45",
+        "Thermal resistance per energy code",
+        "Durability: minimum B rating",
+      ],
+      sourceDocument: "Harbor District PI Baselines",
+    },
+  },
+  {
+    id: "pi-val-2",
+    documentId: "doc-29",
+    versionId: "ver-5",
+    category: "performance_index",
+    status: "review_required",
+    confidenceScore: 72,
+    decision: "pending",
+    evidenceItems: [
+      {
+        id: "pi-ev-2",
+        sourceDocumentId: "doc-29",
+        sourceFileName: "Structural Steel Shop Drawings - Set A.pdf",
+        pageNumber: 12,
+        excerpt: "Structural performance index shows deflection ratio L/320 vs baseline L/360. Marginally below performance target.",
+        relevance: "contradicts",
+        confidence: 78,
+      },
+    ],
+    aiReasoning: {
+      summary: "Structural steel meets code minimums but deflection ratio is marginally below the project's enhanced performance index target.",
+      keyFindings: [
+        "Deflection ratio L/320 vs target L/360",
+        "Strength capacity: adequate with 15% reserve",
+        "Connection performance: meets baseline",
+        "Seismic performance: meets or exceeds",
+      ],
+      complianceAssessment: "The deflection performance is marginally below the enhanced project performance index. While code-compliant, it does not meet the project's elevated performance targets.",
+      recommendation: "Review required. Evaluate if deflection can be improved or if variance is acceptable.",
+    },
+    specReference: {
+      sectionNumber: "05 12 00",
+      sectionTitle: "Structural Steel — Performance Index",
+      requirements: [
+        "Deflection ratio: maximum L/360",
+        "Strength reserve: minimum 10%",
+        "Connection performance per AISC criteria",
+        "Seismic performance per IBC requirements",
+      ],
+      sourceDocument: "Harbor District PI Baselines",
+    },
+  },
+  {
+    id: "pi-val-3",
+    documentId: "doc-30",
+    versionId: "ver-5",
+    category: "performance_index",
+    status: "action_mandatory",
+    confidenceScore: 48,
+    decision: "pending",
+    evidenceItems: [
+      {
+        id: "pi-ev-3",
+        sourceDocumentId: "doc-30",
+        sourceFileName: "HVAC Equipment Schedule.xlsx",
+        excerpt: "COP (Coefficient of Performance) for chiller: 5.2 vs baseline requirement of 6.0. Energy performance index fails minimum threshold.",
+        relevance: "contradicts",
+        confidence: 92,
+      },
+    ],
+    aiReasoning: {
+      summary: "HVAC equipment energy performance is significantly below the performance index baseline.",
+      keyFindings: [
+        "Chiller COP 5.2 vs 6.0 baseline (-13%)",
+        "AHU energy efficiency below baseline by 8%",
+        "Cooling tower approach temperature within range",
+        "Overall system EER does not meet ASHRAE 90.1 enhanced path",
+      ],
+      complianceAssessment: "The HVAC system fails the performance index energy efficiency baselines. The chiller COP shortfall alone represents significant energy cost impact over the building lifecycle.",
+      recommendation: "Action mandatory. Specify higher-efficiency equipment or provide lifecycle cost justification.",
+    },
+    specReference: {
+      sectionNumber: "23 05 00",
+      sectionTitle: "HVAC — Performance Index",
+      requirements: [
+        "Chiller COP: minimum 6.0",
+        "AHU energy efficiency per ASHRAE baseline",
+        "Cooling tower approach: within 3\u00b0F",
+        "System EER: ASHRAE 90.1 enhanced path",
+      ],
+      sourceDocument: "Harbor District PI Baselines",
+    },
+  },
+  {
+    id: "pi-val-4",
+    documentId: "doc-31",
+    versionId: "ver-5",
+    category: "performance_index",
+    status: "pre_approved",
+    confidenceScore: 90,
+    decision: "pending",
+    evidenceItems: [
+      {
+        id: "pi-ev-4",
+        sourceDocumentId: "doc-31",
+        sourceFileName: "Concrete Mix Design Report.pdf",
+        pageNumber: 2,
+        excerpt: "28-day strength 5,500 psi exceeds PI baseline of 5,000 psi. Durability index: permeability < 2000 coulombs meets baseline.",
+        relevance: "supports",
+        confidence: 93,
+      },
+    ],
+    aiReasoning: {
+      summary: "Concrete mix design meets all performance index baselines with good margins.",
+      keyFindings: [
+        "Compressive strength: 10% above baseline",
+        "Permeability: within baseline limits",
+        "Shrinkage: meets performance criteria",
+        "Sustainability: 25% SCM content meets green performance target",
+      ],
+      complianceAssessment: "All concrete performance index metrics are met or exceeded.",
+      recommendation: "Approve. Performance index baselines are satisfied.",
+    },
+    specReference: {
+      sectionNumber: "03 30 00",
+      sectionTitle: "Concrete — Performance Index",
+      requirements: [
+        "28-day strength: minimum 5,000 psi",
+        "Permeability: < 2000 coulombs",
+        "Shrinkage: < 0.04%",
+        "SCM content: minimum 20%",
+      ],
+      sourceDocument: "Harbor District PI Baselines",
+    },
+  },
+];
+
+/* -------------------------------------------------------------------------- */
+/*  Helper functions                                                          */
+/* -------------------------------------------------------------------------- */
+
 export function getValidationsByVersion(versionId: string): ValidationResult[] {
   return mockValidations.filter((v) => v.versionId === versionId);
 }
 
 export function getValidationByDocument(documentId: string): ValidationResult | undefined {
   return mockValidations.find((v) => v.documentId === documentId);
+}
+
+export function getValidationByDocumentAndCategory(
+  documentId: string,
+  category: ValidationCategory
+): ValidationResult | undefined {
+  if (category === "overall") {
+    return mockValidations.find((v) => v.documentId === documentId);
+  }
+  if (category === "project_assets") {
+    return paValidations.find((v) => v.documentId === documentId);
+  }
+  if (category === "performance_index") {
+    return piValidations.find((v) => v.documentId === documentId);
+  }
+  return undefined;
+}
+
+export function getPAValidationByDocument(documentId: string): ValidationResult | undefined {
+  return paValidations.find((v) => v.documentId === documentId);
+}
+
+export function getPIValidationByDocument(documentId: string): ValidationResult | undefined {
+  return piValidations.find((v) => v.documentId === documentId);
 }

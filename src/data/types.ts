@@ -139,6 +139,8 @@ export interface SpecReference {
   sourceDocument: string;
 }
 
+export type ValidationCategory = "overall" | "project_assets" | "performance_index";
+
 export interface ValidationResult {
   id: string;
   documentId: string;
@@ -152,6 +154,7 @@ export interface ValidationResult {
   evidenceItems: EvidenceItem[];
   aiReasoning: AiReasoning;
   specReference: SpecReference;
+  category?: ValidationCategory;
 }
 
 export interface Comment {

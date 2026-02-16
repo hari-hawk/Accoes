@@ -54,16 +54,18 @@ export function ProjectCard({
           ? "bg-status-action-mandatory"
           : "bg-muted-foreground/30";
 
-  const openHref = project.latestVersionId
-    ? `/projects/${project.id}/versions/${project.latestVersionId}`
-    : `/projects/${project.id}`;
+  const hasVersions = project.latestVersionId && versions.length > 0;
 
-  const reportHref = project.latestVersionId
+  const openHref = hasVersions
+    ? `/projects/${project.id}/versions/${project.latestVersionId}`
+    : "#";
+
+  const reportHref = hasVersions
     ? `/projects/${project.id}/versions/${project.latestVersionId}/export`
-    : `/projects/${project.id}`;
+    : "#";
 
   return (
-    <div className="group relative rounded-xl border bg-card shadow-card transition-all duration-300 hover:shadow-card-hover overflow-hidden">
+    <div className="group relative rounded-xl border bg-card shadow-card transition-all duration-300 hover:shadow-card-hover hover-lift overflow-hidden animate-fade-up">
       {/* Top accent line */}
       <div className="absolute top-0 left-0 right-0 h-0.5 gradient-accent opacity-0 group-hover:opacity-100 transition-opacity" />
 
@@ -141,33 +143,58 @@ export function ProjectCard({
 
         {/* Actions — stop propagation so card click doesn't trigger */}
         <div className="mt-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
-            className="text-xs h-8 rounded-lg"
-          >
-            <Link href={openHref}>
-              <ArrowUpRight className="mr-1 h-3.5 w-3.5" />
-              Open
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="text-xs h-8 rounded-lg"
-          >
-            <Link href={reportHref}>
-              <FileBarChart className="mr-1 h-3.5 w-3.5" />
-              Report
-            </Link>
-          </Button>
+          {hasVersions ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="text-xs h-8 rounded-lg"
+              >
+                <Link href={openHref}>
+                  <ArrowUpRight className="mr-1 h-3.5 w-3.5" />
+                  Open
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="text-xs h-8 rounded-lg"
+              >
+                <Link href={reportHref}>
+                  <FileBarChart className="mr-1 h-3.5 w-3.5" />
+                  Report
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                className="text-xs h-8 rounded-lg"
+              >
+                <ArrowUpRight className="mr-1 h-3.5 w-3.5" />
+                Open
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled
+                className="text-xs h-8 rounded-lg"
+              >
+                <FileBarChart className="mr-1 h-3.5 w-3.5" />
+                Report
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
       {/* Version History */}
-      {versions.length > 0 && (
+      {versions.length > 0 ? (
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
             <button className="flex w-full items-center justify-between border-t px-5 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors">
@@ -208,6 +235,10 @@ export function ProjectCard({
             </div>
           </CollapsibleContent>
         </Collapsible>
+      ) : (
+        <div className="border-t px-5 py-2.5 text-xs text-muted-foreground">
+          0 versions
+        </div>
       )}
     </div>
   );

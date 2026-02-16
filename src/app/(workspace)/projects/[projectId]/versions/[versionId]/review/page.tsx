@@ -31,6 +31,8 @@ export default function ReviewPage() {
     decisions,
     updateDecision,
     batchApprove,
+    activeCategory,
+    setActiveCategory,
   } = useMaterials(version.id);
 
   // Auto-select first material
@@ -85,6 +87,8 @@ export default function ReviewPage() {
               onDecide={(decision) =>
                 updateDecision(selectedMaterial.document.id, decision)
               }
+              activeCategory={activeCategory}
+              onCategoryChange={setActiveCategory}
             />
           ) : (
             <div className="flex h-full flex-col items-center justify-center text-muted-foreground">

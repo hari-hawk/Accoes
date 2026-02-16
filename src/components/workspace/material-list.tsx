@@ -154,6 +154,34 @@ function MaterialListItem({
               </span>
             )}
 
+            {/* PA/PI indicator dots */}
+            {(item.paValidation || item.piValidation) && (
+              <span className="inline-flex items-center gap-1.5 ml-1">
+                {item.paValidation && (
+                  <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                    <span className={cn(
+                      "h-1.5 w-1.5 rounded-full shrink-0",
+                      item.paValidation.status === "pre_approved" ? "bg-status-pre-approved" :
+                      item.paValidation.status === "review_required" ? "bg-status-review-required" :
+                      "bg-status-action-mandatory"
+                    )} />
+                    PA
+                  </span>
+                )}
+                {item.piValidation && (
+                  <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                    <span className={cn(
+                      "h-1.5 w-1.5 rounded-full shrink-0",
+                      item.piValidation.status === "pre_approved" ? "bg-status-pre-approved" :
+                      item.piValidation.status === "review_required" ? "bg-status-review-required" :
+                      "bg-status-action-mandatory"
+                    )} />
+                    PI
+                  </span>
+                )}
+              </span>
+            )}
+
             {/* Decision badge */}
             {effectiveDecision && effectiveDecision !== "pending" && (
               <span className="ml-auto text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize shrink-0">

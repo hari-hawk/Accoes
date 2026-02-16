@@ -2,12 +2,18 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { getDocumentsByVersion } from "@/data/mock-documents";
-import { getValidationByDocument } from "@/data/mock-validations";
-import type { ValidationStatus, DecisionStatus, Document, ValidationResult } from "@/data/types";
+import {
+  getValidationByDocument,
+  getPAValidationByDocument,
+  getPIValidationByDocument,
+} from "@/data/mock-validations";
+import type { ValidationStatus, ValidationCategory, DecisionStatus, Document, ValidationResult } from "@/data/types";
 
 export interface MaterialItem {
   document: Document;
   validation: ValidationResult | undefined;
+  paValidation: ValidationResult | undefined;
+  piValidation: ValidationResult | undefined;
 }
 
 export function useMaterials(versionId: string) {
@@ -16,12 +22,15 @@ export function useMaterials(versionId: string) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [decisions, setDecisions] = useState<Record<string, DecisionStatus>>({});
+  const [activeCategory, setActiveCategory] = useState<ValidationCategory>("overall");
 
   const materials: MaterialItem[] = useMemo(() => {
     const docs = getDocumentsByVersion(versionId);
     return docs.map((doc) => ({
       document: doc,
       validation: getValidationByDocument(doc.id),
+      paValidation: getPAValidationByDocument(doc.id),
+      piValidation: getPIValidationByDocument(doc.id),
     }));
   }, [versionId]);
 
@@ -78,6 +87,20 @@ export function useMaterials(versionId: string) {
     setCheckedIds(new Set());
   }, [checkedIds]);
 
+  const getValidationForCategory = useCallback(
+    (item: MaterialItem, category: ValidationCategory): ValidationResult | undefined => {
+      switch (category) {
+        case "project_assets":
+          return item.paValidation;
+        case "performance_index":
+          return item.piValidation;
+        default:
+          return item.validation;
+      }
+    },
+    []
+  );
+
   return {
     materials: filteredMaterials,
     allMaterials: materials,
@@ -94,5 +117,8 @@ export function useMaterials(versionId: string) {
     decisions,
     updateDecision,
     batchApprove,
+    activeCategory,
+    setActiveCategory,
+    getValidationForCategory,
   };
 }

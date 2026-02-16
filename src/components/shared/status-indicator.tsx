@@ -25,6 +25,8 @@ function getConfig(status: StatusType) {
   return { label: status, color: "" };
 }
 
+const PULSE_STATUSES: StatusType[] = ["active", "processing"];
+
 export function StatusIndicator({
   status,
   className,
@@ -33,6 +35,7 @@ export function StatusIndicator({
   className?: string;
 }) {
   const config = getConfig(status);
+  const shouldPulse = PULSE_STATUSES.includes(status);
 
   return (
     <Badge
@@ -40,6 +43,7 @@ export function StatusIndicator({
       className={cn(
         "rounded-md text-xs font-medium border-0",
         config.color,
+        shouldPulse && "animate-pulse-subtle",
         className
       )}
     >

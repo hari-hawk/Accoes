@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConfidenceScore } from "@/components/validation/confidence-score";
 import { StatusClassification } from "@/components/validation/status-classification";
 import { EvidenceSnippet } from "@/components/validation/evidence-snippet";
@@ -22,7 +23,7 @@ import { mockUsers, currentUser } from "@/data/mock-users";
 import { formatRelativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { MaterialItem } from "@/hooks/use-materials";
-import type { DecisionStatus, Comment as CommentType } from "@/data/types";
+import type { DecisionStatus, ValidationCategory, Comment as CommentType, ValidationResult } from "@/data/types";
 
 function DecisionActions({
   currentDecision,
@@ -199,152 +200,136 @@ function CommentThread({
   );
 }
 
-export function EvidencePanel({
-  material,
+const CATEGORY_LABELS: Record<ValidationCategory, string> = {
+  overall: "Overall",
+  project_assets: "PA",
+  performance_index: "PI",
+};
+
+function ValidationContent({
+  validation,
   decision,
   onDecide,
 }: {
-  material: MaterialItem;
+  validation: ValidationResult;
   decision?: DecisionStatus;
   onDecide: (decision: DecisionStatus) => void;
 }) {
-  const { document, validation } = material;
   const [criticalOpen, setCriticalOpen] = useState(false);
-
-  if (!validation) {
-    return (
-      <div className="flex h-full items-center justify-center p-8 text-muted-foreground">
-        No validation results available.
-      </div>
-    );
-  }
-
   const effectiveDecision = decision ?? validation.decision;
   const isCritical = validation.status === "action_mandatory";
 
   return (
-    <ScrollArea className="h-full">
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div>
-          <h3 className="text-base font-semibold leading-tight">{document.fileName}</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            <span className="font-mono font-semibold text-primary/80">{document.specSection}</span>
-            {" — "}
-            {document.specSectionTitle}
+    <>
+      {/* Confidence + Status */}
+      <div className="flex items-center gap-6">
+        <ConfidenceScore score={validation.confidenceScore} size="lg" />
+        <div className="space-y-2 flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <StatusClassification status={validation.status} size="md" />
+            {isCritical && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-7 text-status-action-mandatory border-status-action-mandatory/30 hover:bg-status-action-mandatory-bg"
+                onClick={() => setCriticalOpen(true)}
+              >
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                View Critical Actions
+              </Button>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {validation.aiReasoning.summary}
           </p>
         </div>
-
-        {/* Confidence + Status */}
-        <div className="flex items-center gap-6">
-          <ConfidenceScore score={validation.confidenceScore} size="lg" />
-          <div className="space-y-2 flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <StatusClassification status={validation.status} size="md" />
-              {isCritical && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs h-7 text-status-action-mandatory border-status-action-mandatory/30 hover:bg-status-action-mandatory-bg"
-                  onClick={() => setCriticalOpen(true)}
-                >
-                  <AlertTriangle className="h-3 w-3 mr-1" />
-                  View Critical Actions
-                </Button>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {validation.aiReasoning.summary}
-            </p>
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Evidence */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-semibold">Evidence ({validation.evidenceItems.length})</h4>
-          {validation.evidenceItems.map((ev) => (
-            <EvidenceSnippet key={ev.id} evidence={ev} />
-          ))}
-        </div>
-
-        <Separator />
-
-        {/* AI Reasoning */}
-        <div className="rounded-lg bg-muted/50 border-l-4 border-primary/30 p-4 space-y-4">
-          <h4 className="text-sm font-semibold">AI Reasoning</h4>
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
-              Key Findings
-            </p>
-            <ul className="space-y-1.5">
-              {validation.aiReasoning.keyFindings.map((finding, i) => (
-                <li key={i} className="text-sm text-foreground/80 flex items-start gap-2">
-                  <span className="mt-2 shrink-0 h-1 w-1 rounded-full bg-primary" />
-                  {finding}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
-              Compliance Assessment
-            </p>
-            <p className="text-sm text-foreground/80 leading-relaxed">
-              {validation.aiReasoning.complianceAssessment}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
-              Recommendation
-            </p>
-            <p className="text-sm font-medium">
-              {validation.aiReasoning.recommendation}
-            </p>
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Spec Reference */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-            <h4 className="text-sm font-semibold">Specification Reference</h4>
-          </div>
-          <div className="rounded-lg border p-4">
-            <p className="text-sm font-medium">
-              Section {validation.specReference.sectionNumber} —{" "}
-              {validation.specReference.sectionTitle}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {validation.specReference.sourceDocument}
-            </p>
-            <ul className="mt-3 space-y-1.5">
-              {validation.specReference.requirements.map((req, i) => (
-                <li key={i} className="text-xs text-foreground/70 flex items-start gap-2">
-                  <span className="mt-1.5 shrink-0 h-1 w-1 rounded-full bg-muted-foreground" />
-                  {req}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Decision */}
-        <DecisionActions
-          currentDecision={effectiveDecision}
-          onDecide={onDecide}
-        />
-
-        <Separator />
-
-        {/* Comments */}
-        <CommentThread validationId={validation.id} />
       </div>
+
+      <Separator />
+
+      {/* Evidence */}
+      <div className="space-y-3">
+        <h4 className="text-sm font-semibold">Evidence ({validation.evidenceItems.length})</h4>
+        {validation.evidenceItems.map((ev) => (
+          <EvidenceSnippet key={ev.id} evidence={ev} />
+        ))}
+      </div>
+
+      <Separator />
+
+      {/* AI Reasoning */}
+      <div className="rounded-lg bg-muted/50 border-l-4 border-primary/30 p-4 space-y-4">
+        <h4 className="text-sm font-semibold">AI Reasoning</h4>
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+            Key Findings
+          </p>
+          <ul className="space-y-1.5">
+            {validation.aiReasoning.keyFindings.map((finding, i) => (
+              <li key={i} className="text-sm text-foreground/80 flex items-start gap-2">
+                <span className="mt-2 shrink-0 h-1 w-1 rounded-full bg-primary" />
+                {finding}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+            Compliance Assessment
+          </p>
+          <p className="text-sm text-foreground/80 leading-relaxed">
+            {validation.aiReasoning.complianceAssessment}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+            Recommendation
+          </p>
+          <p className="text-sm font-medium">
+            {validation.aiReasoning.recommendation}
+          </p>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Spec Reference */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-4 w-4 text-muted-foreground" />
+          <h4 className="text-sm font-semibold">Specification Reference</h4>
+        </div>
+        <div className="rounded-lg border p-4">
+          <p className="text-sm font-medium">
+            Section {validation.specReference.sectionNumber} —{" "}
+            {validation.specReference.sectionTitle}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {validation.specReference.sourceDocument}
+          </p>
+          <ul className="mt-3 space-y-1.5">
+            {validation.specReference.requirements.map((req, i) => (
+              <li key={i} className="text-xs text-foreground/70 flex items-start gap-2">
+                <span className="mt-1.5 shrink-0 h-1 w-1 rounded-full bg-muted-foreground" />
+                {req}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Decision */}
+      <DecisionActions
+        currentDecision={effectiveDecision}
+        onDecide={onDecide}
+      />
+
+      <Separator />
+
+      {/* Comments */}
+      <CommentThread validationId={validation.id} />
 
       {/* Critical Action Dialog */}
       <Dialog open={criticalOpen} onOpenChange={setCriticalOpen}>
@@ -396,6 +381,89 @@ export function EvidencePanel({
           </div>
         </DialogContent>
       </Dialog>
+    </>
+  );
+}
+
+export function EvidencePanel({
+  material,
+  decision,
+  onDecide,
+  activeCategory = "overall",
+  onCategoryChange,
+}: {
+  material: MaterialItem;
+  decision?: DecisionStatus;
+  onDecide: (decision: DecisionStatus) => void;
+  activeCategory?: ValidationCategory;
+  onCategoryChange?: (category: ValidationCategory) => void;
+}) {
+  const { document } = material;
+
+  // Get validation for the active category
+  const getActiveValidation = (): ValidationResult | undefined => {
+    switch (activeCategory) {
+      case "project_assets":
+        return material.paValidation;
+      case "performance_index":
+        return material.piValidation;
+      default:
+        return material.validation;
+    }
+  };
+
+  const activeValidation = getActiveValidation();
+
+  return (
+    <ScrollArea className="h-full">
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div>
+          <h3 className="text-base font-semibold leading-tight">{document.fileName}</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            <span className="font-mono font-semibold text-primary/80">{document.specSection}</span>
+            {" — "}
+            {document.specSectionTitle}
+          </p>
+        </div>
+
+        {/* Category Tabs */}
+        {onCategoryChange && (
+          <Tabs
+            value={activeCategory}
+            onValueChange={(v) => onCategoryChange(v as ValidationCategory)}
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              {(Object.entries(CATEGORY_LABELS) as [ValidationCategory, string][]).map(
+                ([key, label]) => (
+                  <TabsTrigger key={key} value={key} className="text-xs">
+                    {label}
+                  </TabsTrigger>
+                )
+              )}
+            </TabsList>
+          </Tabs>
+        )}
+
+        {/* Validation Content */}
+        {activeValidation ? (
+          <ValidationContent
+            validation={activeValidation}
+            decision={decision}
+            onDecide={onDecide}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <BookOpen className="h-8 w-8 mb-3 opacity-40" />
+            <p className="text-sm font-medium">
+              No {CATEGORY_LABELS[activeCategory]} validation data yet
+            </p>
+            <p className="text-xs mt-1">
+              Validation data for this category has not been generated.
+            </p>
+          </div>
+        )}
+      </div>
     </ScrollArea>
   );
 }

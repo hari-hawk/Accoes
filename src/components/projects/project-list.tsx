@@ -19,9 +19,11 @@ function HeroSection({ onNewProject }: { onNewProject: () => void }) {
   const activeCount = mockProjects.filter((p) => p.status === "active").length;
 
   return (
-    <div className="gradient-hero rounded-2xl p-6 text-white relative overflow-hidden">
+    <div className="gradient-hero rounded-2xl p-6 text-white relative overflow-hidden animate-fade-up">
       {/* Decorative circles */}
       <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/4" />
+      {/* Dot pattern overlay */}
+      <div className="absolute inset-0 dot-pattern opacity-40" />
 
       <div className="relative flex items-center justify-between">
         <div>

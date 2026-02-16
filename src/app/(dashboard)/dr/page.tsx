@@ -101,7 +101,7 @@ export default function DRPage() {
           return (
             <div
               key={card.label}
-              className="rounded-xl border bg-card shadow-card p-4 flex items-center gap-4"
+              className="rounded-xl border bg-card shadow-card p-4 flex items-center gap-4 hover-lift animate-fade-up"
             >
               <div className={`h-10 w-10 rounded-lg ${card.bg} flex items-center justify-center shrink-0`}>
                 <IconComp className={`h-5 w-5 ${card.color}`} />
@@ -164,7 +164,7 @@ export default function DRPage() {
           return (
             <div
               key={dr.id}
-              className="group relative rounded-xl border bg-card shadow-card p-5 hover:shadow-card-hover transition-shadow cursor-pointer"
+              className="group relative rounded-xl border bg-card shadow-card p-5 hover:shadow-card-hover transition-all hover-lift animate-fade-up cursor-pointer"
               onClick={() => handleCardClick(dr)}
               role="button"
               tabIndex={0}

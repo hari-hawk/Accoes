@@ -33,11 +33,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -133,110 +134,116 @@ const notifColorMap = {
 /*  Profile & Settings Dialogs                                                */
 /* -------------------------------------------------------------------------- */
 
-function ProfileDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+function ProfilePanel({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Profile</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-5 py-2">
-          <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full gradient-accent flex items-center justify-center shadow-glow">
-              <span className="text-xl font-bold text-white">
-                {currentUser.name.split(" ").map((n) => n[0]).join("")}
-              </span>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="sm:max-w-md w-full flex flex-col p-0">
+        <SheetHeader className="px-6 pt-6 pb-4 border-b pr-12">
+          <SheetTitle>Profile</SheetTitle>
+          <SheetDescription className="sr-only">Your profile information</SheetDescription>
+        </SheetHeader>
+        <ScrollArea className="flex-1">
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 rounded-full gradient-accent flex items-center justify-center shadow-glow">
+                <span className="text-xl font-bold text-white">
+                  {currentUser.name.split(" ").map((n) => n[0]).join("")}
+                </span>
+              </div>
+              <div>
+                <p className="text-lg font-semibold">{currentUser.name}</p>
+                <p className="text-sm text-muted-foreground">{currentUser.email}</p>
+                <Badge variant="secondary" className="mt-1 text-[10px] capitalize bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                  {currentUser.role}
+                </Badge>
+              </div>
             </div>
-            <div>
-              <p className="text-lg font-semibold">{currentUser.name}</p>
-              <p className="text-sm text-muted-foreground">{currentUser.email}</p>
-              <Badge variant="secondary" className="mt-1 text-[10px] capitalize bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                {currentUser.role}
-              </Badge>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Full Name</span>
+                <span className="font-medium">{currentUser.name}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Email</span>
+                <span className="font-medium">{currentUser.email}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Role</span>
+                <span className="font-medium capitalize">{currentUser.role}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Member Since</span>
+                <span className="font-medium">05/01/2026</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Projects</span>
+                <span className="font-medium">5 active</span>
+              </div>
             </div>
           </div>
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Full Name</span>
-              <span className="font-medium">{currentUser.name}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Email</span>
-              <span className="font-medium">{currentUser.email}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Role</span>
-              <span className="font-medium capitalize">{currentUser.role}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Member Since</span>
-              <span className="font-medium">05/01/2026</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Projects</span>
-              <span className="font-medium">5 active</span>
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
   );
 }
 
-function SettingsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+function SettingsPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-5 py-2">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Email Notifications</p>
-                <p className="text-xs text-muted-foreground">Receive email alerts for reviews</p>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="sm:max-w-md w-full flex flex-col p-0">
+        <SheetHeader className="px-6 pt-6 pb-4 border-b pr-12">
+          <SheetTitle>Settings</SheetTitle>
+          <SheetDescription className="sr-only">Application settings</SheetDescription>
+        </SheetHeader>
+        <ScrollArea className="flex-1">
+          <div className="p-6 space-y-5">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Email Notifications</p>
+                  <p className="text-xs text-muted-foreground">Receive email alerts for reviews</p>
+                </div>
+                <div className="h-5 w-9 rounded-full bg-nav-accent relative cursor-pointer">
+                  <div className="absolute right-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow" />
+                </div>
               </div>
-              <div className="h-5 w-9 rounded-full bg-nav-accent relative cursor-pointer">
-                <div className="absolute right-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Push Notifications</p>
+                  <p className="text-xs text-muted-foreground">Browser push for urgent items</p>
+                </div>
+                <div className="h-5 w-9 rounded-full bg-nav-accent relative cursor-pointer">
+                  <div className="absolute right-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow" />
+                </div>
               </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Push Notifications</p>
-                <p className="text-xs text-muted-foreground">Browser push for urgent items</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Auto-save Drafts</p>
+                  <p className="text-xs text-muted-foreground">Save work automatically every 5 min</p>
+                </div>
+                <div className="h-5 w-9 rounded-full bg-muted relative cursor-pointer">
+                  <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow" />
+                </div>
               </div>
-              <div className="h-5 w-9 rounded-full bg-nav-accent relative cursor-pointer">
-                <div className="absolute right-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Default Export Format</p>
+                  <p className="text-xs text-muted-foreground">Preferred report format</p>
+                </div>
+                <span className="text-sm font-medium text-muted-foreground">PDF</span>
               </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Auto-save Drafts</p>
-                <p className="text-xs text-muted-foreground">Save work automatically every 5 min</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Language</p>
+                  <p className="text-xs text-muted-foreground">Interface language</p>
+                </div>
+                <span className="text-sm font-medium text-muted-foreground">English</span>
               </div>
-              <div className="h-5 w-9 rounded-full bg-muted relative cursor-pointer">
-                <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow" />
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Default Export Format</p>
-                <p className="text-xs text-muted-foreground">Preferred report format</p>
-              </div>
-              <span className="text-sm font-medium text-muted-foreground">PDF</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Language</p>
-                <p className="text-xs text-muted-foreground">Interface language</p>
-              </div>
-              <span className="text-sm font-medium text-muted-foreground">English</span>
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -393,12 +400,12 @@ export function TopNav() {
         </div>
       </header>
 
-      {/* Notification Panel Dialog */}
-      <Dialog open={notifOpen} onOpenChange={setNotifOpen}>
-        <DialogContent className="sm:max-w-md p-0 gap-0">
-          <DialogHeader className="px-5 pt-5 pb-3 border-b">
+      {/* Notification Panel */}
+      <Sheet open={notifOpen} onOpenChange={setNotifOpen}>
+        <SheetContent side="right" className="sm:max-w-md w-full flex flex-col p-0">
+          <SheetHeader className="px-6 pt-6 pb-4 border-b pr-12">
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-base">Notifications</DialogTitle>
+              <SheetTitle className="text-base">Notifications</SheetTitle>
               {unreadCount > 0 && (
                 <Button
                   variant="ghost"
@@ -410,8 +417,9 @@ export function TopNav() {
                 </Button>
               )}
             </div>
-          </DialogHeader>
-          <ScrollArea className="max-h-[60vh]">
+            <SheetDescription className="sr-only">Your notifications</SheetDescription>
+          </SheetHeader>
+          <ScrollArea className="flex-1">
             <div className="divide-y">
               {notifications.length === 0 ? (
                 <div className="py-12 text-center">
@@ -459,14 +467,14 @@ export function TopNav() {
               )}
             </div>
           </ScrollArea>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
-      {/* Profile Dialog */}
-      <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
+      {/* Profile Panel */}
+      <ProfilePanel open={profileOpen} onOpenChange={setProfileOpen} />
 
-      {/* Settings Dialog */}
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      {/* Settings Panel */}
+      <SettingsPanel open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>
   );
 }

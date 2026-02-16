@@ -396,13 +396,13 @@ export default function ProjectIndexPage() {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="rounded-xl border bg-card p-4 shadow-card">
+        <div className="rounded-xl border bg-card p-4 shadow-card hover-lift animate-fade-up">
           <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
             Total Projects
           </p>
           <p className="text-2xl font-bold mt-1">{mockProjectIndex.length}</p>
         </div>
-        <div className="rounded-xl border bg-card p-4 shadow-card">
+        <div className="rounded-xl border bg-card p-4 shadow-card hover-lift animate-fade-up">
           <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
             Active
           </p>
@@ -410,7 +410,7 @@ export default function ProjectIndexPage() {
             {mockProjectIndex.filter((p) => p.status === "active").length}
           </p>
         </div>
-        <div className="rounded-xl border bg-card p-4 shadow-card">
+        <div className="rounded-xl border bg-card p-4 shadow-card hover-lift animate-fade-up">
           <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
             Completed
           </p>
@@ -418,7 +418,7 @@ export default function ProjectIndexPage() {
             {mockProjectIndex.filter((p) => p.status === "completed").length}
           </p>
         </div>
-        <div className="rounded-xl border bg-card p-4 shadow-card">
+        <div className="rounded-xl border bg-card p-4 shadow-card hover-lift animate-fade-up">
           <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
             Total Documents
           </p>
@@ -461,7 +461,7 @@ export default function ProjectIndexPage() {
           return (
             <div
               key={item.id}
-              className="rounded-xl border bg-card shadow-card overflow-hidden transition-shadow hover:shadow-md cursor-pointer"
+              className="rounded-xl border bg-card shadow-card overflow-hidden transition-all hover:shadow-card-hover hover-lift animate-fade-up cursor-pointer"
               onClick={() => handleCardClick(item)}
               role="button"
               tabIndex={0}

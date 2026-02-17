@@ -121,7 +121,7 @@ function HeroSection({
             aria-label="Import an XLSX template to update the library"
           >
             <Upload className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Import
+            Import Template
           </Button>
           <Button
             className="bg-white/15 text-white border border-white/30 hover:bg-white/25 hover:border-white/50 transition-all font-medium text-sm h-9 px-4 backdrop-blur-sm"
@@ -134,7 +134,7 @@ function HeroSection({
             ) : (
               <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
             )}
-            Export
+            Export Template
           </Button>
         </div>
       </div>

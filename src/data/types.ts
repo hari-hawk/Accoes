@@ -31,7 +31,8 @@ export type DecisionStatus =
   | "approved"
   | "approved_with_notes"
   | "revision_requested"
-  | "rejected";
+  | "rejected"
+  | "revisit";
 
 export type ProjectStage =
   | "review_required"

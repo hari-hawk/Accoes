@@ -87,6 +87,17 @@ export function useMaterials(versionId: string) {
     setCheckedIds(new Set());
   }, [checkedIds]);
 
+  const batchRevisit = useCallback(() => {
+    setDecisions((prev) => {
+      const next = { ...prev };
+      checkedIds.forEach((id) => {
+        next[id] = "revisit";
+      });
+      return next;
+    });
+    setCheckedIds(new Set());
+  }, [checkedIds]);
+
   const getValidationForCategory = useCallback(
     (item: MaterialItem, category: ValidationCategory): ValidationResult | undefined => {
       switch (category) {
@@ -117,6 +128,7 @@ export function useMaterials(versionId: string) {
     decisions,
     updateDecision,
     batchApprove,
+    batchRevisit,
     activeCategory,
     setActiveCategory,
     getValidationForCategory,

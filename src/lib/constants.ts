@@ -93,6 +93,7 @@ export const DECISION_STATUS_CONFIG: Record<
   approved_with_notes: { label: "Approved with Notes", color: "bg-status-pre-approved-bg text-status-pre-approved" },
   revision_requested: { label: "Revision Requested", color: "bg-status-review-required-bg text-status-review-required" },
   rejected: { label: "Rejected", color: "bg-status-action-mandatory-bg text-status-action-mandatory" },
+  revisit: { label: "Revisit", color: "bg-status-review-required-bg text-status-review-required" },
 };
 
 export const PROJECT_STAGE_CONFIG: Record<

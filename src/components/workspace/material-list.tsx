@@ -72,6 +72,8 @@ function MaterialListItem({
   const status = item.validation?.status;
   const psScore = item.paValidation?.confidenceScore;
   const piScore = item.piValidation?.confidenceScore;
+  const overallScore = item.validation?.confidenceScore;
+  const hasSubScores = psScore !== undefined || piScore !== undefined;
 
   return (
     <div
@@ -125,10 +127,16 @@ function MaterialListItem({
           {item.document.specSectionTitle}
         </p>
 
-        {/* PS + PI score chips */}
+        {/* Score chips — PS/PI when available, overall fallback */}
         <div className="flex items-center gap-2 mt-2 flex-wrap">
-          <ScoreChip label="PS" score={psScore} />
-          <ScoreChip label="PI" score={piScore} />
+          {hasSubScores ? (
+            <>
+              <ScoreChip label="PS" score={psScore} />
+              <ScoreChip label="PI" score={piScore} />
+            </>
+          ) : (
+            <ScoreChip label="Score" score={overallScore} />
+          )}
 
           {effectiveDecision && effectiveDecision !== "pending" && (
             <span className="ml-auto text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize shrink-0">

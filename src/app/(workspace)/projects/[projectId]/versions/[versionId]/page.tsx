@@ -42,8 +42,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWorkspace } from "@/providers/workspace-provider";
 import { formatPercentage } from "@/lib/format";
@@ -75,12 +73,14 @@ function formatFileSize(bytes: number): string {
 
 // Mock recent activity for the version
 const recentActivity = [
-  { id: 1, action: "Document validated", detail: "Fire-Rated Gypsum Board — Pre-Approved (96%)", time: "2 hours ago", type: "success" as const },
-  { id: 2, action: "Review flagged", detail: "Structural Steel Shop Drawings — Missing fireproofing details", time: "3 hours ago", type: "warning" as const },
-  { id: 3, action: "Action required", detail: "HVAC Equipment Schedule — Chiller undersized by 50 tons", time: "4 hours ago", type: "error" as const },
-  { id: 4, action: "Document validated", detail: "Concrete Mix Design Report — Pre-Approved (93%)", time: "5 hours ago", type: "success" as const },
-  { id: 5, action: "Document uploaded", detail: "Elevator Specifications.pdf uploaded by James Chen", time: "6 hours ago", type: "info" as const },
-  { id: 6, action: "AI processing complete", detail: "12 documents analyzed in 4m 23s", time: "6 hours ago", type: "info" as const },
+  { id: 1, action: "Document validated", detail: "Fire-Rated Gypsum Board — Pre-Approved (96%)", time: "2 hours ago", type: "success" as const, user: "AI System" },
+  { id: 2, action: "Review flagged", detail: "Structural Steel Shop Drawings — Missing fireproofing details", time: "3 hours ago", type: "warning" as const, user: "Sarah Wilson" },
+  { id: 3, action: "Action required", detail: "HVAC Equipment Schedule — Chiller undersized by 50 tons", time: "4 hours ago", type: "error" as const, user: "James Chen" },
+  { id: 4, action: "Document validated", detail: "Concrete Mix Design Report — Pre-Approved (93%)", time: "5 hours ago", type: "success" as const, user: "AI System" },
+  { id: 5, action: "Document uploaded", detail: "Elevator Specifications.pdf uploaded", time: "6 hours ago", type: "info" as const, user: "James Chen" },
+  { id: 6, action: "AI processing complete", detail: "12 documents analyzed in 4m 23s", time: "6 hours ago", type: "info" as const, user: "AI System" },
+  { id: 7, action: "Comment added", detail: "Plumbing Fixture Schedule — Verify GPM rating", time: "7 hours ago", type: "warning" as const, user: "Emily Rodriguez" },
+  { id: 8, action: "Document approved", detail: "Electrical Panel Schedule — Approved with notes", time: "8 hours ago", type: "success" as const, user: "Sarah Wilson" },
 ];
 
 // Mock project specification documents — Volume-based naming
@@ -418,10 +418,10 @@ function ProjectSpecificationsCard({
               size="sm"
               className="h-7 text-xs gap-1 gradient-accent text-white border-0 hover:opacity-90"
               onClick={onReUpload}
-              aria-label="Re-upload specification documents"
+              aria-label="Upload specification documents"
             >
               <Upload className="h-3 w-3" aria-hidden="true" />
-              Re-upload
+              Upload
             </Button>
           </div>
         </div>
@@ -429,14 +429,15 @@ function ProjectSpecificationsCard({
         {/* Select all bar */}
         {mockProjectSpecs.length > 0 && (
           <div className="px-5 py-2 border-b bg-muted/20 flex items-center justify-between">
-            <button
-              type="button"
-              className="text-xs font-medium text-nav-accent hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 rounded-sm px-1 py-0.5"
-              onClick={toggleAll}
-              aria-label={allSelected ? "Deselect all specifications" : "Select all specifications"}
-            >
-              {allSelected ? "Deselect All" : "Select All"}
-            </button>
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <Checkbox
+                checked={allSelected}
+                onCheckedChange={toggleAll}
+                className="h-3.5 w-3.5"
+                aria-label={allSelected ? "Deselect all specifications" : "Select all specifications"}
+              />
+              <span className="text-xs text-muted-foreground">Select all</span>
+            </label>
             {selectedSpecIds.size > 0 && (
               <span className="text-xs text-muted-foreground tabular-nums">
                 {selectedSpecIds.size} of {mockProjectSpecs.length} selected
@@ -490,26 +491,16 @@ function ProjectSpecificationsCard({
                   </div>
                 </div>
 
-                {/* Action buttons: View + Download */}
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-nav-accent"
-                    onClick={() => setPreviewSpec(spec)}
-                    aria-label={`View ${spec.fileName}`}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-nav-accent"
-                    aria-label={`Download ${spec.fileName}`}
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
+                {/* Action button: View */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-nav-accent shrink-0"
+                  onClick={() => setPreviewSpec(spec)}
+                  aria-label={`View ${spec.fileName}`}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
               </div>
             );
           })}
@@ -615,14 +606,15 @@ function MaterialMatrixCard({
       {/* Select all bar — shown when documents exist */}
       {documents.length > 0 && (
         <div className="px-5 py-2 border-b bg-muted/20 flex items-center justify-between">
-          <button
-            type="button"
-            className="text-xs font-medium text-nav-accent hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 rounded-sm px-1 py-0.5"
-            onClick={toggleAll}
-            aria-label={allSelected ? "Deselect all documents" : "Select all documents"}
-          >
-            {allSelected ? "Deselect All" : "Select All"}
-          </button>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={toggleAll}
+              className="h-3.5 w-3.5"
+              aria-label={allSelected ? "Deselect all documents" : "Select all documents"}
+            />
+            <span className="text-xs text-muted-foreground">Select all</span>
+          </label>
           {selectedDocIds.size > 0 && (
             <span className="text-xs text-muted-foreground tabular-nums">
               {selectedDocIds.size} of {documents.length} selected
@@ -686,7 +678,7 @@ function MaterialMatrixCard({
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-3 shrink-0 pr-2">
                     {config && StatusIcon ? (
                       <Badge variant="secondary" className={cn("text-[11px]", config.color)}>
                         <StatusIcon className="h-3 w-3 mr-1" aria-hidden="true" />
@@ -742,12 +734,6 @@ export default function VersionOverviewPage() {
   const [specUploadFiles, setSpecUploadFiles] = useState<MockUploadFile[]>([]);
   const [specUploadCounter, setSpecUploadCounter] = useState(0);
   const [specUploading, setSpecUploading] = useState(false);
-
-  // New Version dialog state
-  const [newVersionOpen, setNewVersionOpen] = useState(false);
-  const [versionName, setVersionName] = useState("");
-  const [pullPrevious, setPullPrevious] = useState(true);
-  const [creatingVersion, setCreatingVersion] = useState(false);
 
   const confidence = confidenceSummary.overallConfidence;
   const confidenceColor =
@@ -820,17 +806,6 @@ export default function VersionOverviewPage() {
     }, 1200);
   };
 
-  // New version handler
-  const handleCreateVersion = () => {
-    setCreatingVersion(true);
-    setTimeout(() => {
-      setCreatingVersion(false);
-      setNewVersionOpen(false);
-      setVersionName("");
-      setPullPrevious(true);
-    }, 1200);
-  };
-
   return (
     <main className="p-6 space-y-6 max-w-[1400px] mx-auto">
       {/* Hero Banner */}
@@ -865,21 +840,10 @@ export default function VersionOverviewPage() {
         <div className="space-y-6">
           {/* Version Info Card */}
           <div className="rounded-xl border bg-card shadow-card p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-sm flex items-center gap-2">
-                <Shield className="h-4 w-4 text-primary" aria-hidden="true" />
-                Version Details
-              </h3>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs gap-1"
-                onClick={() => setNewVersionOpen(true)}
-              >
-                <Layers className="h-3 w-3" aria-hidden="true" />
-                New Version
-              </Button>
-            </div>
+            <h3 className="font-semibold text-sm flex items-center gap-2 mb-4">
+              <Shield className="h-4 w-4 text-primary" aria-hidden="true" />
+              Version Details
+            </h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground flex items-center gap-1.5">
@@ -931,24 +895,29 @@ export default function VersionOverviewPage() {
               <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
               Recent Activity
             </h3>
-            <div className="space-y-3">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex gap-3">
-                  <div className={cn(
-                    "mt-0.5 h-2 w-2 rounded-full shrink-0",
-                    activity.type === "success" && "bg-status-pre-approved",
-                    activity.type === "warning" && "bg-status-review-required",
-                    activity.type === "error" && "bg-status-action-mandatory",
-                    activity.type === "info" && "bg-primary",
-                  )} aria-hidden="true" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium">{activity.action}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{activity.detail}</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">{activity.time}</p>
+            <ScrollArea className="max-h-[320px]">
+              <div className="space-y-3 pr-2">
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex gap-3">
+                    <div className={cn(
+                      "mt-0.5 h-2 w-2 rounded-full shrink-0",
+                      activity.type === "success" && "bg-status-pre-approved",
+                      activity.type === "warning" && "bg-status-review-required",
+                      activity.type === "error" && "bg-status-action-mandatory",
+                      activity.type === "info" && "bg-primary",
+                    )} aria-hidden="true" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium">{activity.action}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{activity.detail}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] font-medium text-primary/70">{activity.user}</span>
+                        <span className="text-[10px] text-muted-foreground/60">{activity.time}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
         </div>
       </div>
@@ -1105,7 +1074,7 @@ export default function VersionOverviewPage() {
       <Dialog open={specUploadOpen} onOpenChange={setSpecUploadOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Re-upload Specifications</DialogTitle>
+            <DialogTitle>Upload Specifications</DialogTitle>
             <DialogDescription>
               Upload updated or additional project specification documents.
             </DialogDescription>
@@ -1200,74 +1169,6 @@ export default function VersionOverviewPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ------------------------------------------------------------------ */}
-      {/*  New Version Dialog                                                  */}
-      {/* ------------------------------------------------------------------ */}
-      <Dialog open={newVersionOpen} onOpenChange={setNewVersionOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create New Version</DialogTitle>
-            <DialogDescription>
-              Create a new version for {project.name}. You can pull existing files from the current version.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 pt-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Version Name</Label>
-              <Input
-                value={versionName}
-                onChange={(e) => setVersionName(e.target.value)}
-                placeholder="e.g., Resubmittal B"
-              />
-            </div>
-
-            <div className="flex items-start gap-3 rounded-lg border p-4">
-              <Checkbox
-                id="pull-prev"
-                checked={pullPrevious}
-                onCheckedChange={(checked) => setPullPrevious(checked === true)}
-                className="mt-0.5"
-              />
-              <div className="flex-1">
-                <Label htmlFor="pull-prev" className="text-sm font-medium cursor-pointer">
-                  Pull files from current version
-                </Label>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Copy {documents.length} file{documents.length !== 1 ? "s" : ""} from &ldquo;{version.name}&rdquo; as a starting point
-                </p>
-              </div>
-            </div>
-
-            {/* Upload new files for version */}
-            <div
-              className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-6 text-center hover:border-nav-accent/40 transition-colors cursor-pointer"
-              role="button"
-              tabIndex={0}
-              aria-label="Upload additional files for the new version"
-            >
-              <Upload className="h-6 w-6 text-muted-foreground/50 mx-auto mb-2" aria-hidden="true" />
-              <p className="text-sm font-medium">Upload additional files</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                PDF, XLSX, DOCX up to 50MB each
-              </p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNewVersionOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateVersion}
-              disabled={!versionName.trim() || creatingVersion}
-              className="gradient-gold text-white border-0"
-            >
-              {creatingVersion ? "Creating..." : "Create Version"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </main>
   );
 }

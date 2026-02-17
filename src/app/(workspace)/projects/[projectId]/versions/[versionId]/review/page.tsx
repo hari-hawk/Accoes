@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   MousePointerClick,
   MessageSquare,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -48,15 +49,13 @@ export default function ReviewPage() {
     decisions,
     updateDecision,
     batchApprove,
+    batchRevisit,
     activeCategory,
     setActiveCategory,
   } = useMaterials(version.id);
 
-  // Batch action dialog state
-  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  // Comment dialog state
   const [commentDialogOpen, setCommentDialogOpen] = useState(false);
-  const [approvePS, setApprovePS] = useState(true);
-  const [approvePI, setApprovePI] = useState(true);
   const [commentPS, setCommentPS] = useState(true);
   const [commentPI, setCommentPI] = useState(true);
   const [commentText, setCommentText] = useState("");
@@ -77,13 +76,6 @@ export default function ReviewPage() {
     }
   }, [activeCategory, setActiveCategory]);
 
-  const handleBatchApprove = () => {
-    batchApprove();
-    setApproveDialogOpen(false);
-    setApprovePS(true);
-    setApprovePI(true);
-  };
-
   const handleBatchComment = () => {
     // Mock — in production this would send the comment
     setCommentDialogOpen(false);
@@ -101,9 +93,13 @@ export default function ReviewPage() {
             {checkedIds.size} item{checkedIds.size !== 1 ? "s" : ""} selected
           </span>
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => setApproveDialogOpen(true)}>
+            <Button size="sm" onClick={batchApprove}>
               <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
               Approve
+            </Button>
+            <Button size="sm" variant="secondary" onClick={batchRevisit}>
+              <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+              Revisit
             </Button>
             <Button
               size="sm"
@@ -157,57 +153,6 @@ export default function ReviewPage() {
           )}
         </ResizablePanel>
       </ResizablePanelGroup>
-
-      {/* Approve Dialog */}
-      <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Approve {checkedIds.size} Items</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <p className="text-sm text-muted-foreground">
-              Select which validations to approve for the selected items:
-            </p>
-            <div className="space-y-3">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <Checkbox
-                  checked={approvePS}
-                  onCheckedChange={(v) => setApprovePS(!!v)}
-                />
-                <span className="text-sm font-medium">
-                  Project Specifications (PS)
-                </span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <Checkbox
-                  checked={approvePI}
-                  onCheckedChange={(v) => setApprovePI(!!v)}
-                />
-                <span className="text-sm font-medium">
-                  Project Index (PI)
-                </span>
-              </label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setApproveDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleBatchApprove}
-              disabled={!approvePS && !approvePI}
-            >
-              <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-              Approve
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Add Comment Dialog */}
       <Dialog open={commentDialogOpen} onOpenChange={setCommentDialogOpen}>

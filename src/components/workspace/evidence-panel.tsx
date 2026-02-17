@@ -547,6 +547,8 @@ export function EvidencePanel({
                   <SelectItem value="action_mandatory">
                     Action Mandatory
                   </SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="revisit">Revisit</SelectItem>
                 </SelectContent>
               </Select>
 

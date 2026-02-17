@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   FileText,
@@ -24,6 +24,12 @@ import {
   Check,
   Loader2,
   BookOpen,
+  Eye,
+  ZoomIn,
+  ZoomOut,
+  ChevronLeft,
+  ChevronRight,
+  RotateCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -77,17 +83,178 @@ const recentActivity = [
   { id: 6, action: "AI processing complete", detail: "12 documents analyzed in 4m 23s", time: "6 hours ago", type: "info" as const },
 ];
 
-// Mock project specification documents (source input from the client)
+// Mock project specification documents — Volume-based naming
 const mockProjectSpecs = [
-  { id: "ps-1", fileName: "Project Specifications Rev A.pdf", fileType: "pdf" as const, fileSize: 15728640, uploadedAt: "2025-08-10T09:00:00Z" },
-  { id: "ps-2", fileName: "Division 05 - Metals.pdf", fileType: "pdf" as const, fileSize: 4194304, uploadedAt: "2025-08-10T09:05:00Z" },
-  { id: "ps-3", fileName: "Division 09 - Finishes.pdf", fileType: "pdf" as const, fileSize: 3145728, uploadedAt: "2025-08-10T09:10:00Z" },
+  { id: "ps-1", fileName: "Project Specifications - Volume 1.pdf", fileType: "pdf" as const, fileSize: 15728640, uploadedAt: "2025-08-10T09:00:00Z", totalPages: 342 },
+  { id: "ps-2", fileName: "Project Specifications - Volume 2.pdf", fileType: "pdf" as const, fileSize: 12582912, uploadedAt: "2025-08-10T09:05:00Z", totalPages: 278 },
+  { id: "ps-3", fileName: "Project Specifications - Volume 3.pdf", fileType: "pdf" as const, fileSize: 9437184, uploadedAt: "2025-08-10T09:10:00Z", totalPages: 196 },
 ];
 
 interface MockUploadFile {
   id: string;
   name: string;
   size: string;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  PDF Preview Dialog — 90%+ screen coverage                                  */
+/* -------------------------------------------------------------------------- */
+
+function PdfPreviewDialog({
+  open,
+  onOpenChange,
+  title,
+  totalPages,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  totalPages: number;
+}) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [zoom, setZoom] = useState(100);
+
+  const handlePrevPage = () => setCurrentPage((p) => Math.max(1, p - 1));
+  const handleNextPage = () => setCurrentPage((p) => Math.min(totalPages, p + 1));
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-[95vw] sm:max-w-[95vw] w-[95vw] h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-xl"
+      >
+        {/* Header toolbar */}
+        <div className="flex items-center justify-between px-5 py-3 border-b shrink-0 bg-background">
+          <div className="min-w-0 flex-1">
+            <DialogTitle className="text-sm font-semibold truncate">{title}</DialogTitle>
+            <p className="text-xs text-muted-foreground mt-0.5">Project Specification Document</p>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Download document">
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onOpenChange(false)}
+              aria-label="Close preview"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* PDF content area — fills remaining space */}
+        <ScrollArea className="flex-1 min-h-0 bg-muted/30">
+          <div className="flex justify-center p-4 sm:p-6">
+            <div
+              className="w-full max-w-5xl bg-white dark:bg-card rounded-lg shadow-md border overflow-hidden"
+              style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center" }}
+            >
+              {/* Simulated PDF page */}
+              <div className="p-8 sm:p-12 space-y-6 min-h-[800px]">
+                {/* Document header */}
+                <div className="flex items-center justify-between text-xs text-muted-foreground border-b pb-4">
+                  <span className="font-medium">{title}</span>
+                  <span>Page {currentPage} of {totalPages}</span>
+                </div>
+
+                <h2 className="text-lg font-bold uppercase tracking-wide">
+                  {title}
+                </h2>
+
+                {/* Simulated spec content */}
+                <div className="space-y-5 text-sm text-muted-foreground leading-relaxed">
+                  <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">PART 1 — GENERAL</h3>
+                  <div>
+                    <h4 className="text-xs font-bold text-foreground">1.1 SUMMARY</h4>
+                    <p className="mt-1">A. Section includes water-cooled, centrifugal liquid chillers with variable-speed drives.</p>
+                    <p className="mt-1">B. Related Requirements:</p>
+                    <ul className="list-disc pl-6 mt-1 space-y-0.5">
+                      <li>Section 23 05 00 — Common Work Results for HVAC</li>
+                      <li>Section 23 05 93 — Testing, Adjusting, and Balancing for HVAC</li>
+                      <li>Section 23 21 13 — Hydronic Piping</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-foreground">1.2 PERFORMANCE REQUIREMENTS</h4>
+                    <p className="mt-1">A. Minimum cooling capacity: 500 tons at ARI 550/590 conditions.</p>
+                    <p className="mt-1">B. Variable speed drives required for capacity modulation and energy efficiency.</p>
+                    <p className="mt-1">C. Energy Efficiency:</p>
+                    <ul className="list-disc pl-6 mt-1 space-y-0.5">
+                      <li>Full Load: Maximum 0.560 kW/ton</li>
+                      <li>IPLV: Maximum 0.340 kW/ton</li>
+                      <li>NPLV: Maximum 0.380 kW/ton</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-foreground">1.3 SUBMITTALS</h4>
+                    <p className="mt-1">A. Product Data: Include rated capacities and operating characteristics.</p>
+                    <p className="mt-1">B. Shop Drawings: Include plans, elevations, sections, and details.</p>
+                    <p className="mt-1">C. Certificates: Energy efficiency certifications per ASHRAE 90.1.</p>
+                  </div>
+                  <h3 className="text-xs font-bold text-foreground uppercase tracking-wider pt-4">PART 2 — PRODUCTS</h3>
+                  <div>
+                    <h4 className="text-xs font-bold text-foreground">2.1 MANUFACTURERS</h4>
+                    <p className="mt-1">A. Basis-of-Design: Trane CenTraVac, or equal by:</p>
+                    <ul className="list-disc pl-6 mt-1 space-y-0.5">
+                      <li>Carrier Corporation</li>
+                      <li>Johnson Controls (York)</li>
+                      <li>Daikin Applied</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-foreground">2.2 CHILLER ASSEMBLY</h4>
+                    <p className="mt-1">A. Factory-assembled, single-piece water chiller.</p>
+                    <p className="mt-1">B. Compressor: Hermetic centrifugal, direct-drive with VFD.</p>
+                    <p className="mt-1">C. Refrigerant: R-134a or R-1233zd(E) low-GWP option.</p>
+                  </div>
+                  <h3 className="text-xs font-bold text-foreground uppercase tracking-wider pt-4">PART 3 — EXECUTION</h3>
+                  <div>
+                    <h4 className="text-xs font-bold text-foreground">3.1 INSTALLATION</h4>
+                    <p className="mt-1">A. Install chillers in accordance with manufacturer&apos;s instructions and applicable codes.</p>
+                    <p className="mt-1">B. Coordinate with structural engineer for pad and vibration isolation requirements.</p>
+                    <p className="mt-1">C. Provide clearance for tube pull and maintenance access per manufacturer specifications.</p>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="pt-6 border-t text-center text-[10px] text-muted-foreground/60 italic">
+                  Project Specification Document — Page {currentPage} of {totalPages}
+                </div>
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+
+        {/* Bottom toolbar — page navigation + zoom */}
+        <div className="flex items-center justify-center gap-2 px-4 py-2.5 border-t bg-background shrink-0">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setZoom((z) => Math.max(25, z - 25))} aria-label="Zoom out">
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <span className="text-xs font-medium w-12 text-center tabular-nums">{zoom}%</span>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setZoom((z) => Math.min(200, z + 25))} aria-label="Zoom in">
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+          <div className="w-px h-5 bg-border mx-1" aria-hidden="true" />
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrevPage} disabled={currentPage <= 1} aria-label="Previous page">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-xs font-medium min-w-[80px] text-center tabular-nums">
+            {currentPage} / {totalPages}
+          </span>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleNextPage} disabled={currentPage >= totalPages} aria-label="Next page">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <div className="w-px h-5 bg-border mx-1" aria-hidden="true" />
+          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Rotate page">
+            <RotateCw className="h-4 w-4" />
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -100,7 +267,6 @@ function HeroBanner({
   specRef,
   confidenceSummary,
   confidence,
-  confidenceColor,
 }: {
   versionName: string;
   projectName: string;
@@ -174,60 +340,197 @@ function HeroBanner({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Project Specifications Section                                             */
+/*  Project Specifications Section — with preview, download, multi-select,     */
+/*  export, and re-upload                                                      */
 /* -------------------------------------------------------------------------- */
 
-function ProjectSpecificationsCard() {
+function ProjectSpecificationsCard({
+  onReUpload,
+}: {
+  onReUpload: () => void;
+}) {
+  const [selectedSpecIds, setSelectedSpecIds] = useState<Set<string>>(new Set());
+  const [exporting, setExporting] = useState(false);
+  const [exportComplete, setExportComplete] = useState(false);
+  const [previewSpec, setPreviewSpec] = useState<typeof mockProjectSpecs[number] | null>(null);
+
+  const allSelected = mockProjectSpecs.length > 0 && selectedSpecIds.size === mockProjectSpecs.length;
+
+  const toggleSpec = (specId: string) => {
+    setSelectedSpecIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(specId)) next.delete(specId);
+      else next.add(specId);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedSpecIds(new Set());
+    } else {
+      setSelectedSpecIds(new Set(mockProjectSpecs.map((s) => s.id)));
+    }
+  };
+
+  const handleExport = () => {
+    setExporting(true);
+    setTimeout(() => {
+      setExporting(false);
+      setExportComplete(true);
+      setTimeout(() => setExportComplete(false), 2500);
+    }, 1500);
+  };
+
   return (
-    <div className="rounded-xl border bg-card shadow-card overflow-hidden">
-      <div className="px-5 py-4 border-b flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-primary" aria-hidden="true" />
-          <h3 className="font-semibold text-sm">Project Specifications</h3>
-        </div>
-        <Badge variant="secondary" className="text-xs">
-          {mockProjectSpecs.length} {mockProjectSpecs.length === 1 ? "file" : "files"}
-        </Badge>
-      </div>
-      <div className="divide-y">
-        {mockProjectSpecs.map((spec) => {
-          const FileIcon = fileIconMap[spec.fileType] ?? FileText;
-          return (
-            <div
-              key={spec.id}
-              className="flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors"
+    <>
+      <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+        {/* Header */}
+        <div className="px-5 py-4 border-b flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-primary" aria-hidden="true" />
+            <h3 className="font-semibold text-sm">Project Specifications</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Export button — visible when specs are selected */}
+            {selectedSpecIds.size > 0 && (
+              <Button
+                size="sm"
+                className="h-7 text-xs gap-1 gradient-gold text-white border-0 hover:opacity-90 transition-opacity"
+                onClick={handleExport}
+                disabled={exporting}
+                aria-label={`Export ${selectedSpecIds.size} selected specification${selectedSpecIds.size !== 1 ? "s" : ""}`}
+              >
+                {exporting ? (
+                  <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                ) : exportComplete ? (
+                  <Check className="h-3 w-3" aria-hidden="true" />
+                ) : (
+                  <Download className="h-3 w-3" aria-hidden="true" />
+                )}
+                {exportComplete ? "Exported!" : `Export (${selectedSpecIds.size})`}
+              </Button>
+            )}
+            <Badge variant="secondary" className="text-xs">
+              {mockProjectSpecs.length} {mockProjectSpecs.length === 1 ? "file" : "files"}
+            </Badge>
+            <Button
+              size="sm"
+              className="h-7 text-xs gap-1 gradient-accent text-white border-0 hover:opacity-90"
+              onClick={onReUpload}
+              aria-label="Re-upload specification documents"
             >
-              <div className="h-9 w-9 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-                <FileIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" aria-hidden="true" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{spec.fileName}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[11px] text-muted-foreground">
-                    {formatFileSize(spec.fileSize)}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">
-                    Uploaded {new Date(spec.uploadedAt).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </span>
+              <Upload className="h-3 w-3" aria-hidden="true" />
+              Re-upload
+            </Button>
+          </div>
+        </div>
+
+        {/* Select all bar */}
+        {mockProjectSpecs.length > 0 && (
+          <div className="px-5 py-2 border-b bg-muted/20 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-xs font-medium text-nav-accent hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 rounded-sm px-1 py-0.5"
+              onClick={toggleAll}
+              aria-label={allSelected ? "Deselect all specifications" : "Select all specifications"}
+            >
+              {allSelected ? "Deselect All" : "Select All"}
+            </button>
+            {selectedSpecIds.size > 0 && (
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {selectedSpecIds.size} of {mockProjectSpecs.length} selected
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Spec document list */}
+        <div className="divide-y" role="list" aria-label="Project specification documents">
+          {mockProjectSpecs.map((spec) => {
+            const FileIcon = fileIconMap[spec.fileType] ?? FileText;
+            const isChecked = selectedSpecIds.has(spec.id);
+
+            return (
+              <div
+                key={spec.id}
+                className={cn(
+                  "flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors group/spec",
+                  isChecked && "bg-nav-accent/5"
+                )}
+                role="listitem"
+              >
+                {/* Checkbox */}
+                <Checkbox
+                  checked={isChecked}
+                  onCheckedChange={() => toggleSpec(spec.id)}
+                  aria-label={`Select ${spec.fileName}`}
+                  className="shrink-0"
+                />
+
+                {/* File icon */}
+                <div className="h-9 w-9 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
+                  <FileIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+                </div>
+
+                {/* File info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{spec.fileName}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[11px] text-muted-foreground">
+                      {formatFileSize(spec.fileSize)}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                      Uploaded {new Date(spec.uploadedAt).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action buttons: View + Download */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-nav-accent"
+                    onClick={() => setPreviewSpec(spec)}
+                    aria-label={`View ${spec.fileName}`}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-nav-accent"
+                    aria-label={`Download ${spec.fileName}`}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-              <Badge variant="secondary" className="text-[10px] bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
-                Source
-              </Badge>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </div>
+
+      {/* PDF Preview Dialog */}
+      {previewSpec && (
+        <PdfPreviewDialog
+          open={!!previewSpec}
+          onOpenChange={(open) => { if (!open) setPreviewSpec(null); }}
+          title={previewSpec.fileName}
+          totalPages={previewSpec.totalPages}
+        />
+      )}
+    </>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Material Matrix Section (formerly Conformance)                             */
+/*  Material Matrix Section                                                    */
 /* -------------------------------------------------------------------------- */
 
 function MaterialMatrixCard({
@@ -248,17 +551,6 @@ function MaterialMatrixCard({
   const [exportComplete, setExportComplete] = useState(false);
 
   const allSelected = documents.length > 0 && selectedDocIds.size === documents.length;
-
-  const toggleDoc = (docId: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setSelectedDocIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(docId)) next.delete(docId);
-      else next.add(docId);
-      return next;
-    });
-  };
 
   const toggleAll = () => {
     if (allSelected) {
@@ -439,11 +731,17 @@ export default function VersionOverviewPage() {
   const documents = getDocumentsByVersion(version.id);
   const validations = getValidationsByVersion(version.id);
 
-  // Upload dialog state
+  // Upload dialog state (for Material Matrix)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadFiles, setUploadFiles] = useState<MockUploadFile[]>([]);
   const [uploadCounter, setUploadCounter] = useState(0);
   const [uploading, setUploading] = useState(false);
+
+  // Re-upload dialog for Project Specifications
+  const [specUploadOpen, setSpecUploadOpen] = useState(false);
+  const [specUploadFiles, setSpecUploadFiles] = useState<MockUploadFile[]>([]);
+  const [specUploadCounter, setSpecUploadCounter] = useState(0);
+  const [specUploading, setSpecUploading] = useState(false);
 
   // New Version dialog state
   const [newVersionOpen, setNewVersionOpen] = useState(false);
@@ -461,7 +759,7 @@ export default function VersionOverviewPage() {
           ? "text-status-action-mandatory"
           : "text-muted-foreground";
 
-  // Upload handlers
+  // Material Matrix upload handlers
   const handleSimulateUpload = () => {
     const batch: MockUploadFile[] = [
       { id: `up-${uploadCounter}`, name: "New_Submittal_Document.pdf", size: "3.2 MB" },
@@ -492,6 +790,36 @@ export default function VersionOverviewPage() {
     }, 1200);
   };
 
+  // Spec re-upload handlers
+  const handleSimulateSpecUpload = () => {
+    const batch: MockUploadFile[] = [
+      { id: `spec-${specUploadCounter}`, name: "Project Specifications - Volume 4.pdf", size: "8.5 MB" },
+    ];
+    setSpecUploadCounter((c) => c + 1);
+    setSpecUploadFiles((prev) => [...prev, ...batch]);
+  };
+
+  const handleAddOneMoreSpec = () => {
+    setSpecUploadFiles((prev) => [
+      ...prev,
+      { id: `spec-${specUploadCounter}`, name: `Additional_Spec_Volume_${specUploadCounter + 1}.pdf`, size: "5.0 MB" },
+    ]);
+    setSpecUploadCounter((c) => c + 1);
+  };
+
+  const handleRemoveSpecFile = (id: string) => {
+    setSpecUploadFiles((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  const handleConfirmSpecUpload = () => {
+    setSpecUploading(true);
+    setTimeout(() => {
+      setSpecUploading(false);
+      setSpecUploadOpen(false);
+      setSpecUploadFiles([]);
+    }, 1200);
+  };
+
   // New version handler
   const handleCreateVersion = () => {
     setCreatingVersion(true);
@@ -505,7 +833,7 @@ export default function VersionOverviewPage() {
 
   return (
     <main className="p-6 space-y-6 max-w-[1400px] mx-auto">
-      {/* Hero Banner — no Open Conformance CTA */}
+      {/* Hero Banner */}
       <HeroBanner
         versionName={version.name}
         projectName={project.name}
@@ -516,18 +844,20 @@ export default function VersionOverviewPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left column: Project Specs + Material Matrix */}
+        {/* Left column: Material Matrix (top) + Project Specifications (bottom) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Project Specifications */}
-          <ProjectSpecificationsCard />
-
-          {/* Material Matrix (formerly Conformance) — with multi-select + export */}
+          {/* Material Matrix — at the top */}
           <MaterialMatrixCard
             documents={documents}
             validations={validations}
             projectId={project.id}
             versionId={version.id}
             onUpload={() => setUploadDialogOpen(true)}
+          />
+
+          {/* Project Specifications — at the bottom */}
+          <ProjectSpecificationsCard
+            onReUpload={() => setSpecUploadOpen(true)}
           />
         </div>
 
@@ -669,7 +999,7 @@ export default function VersionOverviewPage() {
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/*  Upload Files Dialog                                                */}
+      {/*  Upload Files Dialog (Material Matrix)                              */}
       {/* ------------------------------------------------------------------ */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -764,6 +1094,107 @@ export default function VersionOverviewPage() {
               className="gradient-accent text-white border-0"
             >
               {uploading ? "Uploading..." : `Upload ${uploadFiles.length} File${uploadFiles.length !== 1 ? "s" : ""}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ------------------------------------------------------------------ */}
+      {/*  Re-upload Specifications Dialog                                    */}
+      {/* ------------------------------------------------------------------ */}
+      <Dialog open={specUploadOpen} onOpenChange={setSpecUploadOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Re-upload Specifications</DialogTitle>
+            <DialogDescription>
+              Upload updated or additional project specification documents.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            {specUploadFiles.length === 0 ? (
+              <div
+                className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-8 text-center hover:border-nav-accent/40 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 outline-none"
+                onClick={handleSimulateSpecUpload}
+                role="button"
+                tabIndex={0}
+                aria-label="Click to select specification files"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleSimulateSpecUpload();
+                  }
+                }}
+              >
+                <div className="mx-auto w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
+                  <BookOpen className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+                </div>
+                <p className="text-sm font-medium">Click to select specification files</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  PDF files — up to 50MB each
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  These will be added alongside existing specifications
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <ScrollArea className={specUploadFiles.length > 4 ? "h-[180px]" : ""}>
+                  <div className="space-y-2 pr-2">
+                    {specUploadFiles.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center gap-3 p-3 rounded-lg border bg-muted/10"
+                      >
+                        <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                          <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">{file.size}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                          onClick={() => handleRemoveSpecFile(file.id)}
+                          aria-label={`Remove ${file.name}`}
+                        >
+                          <X className="h-3.5 w-3.5" aria-hidden="true" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    {specUploadFiles.length} file{specUploadFiles.length !== 1 ? "s" : ""} selected
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onClick={handleAddOneMoreSpec}
+                  >
+                    <Plus className="h-3 w-3" aria-hidden="true" />
+                    Add More
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setSpecUploadOpen(false); setSpecUploadFiles([]); }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmSpecUpload}
+              disabled={specUploadFiles.length === 0 || specUploading}
+              className="gradient-accent text-white border-0"
+            >
+              {specUploading ? "Uploading..." : `Upload ${specUploadFiles.length} File${specUploadFiles.length !== 1 ? "s" : ""}`}
             </Button>
           </DialogFooter>
         </DialogContent>

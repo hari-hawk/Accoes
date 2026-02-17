@@ -6,7 +6,6 @@ import {
   ZoomOut,
   ChevronLeft,
   ChevronRight,
-  Maximize2,
   RotateCw,
   X,
 } from "lucide-react";
@@ -53,7 +52,7 @@ export function FullScreenPdfViewer({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="max-w-[96vw] sm:max-w-[96vw] w-[96vw] h-[96vh] p-0 gap-0 flex flex-col overflow-hidden"
+        className="max-w-[95vw] sm:max-w-[95vw] w-[95vw] h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b shrink-0">
@@ -77,9 +76,12 @@ export function FullScreenPdfViewer({
         <div className="flex flex-1 min-h-0">
           {/* Main PDF area */}
           <div className="flex-1 flex flex-col min-w-0">
-            <ScrollArea className="flex-1">
-              <div className="p-6 flex justify-center">
-                <div className="w-full max-w-5xl bg-white dark:bg-card rounded-lg shadow-sm border p-8 space-y-6">
+            <ScrollArea className="flex-1 bg-muted/30">
+              <div className="p-4 sm:p-6 flex justify-center">
+                <div
+                  className="w-full max-w-5xl bg-white dark:bg-card rounded-lg shadow-md border p-8 space-y-6"
+                  style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center" }}
+                >
                   {/* Document header */}
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{subtitle || "Project Document"}</span>
@@ -159,29 +161,26 @@ export function FullScreenPdfViewer({
             </ScrollArea>
 
             {/* Bottom toolbar */}
-            <div className="flex items-center justify-center gap-2 px-4 py-2.5 border-t bg-muted/30 shrink-0">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setZoom((z) => Math.max(25, z - 25))}>
+            <div className="flex items-center justify-center gap-2 px-4 py-2.5 border-t bg-background shrink-0">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setZoom((z) => Math.max(25, z - 25))} aria-label="Zoom out">
                 <ZoomOut className="h-4 w-4" />
               </Button>
-              <span className="text-xs font-medium w-12 text-center">{zoom}%</span>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setZoom((z) => Math.min(200, z + 25))}>
+              <span className="text-xs font-medium w-12 text-center tabular-nums">{zoom}%</span>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setZoom((z) => Math.min(200, z + 25))} aria-label="Zoom in">
                 <ZoomIn className="h-4 w-4" />
               </Button>
-              <div className="w-px h-5 bg-border mx-1" />
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrevPage}>
+              <div className="w-px h-5 bg-border mx-1" aria-hidden="true" />
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrevPage} disabled={currentPage <= 1} aria-label="Previous page">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-xs font-medium min-w-[80px] text-center">
-                {currentPage}/{totalPages}
+              <span className="text-xs font-medium min-w-[80px] text-center tabular-nums">
+                {currentPage} / {totalPages}
               </span>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleNextPage}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleNextPage} disabled={currentPage >= totalPages} aria-label="Next page">
                 <ChevronRight className="h-4 w-4" />
               </Button>
-              <div className="w-px h-5 bg-border mx-1" />
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Maximize2 className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <div className="w-px h-5 bg-border mx-1" aria-hidden="true" />
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Rotate page">
                 <RotateCw className="h-4 w-4" />
               </Button>
             </div>

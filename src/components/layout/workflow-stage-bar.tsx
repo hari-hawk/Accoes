@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FolderKanban, CheckCircle2, ShieldCheck } from "lucide-react";
+import { FolderKanban, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WorkflowStage } from "@/data/types";
 
-/** Inline tab bar for version workspace: Overview / Material Matrix / Upload */
+/** Inline tab bar for version workspace: Overview / Material Matrix */
 const TABS = [
   { key: "overview", label: "Overview", icon: FolderKanban, path: "" },
   { key: "review", label: "Material Matrix", icon: CheckCircle2, path: "/review" },
-  { key: "upload", label: "Upload", icon: ShieldCheck, path: "/upload" },
 ] as const;
 
 export function WorkflowStageBar({
@@ -26,7 +25,6 @@ export function WorkflowStageBar({
 
   function getActiveTab() {
     if (pathname.includes("/review")) return "review";
-    if (pathname.includes("/upload")) return "upload";
     if (pathname.includes("/processing")) return "review";
     if (pathname.includes("/export")) return "review";
     return "overview";

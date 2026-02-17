@@ -29,7 +29,7 @@ const formats: {
   {
     key: "pdf",
     label: "PDF Report",
-    description: "Comprehensive conformance report with AI evidence and decisions",
+    description: "Comprehensive validation report with AI evidence and decisions",
     icon: FileText,
   },
   {
@@ -173,7 +173,7 @@ export default function ExportPage() {
             <div className="p-5 space-y-4 text-sm">
               <div>
                 <h4 className="font-semibold text-base">
-                  Conformance Validation Report
+                  Material Matrix Validation Report
                 </h4>
                 <p className="text-muted-foreground">
                   {project.name} - {version.name}

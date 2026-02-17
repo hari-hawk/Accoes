@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import {
   FileText,
@@ -16,14 +16,18 @@ import {
   Calendar,
   Shield,
   FileSpreadsheet,
-  ShieldCheck,
   Upload,
   Plus,
   X,
   Layers,
+  Download,
+  Check,
+  Loader2,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +37,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWorkspace } from "@/providers/workspace-provider";
@@ -41,6 +44,10 @@ import { formatPercentage } from "@/lib/format";
 import { getDocumentsByVersion } from "@/data/mock-documents";
 import { getValidationsByVersion } from "@/data/mock-validations";
 import { cn } from "@/lib/utils";
+
+/* -------------------------------------------------------------------------- */
+/*  Constants                                                                   */
+/* -------------------------------------------------------------------------- */
 
 const statusConfig = {
   pre_approved: { label: "Pre-Approved", color: "bg-status-pre-approved-bg text-status-pre-approved", icon: CheckCircle2 },
@@ -70,11 +77,361 @@ const recentActivity = [
   { id: 6, action: "AI processing complete", detail: "12 documents analyzed in 4m 23s", time: "6 hours ago", type: "info" as const },
 ];
 
+// Mock project specification documents (source input from the client)
+const mockProjectSpecs = [
+  { id: "ps-1", fileName: "Project Specifications Rev A.pdf", fileType: "pdf" as const, fileSize: 15728640, uploadedAt: "2025-08-10T09:00:00Z" },
+  { id: "ps-2", fileName: "Division 05 - Metals.pdf", fileType: "pdf" as const, fileSize: 4194304, uploadedAt: "2025-08-10T09:05:00Z" },
+  { id: "ps-3", fileName: "Division 09 - Finishes.pdf", fileType: "pdf" as const, fileSize: 3145728, uploadedAt: "2025-08-10T09:10:00Z" },
+];
+
 interface MockUploadFile {
   id: string;
   name: string;
   size: string;
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Hero Section                                                               */
+/* -------------------------------------------------------------------------- */
+
+function HeroBanner({
+  versionName,
+  projectName,
+  specRef,
+  confidenceSummary,
+  confidence,
+  confidenceColor,
+}: {
+  versionName: string;
+  projectName: string;
+  specRef: string;
+  confidenceSummary: { total: number; preApproved: number; reviewRequired: number; actionMandatory: number };
+  confidence: number;
+  confidenceColor: string;
+}) {
+  return (
+    <section
+      className="gradient-hero rounded-2xl p-6 text-white relative overflow-hidden"
+      aria-label="Version overview"
+    >
+      <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/4" aria-hidden="true" />
+      <div className="relative">
+        <div>
+          <h2 className="text-xl font-bold">{versionName}</h2>
+          <p className="text-white/80 text-sm mt-0.5">
+            {projectName} — {specRef}
+          </p>
+        </div>
+
+        {/* Compact stats — 3 items */}
+        <div className="grid grid-cols-3 gap-4 mt-5" role="group" aria-label="Version statistics">
+          <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <FileText className="h-3.5 w-3.5 text-nav-gold" aria-hidden="true" />
+              <span className="text-[11px] text-white/60 font-medium uppercase tracking-wider">
+                Material Matrix
+              </span>
+            </div>
+            <p className="text-xl font-bold">{confidenceSummary.total}</p>
+          </div>
+          <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <TrendingUp className="h-3.5 w-3.5 text-nav-gold" aria-hidden="true" />
+              <span className="text-[11px] text-white/60 font-medium uppercase tracking-wider">
+                Confidence
+              </span>
+            </div>
+            <p className="text-xl font-bold">
+              {confidence > 0 ? `${confidence}%` : "—"}
+            </p>
+          </div>
+          <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Shield className="h-3.5 w-3.5 text-nav-gold" aria-hidden="true" />
+              <span className="text-[11px] text-white/60 font-medium uppercase tracking-wider">
+                Status
+              </span>
+            </div>
+            <div className="flex items-center gap-3 mt-1">
+              <span className="flex items-center gap-1 text-sm" aria-label={`${confidenceSummary.preApproved} pre-approved`}>
+                <CheckCircle2 className="h-3.5 w-3.5 text-green-400" aria-hidden="true" />
+                <span className="font-bold">{confidenceSummary.preApproved}</span>
+              </span>
+              <span className="flex items-center gap-1 text-sm" aria-label={`${confidenceSummary.reviewRequired} review required`}>
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
+                <span className="font-bold">{confidenceSummary.reviewRequired}</span>
+              </span>
+              <span className="flex items-center gap-1 text-sm" aria-label={`${confidenceSummary.actionMandatory} action mandatory`}>
+                <XCircle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
+                <span className="font-bold">{confidenceSummary.actionMandatory}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Project Specifications Section                                             */
+/* -------------------------------------------------------------------------- */
+
+function ProjectSpecificationsCard() {
+  return (
+    <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+      <div className="px-5 py-4 border-b flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-4 w-4 text-primary" aria-hidden="true" />
+          <h3 className="font-semibold text-sm">Project Specifications</h3>
+        </div>
+        <Badge variant="secondary" className="text-xs">
+          {mockProjectSpecs.length} {mockProjectSpecs.length === 1 ? "file" : "files"}
+        </Badge>
+      </div>
+      <div className="divide-y">
+        {mockProjectSpecs.map((spec) => {
+          const FileIcon = fileIconMap[spec.fileType] ?? FileText;
+          return (
+            <div
+              key={spec.id}
+              className="flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors"
+            >
+              <div className="h-9 w-9 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
+                <FileIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{spec.fileName}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[11px] text-muted-foreground">
+                    {formatFileSize(spec.fileSize)}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    Uploaded {new Date(spec.uploadedAt).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+              </div>
+              <Badge variant="secondary" className="text-[10px] bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+                Source
+              </Badge>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Material Matrix Section (formerly Conformance)                             */
+/* -------------------------------------------------------------------------- */
+
+function MaterialMatrixCard({
+  documents,
+  validations,
+  projectId,
+  versionId,
+  onUpload,
+}: {
+  documents: ReturnType<typeof getDocumentsByVersion>;
+  validations: ReturnType<typeof getValidationsByVersion>;
+  projectId: string;
+  versionId: string;
+  onUpload: () => void;
+}) {
+  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
+  const [exporting, setExporting] = useState(false);
+  const [exportComplete, setExportComplete] = useState(false);
+
+  const allSelected = documents.length > 0 && selectedDocIds.size === documents.length;
+
+  const toggleDoc = (docId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedDocIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(docId)) next.delete(docId);
+      else next.add(docId);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedDocIds(new Set());
+    } else {
+      setSelectedDocIds(new Set(documents.map((d) => d.id)));
+    }
+  };
+
+  const handleExport = () => {
+    setExporting(true);
+    setTimeout(() => {
+      setExporting(false);
+      setExportComplete(true);
+      setTimeout(() => setExportComplete(false), 2500);
+    }, 1500);
+  };
+
+  return (
+    <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+      {/* Header */}
+      <div className="px-5 py-4 border-b flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Layers className="h-4 w-4 text-primary" aria-hidden="true" />
+          <h3 className="font-semibold text-sm">Material Matrix</h3>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Export button — visible when documents are selected */}
+          {selectedDocIds.size > 0 && (
+            <Button
+              size="sm"
+              className="h-7 text-xs gap-1 gradient-gold text-white border-0 hover:opacity-90 transition-opacity"
+              onClick={handleExport}
+              disabled={exporting}
+              aria-label={`Export ${selectedDocIds.size} selected document${selectedDocIds.size !== 1 ? "s" : ""}`}
+            >
+              {exporting ? (
+                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+              ) : exportComplete ? (
+                <Check className="h-3 w-3" aria-hidden="true" />
+              ) : (
+                <Download className="h-3 w-3" aria-hidden="true" />
+              )}
+              {exportComplete ? "Exported!" : `Export (${selectedDocIds.size})`}
+            </Button>
+          )}
+          <Badge variant="secondary" className="text-xs">
+            {documents.length} files
+          </Badge>
+          <Button
+            size="sm"
+            className="h-7 text-xs gap-1 gradient-accent text-white border-0 hover:opacity-90"
+            onClick={onUpload}
+            aria-label="Upload new files"
+          >
+            <Upload className="h-3 w-3" aria-hidden="true" />
+            Upload Files
+          </Button>
+        </div>
+      </div>
+
+      {/* Select all bar — shown when documents exist */}
+      {documents.length > 0 && (
+        <div className="px-5 py-2 border-b bg-muted/20 flex items-center justify-between">
+          <button
+            type="button"
+            className="text-xs font-medium text-nav-accent hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 rounded-sm px-1 py-0.5"
+            onClick={toggleAll}
+            aria-label={allSelected ? "Deselect all documents" : "Select all documents"}
+          >
+            {allSelected ? "Deselect All" : "Select All"}
+          </button>
+          {selectedDocIds.size > 0 && (
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {selectedDocIds.size} of {documents.length} selected
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Document list */}
+      {documents.length > 0 ? (
+        <div className="divide-y" role="list" aria-label="Material matrix documents">
+          {documents.map((doc) => {
+            const validation = validations.find((v) => v.documentId === doc.id);
+            const config = validation ? statusConfig[validation.status] : null;
+            const StatusIcon = config?.icon;
+            const FileIcon = fileIconMap[doc.fileType] ?? FileText;
+            const isChecked = selectedDocIds.has(doc.id);
+
+            return (
+              <div
+                key={doc.id}
+                className={cn(
+                  "flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors group/doc",
+                  isChecked && "bg-nav-accent/5"
+                )}
+                role="listitem"
+              >
+                {/* Checkbox */}
+                <Checkbox
+                  checked={isChecked}
+                  onCheckedChange={() => {
+                    setSelectedDocIds((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(doc.id)) next.delete(doc.id);
+                      else next.add(doc.id);
+                      return next;
+                    });
+                  }}
+                  aria-label={`Select ${doc.fileName}`}
+                  className="shrink-0"
+                />
+
+                {/* Clickable document link area */}
+                <Link
+                  href={`/projects/${projectId}/versions/${versionId}/review?item=${doc.id}`}
+                  className="flex items-center gap-4 flex-1 min-w-0"
+                >
+                  <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+                    <FileIcon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {doc.fileName}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs font-mono font-semibold text-nav-accent">
+                        {doc.specSection}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {formatFileSize(doc.fileSize)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    {config && StatusIcon ? (
+                      <Badge variant="secondary" className={cn("text-[11px]", config.color)}>
+                        <StatusIcon className="h-3 w-3 mr-1" aria-hidden="true" />
+                        {config.label}
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-[11px]">Pending</Badge>
+                    )}
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground/0 group-hover/doc:text-muted-foreground transition-colors" aria-hidden="true" />
+                  </div>
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <FileText className="h-10 w-10 text-muted-foreground/40 mb-3" aria-hidden="true" />
+          <p className="text-sm font-medium text-muted-foreground">No documents uploaded yet</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">Upload documents to start the AI validation process</p>
+          <Button
+            size="sm"
+            className="mt-4 gap-1"
+            onClick={onUpload}
+          >
+            <Upload className="h-3.5 w-3.5" aria-hidden="true" />
+            Upload Files
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Main Page Component                                                        */
+/* -------------------------------------------------------------------------- */
 
 export default function VersionOverviewPage() {
   const { project, version } = useWorkspace();
@@ -147,170 +504,31 @@ export default function VersionOverviewPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
-      {/* Hero Banner — simplified to 3 stats */}
-      <div className="gradient-hero rounded-2xl p-6 text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/4" />
-        <div className="relative">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold">{version.name}</h2>
-              <p className="text-white/70 text-sm mt-0.5">
-                {project.name} — {version.specificationRef}
-              </p>
-            </div>
-            <Button
-              asChild
-              className="gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity font-semibold"
-            >
-              <Link href={`/projects/${project.id}/versions/${version.id}/review`}>
-                <ArrowUpRight className="mr-1.5 h-4 w-4" />
-                Open Conformance
-              </Link>
-            </Button>
-          </div>
-
-          {/* Compact stats — 3 items */}
-          <div className="grid grid-cols-3 gap-4 mt-5">
-            <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4">
-              <div className="flex items-center gap-1.5 mb-1">
-                <FileText className="h-3.5 w-3.5 text-nav-gold" />
-                <span className="text-[11px] text-white/60 font-medium uppercase tracking-wider">
-                  Conformance Records
-                </span>
-              </div>
-              <p className="text-xl font-bold">{confidenceSummary.total}</p>
-            </div>
-            <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4">
-              <div className="flex items-center gap-1.5 mb-1">
-                <TrendingUp className="h-3.5 w-3.5 text-nav-gold" />
-                <span className="text-[11px] text-white/60 font-medium uppercase tracking-wider">
-                  Confidence
-                </span>
-              </div>
-              <p className="text-xl font-bold">
-                {confidence > 0 ? `${confidence}%` : "—"}
-              </p>
-            </div>
-            <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Shield className="h-3.5 w-3.5 text-nav-gold" />
-                <span className="text-[11px] text-white/60 font-medium uppercase tracking-wider">
-                  Status
-                </span>
-              </div>
-              <div className="flex items-center gap-3 mt-1">
-                <span className="flex items-center gap-1 text-sm">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
-                  <span className="font-bold">{confidenceSummary.preApproved}</span>
-                </span>
-                <span className="flex items-center gap-1 text-sm">
-                  <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
-                  <span className="font-bold">{confidenceSummary.reviewRequired}</span>
-                </span>
-                <span className="flex items-center gap-1 text-sm">
-                  <XCircle className="h-3.5 w-3.5 text-red-400" />
-                  <span className="font-bold">{confidenceSummary.actionMandatory}</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <main className="p-6 space-y-6 max-w-[1400px] mx-auto">
+      {/* Hero Banner — no Open Conformance CTA */}
+      <HeroBanner
+        versionName={version.name}
+        projectName={project.name}
+        specRef={version.specificationRef}
+        confidenceSummary={confidenceSummary}
+        confidence={confidence}
+        confidenceColor={confidenceColor}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Conformance — card-based list with Upload button */}
-        <div className="lg:col-span-2 rounded-xl border bg-card shadow-card overflow-hidden">
-          <div className="px-5 py-4 border-b flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary" />
-              <h3 className="font-semibold text-sm">Conformance</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {documents.length} files
-              </Badge>
-              <Button
-                size="sm"
-                className="h-7 text-xs gap-1 gradient-accent text-white border-0 hover:opacity-90"
-                onClick={() => setUploadDialogOpen(true)}
-              >
-                <Upload className="h-3 w-3" />
-                Upload Files
-              </Button>
-            </div>
-          </div>
+        {/* Left column: Project Specs + Material Matrix */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Project Specifications */}
+          <ProjectSpecificationsCard />
 
-          {documents.length > 0 ? (
-            <div className="divide-y">
-              {documents.map((doc) => {
-                const validation = validations.find((v) => v.documentId === doc.id);
-                const config = validation ? statusConfig[validation.status] : null;
-                const StatusIcon = config?.icon;
-                const FileIcon = fileIconMap[doc.fileType] ?? FileText;
-                return (
-                  <Link
-                    key={doc.id}
-                    href={`/projects/${project.id}/versions/${version.id}/review?item=${doc.id}`}
-                    className="flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors cursor-pointer group/doc"
-                  >
-                    <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                      <FileIcon className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {doc.fileName}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs font-mono font-semibold text-nav-accent">
-                          {doc.specSection}
-                        </span>
-                        <span className="text-[11px] text-muted-foreground">
-                          {formatFileSize(doc.fileSize)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      {config && StatusIcon ? (
-                        <Badge variant="secondary" className={cn("text-[11px]", config.color)}>
-                          <StatusIcon className="h-3 w-3 mr-1" />
-                          {config.label}
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-[11px]">Pending</Badge>
-                      )}
-                      {validation ? (
-                        <span className={cn("text-sm font-bold min-w-[3ch] text-right",
-                          validation.confidenceScore >= 80 ? "text-status-pre-approved" :
-                          validation.confidenceScore >= 60 ? "text-status-review-required" :
-                          "text-status-action-mandatory"
-                        )}>
-                          {validation.confidenceScore}%
-                        </span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground min-w-[3ch] text-right">—</span>
-                      )}
-                      <ArrowUpRight className="h-4 w-4 text-muted-foreground/0 group-hover/doc:text-muted-foreground transition-colors" />
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <FileText className="h-10 w-10 text-muted-foreground/40 mb-3" />
-              <p className="text-sm font-medium text-muted-foreground">No documents uploaded yet</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Upload documents to start the AI validation process</p>
-              <Button
-                size="sm"
-                className="mt-4 gap-1"
-                onClick={() => setUploadDialogOpen(true)}
-              >
-                <Upload className="h-3.5 w-3.5" />
-                Upload Files
-              </Button>
-            </div>
-          )}
+          {/* Material Matrix (formerly Conformance) — with multi-select + export */}
+          <MaterialMatrixCard
+            documents={documents}
+            validations={validations}
+            projectId={project.id}
+            versionId={version.id}
+            onUpload={() => setUploadDialogOpen(true)}
+          />
         </div>
 
         {/* Right column — Version Details + Activity */}
@@ -319,7 +537,7 @@ export default function VersionOverviewPage() {
           <div className="rounded-xl border bg-card shadow-card p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-sm flex items-center gap-2">
-                <Shield className="h-4 w-4 text-primary" />
+                <Shield className="h-4 w-4 text-primary" aria-hidden="true" />
                 Version Details
               </h3>
               <Button
@@ -328,46 +546,46 @@ export default function VersionOverviewPage() {
                 className="h-7 text-xs gap-1"
                 onClick={() => setNewVersionOpen(true)}
               >
-                <Layers className="h-3 w-3" />
+                <Layers className="h-3 w-3" aria-hidden="true" />
                 New Version
               </Button>
             </div>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5" />
+                  <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
                   Created
                 </span>
-                <span className="font-medium">
+                <time className="font-medium" dateTime={version.createdAt}>
                   {new Date(version.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
-                </span>
+                </time>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
+                  <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                   Last Updated
                 </span>
-                <span className="font-medium">
+                <time className="font-medium" dateTime={version.updatedAt}>
                   {new Date(version.updatedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
-                </span>
+                </time>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Users className="h-3.5 w-3.5" />
+                  <Users className="h-3.5 w-3.5" aria-hidden="true" />
                   Team Members
                 </span>
                 <span className="font-medium">{project.memberIds.length}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground flex items-center gap-1.5">
-                  <FileText className="h-3.5 w-3.5" />
+                  <FileText className="h-3.5 w-3.5" aria-hidden="true" />
                   Spec Reference
                 </span>
                 <span className="font-medium text-xs truncate max-w-[140px]">{version.specificationRef}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground flex items-center gap-1.5">
-                  <BarChart3 className="h-3.5 w-3.5" />
+                  <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" />
                   Overall Score
                 </span>
                 <span className={cn("font-bold", confidenceColor)}>
@@ -380,7 +598,7 @@ export default function VersionOverviewPage() {
           {/* Recent Activity */}
           <div className="rounded-xl border bg-card shadow-card p-5">
             <h3 className="font-semibold text-sm flex items-center gap-2 mb-4">
-              <Clock className="h-4 w-4 text-primary" />
+              <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
               Recent Activity
             </h3>
             <div className="space-y-3">
@@ -392,7 +610,7 @@ export default function VersionOverviewPage() {
                     activity.type === "warning" && "bg-status-review-required",
                     activity.type === "error" && "bg-status-action-mandatory",
                     activity.type === "info" && "bg-primary",
-                  )} />
+                  )} aria-hidden="true" />
                   <div className="min-w-0">
                     <p className="text-xs font-medium">{activity.action}</p>
                     <p className="text-[11px] text-muted-foreground truncate">{activity.detail}</p>
@@ -409,11 +627,11 @@ export default function VersionOverviewPage() {
       {version.processingProgress && (
         <div className="rounded-xl border bg-card shadow-card p-5">
           <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-primary" />
+            <BarChart3 className="h-4 w-4 text-primary" aria-hidden="true" />
             Processing Status
           </h3>
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
+            <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden" role="progressbar" aria-valuenow={version.processingProgress.percentComplete} aria-valuemin={0} aria-valuemax={100}>
               <div
                 className="h-full rounded-full gradient-accent transition-all"
                 style={{
@@ -465,16 +683,20 @@ export default function VersionOverviewPage() {
           <div className="space-y-4 pt-2">
             {uploadFiles.length === 0 ? (
               <div
-                className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-8 text-center hover:border-nav-accent/40 transition-colors cursor-pointer"
+                className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-8 text-center hover:border-nav-accent/40 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 outline-none"
                 onClick={handleSimulateUpload}
                 role="button"
                 tabIndex={0}
+                aria-label="Click to select files for upload"
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") handleSimulateUpload();
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleSimulateUpload();
+                  }
                 }}
               >
                 <div className="mx-auto w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
-                  <Upload className="h-6 w-6 text-muted-foreground" />
+                  <Upload className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
                 </div>
                 <p className="text-sm font-medium">Click to select files</p>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -494,7 +716,7 @@ export default function VersionOverviewPage() {
                         className="flex items-center gap-3 p-3 rounded-lg border bg-muted/10"
                       >
                         <div className="h-8 w-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
-                          <FileText className="h-4 w-4 text-red-600 dark:text-red-400" />
+                          <FileText className="h-4 w-4 text-red-600 dark:text-red-400" aria-hidden="true" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{file.name}</p>
@@ -505,8 +727,9 @@ export default function VersionOverviewPage() {
                           size="icon"
                           className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
                           onClick={() => handleRemoveUploadFile(file.id)}
+                          aria-label={`Remove ${file.name}`}
                         >
-                          <X className="h-3.5 w-3.5" />
+                          <X className="h-3.5 w-3.5" aria-hidden="true" />
                         </Button>
                       </div>
                     ))}
@@ -523,7 +746,7 @@ export default function VersionOverviewPage() {
                     className="h-7 text-xs gap-1"
                     onClick={handleAddOneMore}
                   >
-                    <Plus className="h-3 w-3" />
+                    <Plus className="h-3 w-3" aria-hidden="true" />
                     Add More
                   </Button>
                 </div>
@@ -590,8 +813,9 @@ export default function VersionOverviewPage() {
               className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-6 text-center hover:border-nav-accent/40 transition-colors cursor-pointer"
               role="button"
               tabIndex={0}
+              aria-label="Upload additional files for the new version"
             >
-              <Upload className="h-6 w-6 text-muted-foreground/50 mx-auto mb-2" />
+              <Upload className="h-6 w-6 text-muted-foreground/50 mx-auto mb-2" aria-hidden="true" />
               <p className="text-sm font-medium">Upload additional files</p>
               <p className="text-xs text-muted-foreground mt-1">
                 PDF, XLSX, DOCX up to 50MB each
@@ -613,6 +837,6 @@ export default function VersionOverviewPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </main>
   );
 }

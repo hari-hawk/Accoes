@@ -6,10 +6,10 @@ import { FolderKanban, CheckCircle2, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WorkflowStage } from "@/data/types";
 
-/** Inline tab bar for version workspace: Overview / Conformance / Upload */
+/** Inline tab bar for version workspace: Overview / Material Matrix / Upload */
 const TABS = [
   { key: "overview", label: "Overview", icon: FolderKanban, path: "" },
-  { key: "review", label: "Conformance", icon: CheckCircle2, path: "/review" },
+  { key: "review", label: "Material Matrix", icon: CheckCircle2, path: "/review" },
   { key: "upload", label: "Upload", icon: ShieldCheck, path: "/upload" },
 ] as const;
 

@@ -79,7 +79,7 @@ export function ProjectCard({
 
   // Action link hrefs
   const overviewHref = `/projects/${project.id}/versions/${project.latestVersionId}`;
-  const conformanceHref = `/projects/${project.id}/versions/${project.latestVersionId}/review`;
+  const materialMatrixHref = `/projects/${project.id}/versions/${project.latestVersionId}/review`;
 
   return (
     <article
@@ -209,12 +209,12 @@ export function ProjectCard({
                 Overview
               </Link>
               <Link
-                href={conformanceHref}
+                href={materialMatrixHref}
                 className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-nav-accent transition-colors font-medium focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-sm outline-none px-0.5"
-                aria-label={`View conformance for ${project.name}`}
+                aria-label={`View material matrix for ${project.name}`}
               >
                 <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                Conformance
+                Material Matrix
               </Link>
               <button
                 type="button"
@@ -249,10 +249,10 @@ export function ProjectCard({
               </span>
               <span
                 className="flex items-center gap-1.5 text-xs text-muted-foreground/40 font-medium cursor-not-allowed"
-                aria-label="Conformance unavailable — no versions"
+                aria-label="Material Matrix unavailable — no versions"
               >
                 <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                Conformance
+                Material Matrix
               </span>
               <span
                 className="flex items-center gap-1.5 text-xs text-muted-foreground/40 font-medium cursor-not-allowed"

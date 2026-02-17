@@ -4,7 +4,7 @@ import Link from "next/link";
 import {
   Eye,
   ShieldCheck,
-  FileBarChart,
+  Download,
   MapPin,
   Calendar,
   TrendingUp,
@@ -20,7 +20,6 @@ import {
   AvatarGroupCount,
 } from "@/components/ui/avatar";
 import { StatusIndicator } from "@/components/shared/status-indicator";
-import { PROJECT_STAGE_CONFIG } from "@/lib/constants";
 import { mockUsers } from "@/data/mock-users";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/data/types";
@@ -37,9 +36,11 @@ function getInitials(name: string) {
 export function ProjectCard({
   project,
   onCardClick,
+  onDownloadReport,
 }: {
   project: Project;
   onCardClick?: (project: Project) => void;
+  onDownloadReport?: (project: Project) => void;
 }) {
   const confidence = project.confidenceSummary.overallConfidence;
   const confidenceColor =
@@ -61,7 +62,6 @@ export function ProjectCard({
           : "bg-muted-foreground/30";
 
   const hasVersions = !!project.latestVersionId;
-  const stageConfig = PROJECT_STAGE_CONFIG[project.stage];
 
   // Resolve member IDs to user objects (show max 3)
   const members = project.memberIds
@@ -73,7 +73,6 @@ export function ProjectCard({
   // Action link hrefs
   const overviewHref = `/projects/${project.id}/versions/${project.latestVersionId}`;
   const conformanceHref = `/projects/${project.id}/versions/${project.latestVersionId}/review`;
-  const reportHref = `/projects/${project.id}/versions/${project.latestVersionId}/export`;
 
   return (
     <div className="group relative rounded-xl border bg-card shadow-card transition-all duration-300 hover:shadow-card-hover hover-lift overflow-hidden animate-fade-up">
@@ -124,16 +123,8 @@ export function ProjectCard({
           </div>
         </div>
 
-        {/* Row 3: Stage as text field + Avatar stack */}
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 text-xs">
-            <span className="text-muted-foreground">Stage:</span>
-            <span className={cn("font-medium", stageConfig.color)}>
-              {stageConfig.label}
-            </span>
-          </div>
-
-          {/* Avatar stack with mock profile images */}
+        {/* Row 3: Avatar stack */}
+        <div className="mt-3 flex items-center justify-end">
           <AvatarGroup>
             {visibleMembers.map((user) => (
               <Avatar key={user!.id} size="sm">
@@ -210,13 +201,14 @@ export function ProjectCard({
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Conformance
               </Link>
-              <Link
-                href={reportHref}
+              <button
+                type="button"
                 className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-nav-accent transition-colors font-medium"
+                onClick={() => onDownloadReport?.(project)}
               >
-                <FileBarChart className="h-3.5 w-3.5" />
-                Report
-              </Link>
+                <Download className="h-3.5 w-3.5" />
+                Download Report
+              </button>
             </>
           ) : (
             <>
@@ -229,8 +221,8 @@ export function ProjectCard({
                 Conformance
               </span>
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground/50 font-medium cursor-not-allowed">
-                <FileBarChart className="h-3.5 w-3.5" />
-                Report
+                <Download className="h-3.5 w-3.5" />
+                Download Report
               </span>
             </>
           )}

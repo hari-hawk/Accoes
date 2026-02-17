@@ -1,27 +1,22 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useCallback } from "react";
 import {
   Search,
-  MoreVertical,
-  FileText,
-  Calendar,
-  MapPin,
   Upload,
-  Eye,
+  Download,
   FileSpreadsheet,
-  FileType,
-  File,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  X,
-  Plus,
-  Copy,
   Layers,
+  Filter,
+  X,
+  Loader2,
+  AlertTriangle,
+  Check,
+  ExternalLink,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -29,13 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -49,958 +37,836 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { EmptyState } from "@/components/shared/empty-state";
+import { useHydroMatrix } from "@/hooks/use-hydro-matrix";
+import { HYDRO_CATEGORY_ORDER } from "@/data/mock-project-index";
+import type {
+  HydroIndexCategory,
+  HydroSystemCategory,
+  HydroMaterialCategory,
+  HydroMatrixEntry,
+} from "@/data/mock-project-index";
+import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
-/*  Types                                                                     */
+/*  Badge color configs                                                        */
 /* -------------------------------------------------------------------------- */
 
-interface ProjectFile {
-  id: string;
-  name: string;
-  type: "pdf" | "xlsx" | "docx";
-  size: string;
-  uploadDate: string;
-}
-
-interface ProjectVersion {
-  id: string;
-  versionNumber: number;
-  label: string;
-  status: "active" | "archived";
-  files: ProjectFile[];
-  createdAt: string;
-}
-
-interface ProjectIndexItem {
-  id: string;
-  projectCode: string;
-  projectName: string;
-  client: string;
-  location: string;
-  status: "in_progress" | "active" | "on_hold" | "completed";
-  documentsCount: number;
-  startDate: string;
-  team: string[];
-  versions: ProjectVersion[];
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Mock data                                                                 */
-/* -------------------------------------------------------------------------- */
-
-const mockProjectIndex: ProjectIndexItem[] = [
-  {
-    id: "pi1",
-    projectCode: "RCT-2025",
-    projectName: "Riverside Commercial Tower",
-    client: "Meridian Development Group",
-    location: "Downtown Riverside",
-    status: "completed",
-    documentsCount: 34,
-    startDate: "01/08/2025",
-    team: ["SM", "JC", "MG"],
-    versions: [
-      {
-        id: "pi1-v1", versionNumber: 1, label: "v1.0", status: "archived", createdAt: "01/09/2025",
-        files: [
-          { id: "f1a-v1", name: "Structural Steel Shop Drawings.pdf", type: "pdf", size: "4.2 MB", uploadDate: "05/09/2025" },
-          { id: "f1b-v1", name: "HVAC Equipment Schedule.xlsx", type: "xlsx", size: "1.0 MB", uploadDate: "10/09/2025" },
-        ],
-      },
-      {
-        id: "pi1-v2", versionNumber: 2, label: "v2.0", status: "archived", createdAt: "01/10/2025",
-        files: [
-          { id: "f1a-v2", name: "Structural Steel Shop Drawings Rev2.pdf", type: "pdf", size: "4.5 MB", uploadDate: "01/10/2025" },
-          { id: "f1b-v2", name: "HVAC Equipment Schedule.xlsx", type: "xlsx", size: "1.2 MB", uploadDate: "05/10/2025" },
-          { id: "f1c-v2", name: "Electrical Riser Diagram.pdf", type: "pdf", size: "2.1 MB", uploadDate: "03/10/2025" },
-        ],
-      },
-      {
-        id: "pi1-v3", versionNumber: 3, label: "v3.0", status: "active", createdAt: "01/11/2025",
-        files: [
-          { id: "f1a", name: "Structural Steel Shop Drawings Rev3.pdf", type: "pdf", size: "4.8 MB", uploadDate: "12/11/2025" },
-          { id: "f1b", name: "HVAC Equipment Schedule.xlsx", type: "xlsx", size: "1.2 MB", uploadDate: "20/11/2025" },
-          { id: "f1c", name: "Electrical Riser Diagram.pdf", type: "pdf", size: "2.1 MB", uploadDate: "03/10/2025" },
-          { id: "f1d", name: "Fire Protection Narrative.docx", type: "docx", size: "820 KB", uploadDate: "15/11/2025" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "pi2",
-    projectCode: "HDM-2025",
-    projectName: "Harbor District Mixed Use",
-    client: "Coastal Properties LLC",
-    location: "Harbor District",
-    status: "active",
-    documentsCount: 22,
-    startDate: "01/10/2025",
-    team: ["SM", "JC", "DP"],
-    versions: [
-      {
-        id: "pi2-v1", versionNumber: 1, label: "v1.0", status: "archived", createdAt: "01/11/2025",
-        files: [
-          { id: "f2a-v1", name: "Foundation Plan Rev 1.pdf", type: "pdf", size: "3.0 MB", uploadDate: "01/11/2025" },
-        ],
-      },
-      {
-        id: "pi2-v2", versionNumber: 2, label: "v2.0", status: "active", createdAt: "01/12/2025",
-        files: [
-          { id: "f2a", name: "Foundation Plan Rev 3.pdf", type: "pdf", size: "3.4 MB", uploadDate: "05/12/2025" },
-          { id: "f2b", name: "Plumbing Fixture Schedule.xlsx", type: "xlsx", size: "640 KB", uploadDate: "18/12/2025" },
-          { id: "f2c", name: "Curtain Wall Details.pdf", type: "pdf", size: "5.2 MB", uploadDate: "02/12/2025" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "pi3",
-    projectCode: "MLE-2025",
-    projectName: "Metro Line Extension Phase 3",
-    client: "City Transit Authority",
-    location: "Metro Area",
-    status: "active",
-    documentsCount: 15,
-    startDate: "01/11/2025",
-    team: ["SM", "JC"],
-    versions: [
-      {
-        id: "pi3-v1", versionNumber: 1, label: "v1.0", status: "active", createdAt: "01/12/2025",
-        files: [
-          { id: "f3a", name: "Track Alignment Survey.pdf", type: "pdf", size: "6.1 MB", uploadDate: "10/12/2025" },
-          { id: "f3b", name: "Signal Systems Specification.docx", type: "docx", size: "1.8 MB", uploadDate: "22/12/2025" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "pi4",
-    projectCode: "PRC-2026",
-    projectName: "Parkview Residential Complex",
-    client: "Greenfield Homes Inc.",
-    location: "Parkview",
-    status: "on_hold",
-    documentsCount: 0,
-    startDate: "01/01/2026",
-    team: ["SM"],
-    versions: [
-      {
-        id: "pi4-v1", versionNumber: 1, label: "v1.0", status: "active", createdAt: "01/01/2026",
-        files: [
-          { id: "f4a", name: "Site Grading Plan.pdf", type: "pdf", size: "2.4 MB", uploadDate: "08/01/2026" },
-          { id: "f4b", name: "Unit Mix Summary.xlsx", type: "xlsx", size: "340 KB", uploadDate: "12/01/2026" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "pi5",
-    projectCode: "DOR-2025",
-    projectName: "Downtown Office Renovation",
-    client: "Metro Business Park Corp",
-    location: "Downtown",
-    status: "completed",
-    documentsCount: 18,
-    startDate: "01/06/2025",
-    team: ["SM", "MG", "DP"],
-    versions: [
-      {
-        id: "pi5-v1", versionNumber: 1, label: "v1.0", status: "archived", createdAt: "01/07/2025",
-        files: [
-          { id: "f5a-v1", name: "Demolition Plan.pdf", type: "pdf", size: "1.9 MB", uploadDate: "14/07/2025" },
-          { id: "f5b-v1", name: "MEP Coordination Drawings.pdf", type: "pdf", size: "7.3 MB", uploadDate: "02/08/2025" },
-        ],
-      },
-      {
-        id: "pi5-v2", versionNumber: 2, label: "v2.0", status: "active", createdAt: "01/09/2025",
-        files: [
-          { id: "f5a", name: "Demolition Plan Rev 2.pdf", type: "pdf", size: "1.9 MB", uploadDate: "01/09/2025" },
-          { id: "f5b", name: "MEP Coordination Drawings.pdf", type: "pdf", size: "7.3 MB", uploadDate: "02/08/2025" },
-          { id: "f5c", name: "Finish Schedule.xlsx", type: "xlsx", size: "510 KB", uploadDate: "20/09/2025" },
-          { id: "f5d", name: "Occupancy Permit Application.docx", type: "docx", size: "420 KB", uploadDate: "05/09/2025" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "pi6",
-    projectCode: "CCA-2026",
-    projectName: "Central Campus Addition",
-    client: "State University",
-    location: "University District",
-    status: "active",
-    documentsCount: 8,
-    startDate: "01/02/2026",
-    team: ["JC", "MG"],
-    versions: [
-      {
-        id: "pi6-v1", versionNumber: 1, label: "v1.0", status: "active", createdAt: "01/02/2026",
-        files: [
-          { id: "f6a", name: "Classroom Wing Floor Plans.pdf", type: "pdf", size: "3.6 MB", uploadDate: "05/02/2026" },
-          { id: "f6b", name: "AV Systems Requirements.docx", type: "docx", size: "960 KB", uploadDate: "08/02/2026" },
-          { id: "f6c", name: "Energy Model Report.pdf", type: "pdf", size: "2.8 MB", uploadDate: "10/02/2026" },
-        ],
-      },
-    ],
-  },
-];
-
-/* -------------------------------------------------------------------------- */
-/*  Status / file-type config                                                 */
-/* -------------------------------------------------------------------------- */
-
-const statusConfig: Record<string, { label: string; color: string }> = {
-  planning: {
-    label: "Planning",
-    color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  },
-  active: {
-    label: "Active",
-    color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  },
-  on_hold: {
-    label: "On Hold",
-    color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  },
-  completed: {
-    label: "Completed",
-    color: "bg-status-pre-approved-bg text-status-pre-approved",
-  },
+const INDEX_CATEGORY_COLORS: Record<HydroIndexCategory, string> = {
+  "Pipe": "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  "Fittings": "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
+  "Valves": "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  "Insulation": "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  "Hangers/Supports": "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  "Specialties": "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400",
+  "Joining/Branch Methods": "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
+  "Identification": "bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-400",
+  "Pressure Testing": "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
+  "Anchors": "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
-const fileTypeConfig: Record<string, { label: string; color: string; icon: typeof FileText }> = {
-  pdf: {
-    label: "PDF",
-    color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-    icon: FileText,
-  },
-  xlsx: {
-    label: "XLSX",
-    color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-    icon: FileSpreadsheet,
-  },
-  docx: {
-    label: "DOCX",
-    color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    icon: FileType,
-  },
+const SYSTEM_CATEGORY_COLORS: Record<HydroSystemCategory, string> = {
+  "Chilled Water": "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
+  "Condenser Water": "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400",
+  "Generic": "bg-gray-100 text-gray-600 dark:bg-gray-800/50 dark:text-gray-400",
+};
+
+const MATERIAL_CATEGORY_COLORS: Record<HydroMaterialCategory, string> = {
+  "Carbon Steel": "bg-zinc-100 text-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400",
+  "Copper": "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  "n/a": "",
 };
 
 /* -------------------------------------------------------------------------- */
-/*  Page component                                                            */
+/*  Hero Section                                                               */
 /* -------------------------------------------------------------------------- */
 
-export default function ProjectIndexPage() {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-
-  // Sheet state — right side panel for files
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<ProjectIndexItem | null>(null);
-  const [selectedVersionId, setSelectedVersionId] = useState<string>("");
-
-  // Full-screen PDF viewer dialog
-  const [viewerOpen, setViewerOpen] = useState(false);
-  const [viewingFile, setViewingFile] = useState<ProjectFile | null>(null);
-  const [viewerFiles, setViewerFiles] = useState<ProjectFile[]>([]);
-
-  // Create Version dialog
-  const [createVersionOpen, setCreateVersionOpen] = useState(false);
-  const [pullFromPrevious, setPullFromPrevious] = useState(true);
-  const [createVersionUploading, setCreateVersionUploading] = useState(false);
-
-  // Per-card version selectors
-  const [cardVersionMap, setCardVersionMap] = useState<Record<string, string>>({});
-
-  const filtered = mockProjectIndex.filter((item) => {
-    const matchSearch =
-      item.projectName.toLowerCase().includes(search.toLowerCase()) ||
-      item.projectCode.toLowerCase().includes(search.toLowerCase()) ||
-      item.client.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === "all" || item.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
-
-  const getActiveVersion = (project: ProjectIndexItem): ProjectVersion => {
-    const cardVerId = cardVersionMap[project.id];
-    if (cardVerId) {
-      const found = project.versions.find((v) => v.id === cardVerId);
-      if (found) return found;
-    }
-    return project.versions.find((v) => v.status === "active") ?? project.versions[project.versions.length - 1];
-  };
-
-  const selectedVersion = useMemo(() => {
-    if (!selectedProject || !selectedVersionId) return null;
-    return selectedProject.versions.find((v) => v.id === selectedVersionId) ?? null;
-  }, [selectedProject, selectedVersionId]);
-
-  const handleCardClick = (project: ProjectIndexItem) => {
-    setSelectedProject(project);
-    const ver = getActiveVersion(project);
-    setSelectedVersionId(ver.id);
-    setSheetOpen(true);
-  };
-
-  const handleViewFile = (file: ProjectFile, files: ProjectFile[]) => {
-    setViewingFile(file);
-    setViewerFiles(files);
-    setViewerOpen(true);
-  };
-
-  const handlePrevFile = () => {
-    if (!viewingFile || viewerFiles.length === 0) return;
-    const idx = viewerFiles.findIndex((f) => f.id === viewingFile.id);
-    const prevIdx = idx <= 0 ? viewerFiles.length - 1 : idx - 1;
-    setViewingFile(viewerFiles[prevIdx]);
-  };
-
-  const handleNextFile = () => {
-    if (!viewingFile || viewerFiles.length === 0) return;
-    const idx = viewerFiles.findIndex((f) => f.id === viewingFile.id);
-    const nextIdx = idx >= viewerFiles.length - 1 ? 0 : idx + 1;
-    setViewingFile(viewerFiles[nextIdx]);
-  };
-
-  const handleCreateVersion = () => {
-    setCreateVersionUploading(true);
-    // Mock creation delay
-    setTimeout(() => {
-      setCreateVersionUploading(false);
-      setCreateVersionOpen(false);
-      setPullFromPrevious(true);
-    }, 1500);
-  };
-
-  const currentFileIndex = viewingFile
-    ? viewerFiles.findIndex((f) => f.id === viewingFile.id)
-    : -1;
-
-  const previousVersion = selectedProject && selectedVersion
-    ? selectedProject.versions.find((v) => v.versionNumber === selectedVersion.versionNumber - 1)
-    : null;
-
+function HeroSection({
+  totalCount,
+  categoryCount,
+  systemCount,
+  onImport,
+  onExport,
+  exporting,
+}: {
+  totalCount: number;
+  categoryCount: number;
+  systemCount: number;
+  onImport: () => void;
+  onExport: () => void;
+  exporting: boolean;
+}) {
   return (
-    <div className="px-6 py-6 space-y-6 max-w-[1400px] mx-auto">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Project Index</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Complete index of all projects with version management and file tracking
-        </p>
-      </div>
+    <div className="gradient-hero rounded-2xl p-6 text-white relative overflow-hidden animate-fade-up">
+      <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/4" />
+      <div className="absolute inset-0 dot-pattern opacity-40" />
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="rounded-xl border bg-card p-4 shadow-card hover-lift animate-fade-up">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
-            Total Projects
-          </p>
-          <p className="text-2xl font-bold mt-1">{mockProjectIndex.length}</p>
-        </div>
-        <div className="rounded-xl border bg-card p-4 shadow-card hover-lift animate-fade-up">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
-            Active
-          </p>
-          <p className="text-2xl font-bold mt-1 text-blue-600">
-            {mockProjectIndex.filter((p) => p.status === "active").length}
+      <div className="relative flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">Hydro Matrix Index Grid</h1>
+          <p className="text-white/70 mt-0.5 text-sm">
+            Material specification library for mechanical systems reference data
           </p>
         </div>
-        <div className="rounded-xl border bg-card p-4 shadow-card hover-lift animate-fade-up">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
-            Completed
-          </p>
-          <p className="text-2xl font-bold mt-1 text-status-pre-approved">
-            {mockProjectIndex.filter((p) => p.status === "completed").length}
-          </p>
-        </div>
-        <div className="rounded-xl border bg-card p-4 shadow-card hover-lift animate-fade-up">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
-            Total Documents
-          </p>
-          <p className="text-2xl font-bold mt-1">
-            {mockProjectIndex.reduce((sum, p) => sum + p.documentsCount, 0)}
-          </p>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            className="gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity font-semibold"
+            onClick={onImport}
+          >
+            <Upload className="mr-1.5 h-4 w-4" />
+            Import Template
+          </Button>
+          <Button
+            variant="outline"
+            className="border-white/20 text-white hover:bg-white/10"
+            onClick={onExport}
+            disabled={exporting}
+          >
+            {exporting ? (
+              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-1.5 h-4 w-4" />
+            )}
+            Export Template
+          </Button>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name, code, or client..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="All Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="on_hold">On Hold</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Card Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {filtered.map((item) => {
-          const config = statusConfig[item.status];
-          const activeVer = getActiveVersion(item);
+      {/* Stat strip */}
+      <div className="relative flex items-center gap-6 mt-4 pt-4 border-t border-white/10">
+        {[
+          { label: "Total Entries", value: totalCount, icon: Layers },
+          { label: "Categories", value: categoryCount, icon: Filter },
+          { label: "Systems", value: systemCount, icon: ExternalLink },
+        ].map((stat) => {
+          const Icon = stat.icon;
           return (
-            <div
-              key={item.id}
-              className="rounded-xl border bg-card shadow-card overflow-hidden transition-all hover:shadow-card-hover hover-lift animate-fade-up cursor-pointer"
-              onClick={() => handleCardClick(item)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handleCardClick(item);
-                }
-              }}
-            >
-              <div className="flex">
-                {/* Left section — main info */}
-                <div className="flex-1 p-5 space-y-3 min-w-0">
-                  {/* Project code + status + version */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-sm font-bold text-nav-accent">
-                      {item.projectCode}
-                    </span>
-                    <Badge variant="secondary" className={config.color}>
-                      {config.label}
-                    </Badge>
-                    {/* Version selector on card */}
-                    {item.versions.length > 1 ? (
-                      <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-                        <Select
-                          value={cardVersionMap[item.id] || activeVer.id}
-                          onValueChange={(v) => setCardVersionMap((prev) => ({ ...prev, [item.id]: v }))}
-                        >
-                          <SelectTrigger className="h-6 w-auto text-[10px] px-2 gap-1 border-muted-foreground/20">
-                            <Layers className="h-3 w-3 text-muted-foreground" />
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {item.versions.map((ver) => (
-                              <SelectItem key={ver.id} value={ver.id}>
-                                {ver.label}{ver.status === "active" ? " (Active)" : ""}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ) : (
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <Layers className="h-3 w-3" />
-                        {activeVer.label}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Project name */}
-                  <h3 className="font-semibold text-base leading-snug truncate">
-                    {item.projectName}
-                  </h3>
-
-                  {/* Client */}
-                  <p className="text-sm text-muted-foreground truncate">
-                    {item.client}
-                  </p>
-
-                  {/* Meta row: date + location */}
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5" />
-                      {item.startDate}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5" />
-                      {item.location}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Right section — team, docs, actions */}
-                <div
-                  className="flex flex-col items-end justify-between p-5 pl-0 shrink-0"
-                  onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => e.stopPropagation()}
-                >
-                  {/* Actions dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 -mt-1 -mr-1">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit Project</DropdownMenuItem>
-                      <DropdownMenuItem>Archive</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  {/* Team avatars */}
-                  <div className="flex -space-x-1.5">
-                    {item.team.map((initials, i) => (
-                      <div
-                        key={`${item.id}-team-${i}`}
-                        className="h-7 w-7 rounded-full bg-primary/10 border-2 border-card flex items-center justify-center"
-                      >
-                        <span className="text-[10px] font-bold text-primary">
-                          {initials}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Document count + version file count */}
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <FileText className="h-3.5 w-3.5" />
-                    <span className="font-medium">
-                      {activeVer.files.length} files
-                    </span>
-                  </div>
-                </div>
+            <div key={stat.label} className="flex items-center gap-2.5">
+              <Icon className="h-4 w-4 text-nav-gold" />
+              <div>
+                <p className="text-lg font-bold leading-none">{stat.value}</p>
+                <p className="text-[10px] text-white/50 font-medium uppercase tracking-wider mt-0.5">
+                  {stat.label}
+                </p>
               </div>
             </div>
           );
         })}
       </div>
+    </div>
+  );
+}
 
-      {filtered.length === 0 && (
-        <div className="text-center py-16 text-muted-foreground">
-          <FileText className="h-8 w-8 mx-auto mb-3 opacity-40" />
-          <p className="text-sm">No projects match your search criteria.</p>
-        </div>
-      )}
+/* -------------------------------------------------------------------------- */
+/*  Filters Bar                                                                */
+/* -------------------------------------------------------------------------- */
 
-      {/* ------------------------------------------------------------------ */}
-      {/*  Right-Side Sheet — Project Files Panel with Version Selector       */}
-      {/* ------------------------------------------------------------------ */}
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="right" className="sm:max-w-xl w-full flex flex-col p-0">
-          {selectedProject && selectedVersion && (
-            <>
-              <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0 pr-12">
-                <div className="flex items-center gap-3">
-                  <span className="font-mono text-sm font-bold text-nav-accent">
-                    {selectedProject.projectCode}
-                  </span>
-                  <Badge
-                    variant="secondary"
-                    className={statusConfig[selectedProject.status].color}
-                  >
-                    {statusConfig[selectedProject.status].label}
-                  </Badge>
-                </div>
-                <SheetTitle className="text-lg">
-                  {selectedProject.projectName}
-                </SheetTitle>
-                <SheetDescription className="text-sm">
-                  {selectedProject.client} &middot; {selectedProject.location}
-                </SheetDescription>
-              </SheetHeader>
+function FiltersBar({
+  search,
+  onSearchChange,
+  categoryFilter,
+  onCategoryChange,
+  systemFilter,
+  onSystemChange,
+  materialFilter,
+  onMaterialChange,
+  hasActiveFilters,
+  onClearFilters,
+  filteredCount,
+  totalCount,
+}: {
+  search: string;
+  onSearchChange: (v: string) => void;
+  categoryFilter: HydroIndexCategory | "all";
+  onCategoryChange: (v: HydroIndexCategory | "all") => void;
+  systemFilter: HydroSystemCategory | "all";
+  onSystemChange: (v: HydroSystemCategory | "all") => void;
+  materialFilter: HydroMaterialCategory | "all";
+  onMaterialChange: (v: HydroMaterialCategory | "all") => void;
+  hasActiveFilters: boolean;
+  onClearFilters: () => void;
+  filteredCount: number;
+  totalCount: number;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      {/* Search */}
+      <div className="relative flex-1 min-w-[200px] max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search descriptions, IDs, subcategories..."
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="pl-9"
+        />
+        {search && (
+          <button
+            type="button"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full hover:bg-muted flex items-center justify-center"
+            onClick={() => onSearchChange("")}
+          >
+            <X className="h-3 w-3 text-muted-foreground" />
+          </button>
+        )}
+      </div>
 
-              <ScrollArea className="flex-1">
-                <div className="p-6 space-y-6">
-                  {/* Version selector + create */}
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 flex-1">
-                      <Layers className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <Select
-                        value={selectedVersionId}
-                        onValueChange={setSelectedVersionId}
-                      >
-                        <SelectTrigger className="flex-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {selectedProject.versions.map((ver) => (
-                            <SelectItem key={ver.id} value={ver.id}>
-                              {ver.label}
-                              {ver.status === "active" ? " (Active)" : " (Archived)"}
-                              {" — "}{ver.files.length} file{ver.files.length !== 1 ? "s" : ""}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button
-                      size="sm"
-                      className="gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity font-semibold shrink-0"
-                      onClick={() => setCreateVersionOpen(true)}
-                    >
-                      <Plus className="h-3.5 w-3.5 mr-1" />
-                      New Version
-                    </Button>
-                  </div>
+      {/* Index Category */}
+      <Select
+        value={categoryFilter}
+        onValueChange={(v) => onCategoryChange(v as HydroIndexCategory | "all")}
+      >
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="All Categories" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Categories</SelectItem>
+          {HYDRO_CATEGORY_ORDER.map((cat) => (
+            <SelectItem key={cat} value={cat}>
+              {cat}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-                  {/* Version info */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="rounded-lg bg-muted/40 p-3 text-center">
-                      <p className="text-lg font-bold">{selectedVersion.files.length}</p>
-                      <p className="text-[11px] text-muted-foreground">Files</p>
-                    </div>
-                    <div className="rounded-lg bg-muted/40 p-3 text-center">
-                      <p className="text-lg font-bold">{selectedVersion.label}</p>
-                      <p className="text-[11px] text-muted-foreground">Version</p>
-                    </div>
-                    <div className="rounded-lg bg-muted/40 p-3 text-center">
-                      <p className="text-lg font-bold capitalize">{selectedVersion.status}</p>
-                      <p className="text-[11px] text-muted-foreground">Status</p>
-                    </div>
-                  </div>
+      {/* System Category */}
+      <Select
+        value={systemFilter}
+        onValueChange={(v) => onSystemChange(v as HydroSystemCategory | "all")}
+      >
+        <SelectTrigger className="w-[160px]">
+          <SelectValue placeholder="All Systems" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Systems</SelectItem>
+          <SelectItem value="Chilled Water">Chilled Water</SelectItem>
+          <SelectItem value="Condenser Water">Condenser Water</SelectItem>
+          <SelectItem value="Generic">Generic</SelectItem>
+        </SelectContent>
+      </Select>
 
-                  {/* Team */}
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                      Team
-                    </p>
-                    <div className="flex -space-x-2">
-                      {selectedProject.team.map((initials, i) => (
-                        <div
-                          key={`sheet-team-${i}`}
-                          className="h-8 w-8 rounded-full gradient-accent border-2 border-card flex items-center justify-center"
-                        >
-                          <span className="text-[11px] font-bold text-white">
-                            {initials}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+      {/* Material Category */}
+      <Select
+        value={materialFilter}
+        onValueChange={(v) => onMaterialChange(v as HydroMaterialCategory | "all")}
+      >
+        <SelectTrigger className="w-[160px]">
+          <SelectValue placeholder="All Materials" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Materials</SelectItem>
+          <SelectItem value="Carbon Steel">Carbon Steel</SelectItem>
+          <SelectItem value="Copper">Copper</SelectItem>
+          <SelectItem value="n/a">N/A</SelectItem>
+        </SelectContent>
+      </Select>
 
-                  {/* Files list */}
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                      Version Files ({selectedVersion.files.length})
-                    </p>
-                    <div className="space-y-2">
-                      {selectedVersion.files.map((file) => {
-                        const ftConfig = fileTypeConfig[file.type];
-                        const FileIcon = ftConfig.icon;
-                        return (
-                          <div
-                            key={file.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors cursor-pointer group"
-                            onClick={() => handleViewFile(file, selectedVersion.files)}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                handleViewFile(file, selectedVersion.files);
-                              }
-                            }}
-                          >
-                            <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                              <FileIcon className="h-4.5 w-4.5 text-muted-foreground" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate group-hover:text-nav-accent transition-colors">
-                                {file.name}
-                              </p>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <Badge
-                                  variant="secondary"
-                                  className={`text-[10px] px-1.5 py-0 ${ftConfig.color}`}
-                                >
-                                  {ftConfig.label}
-                                </Badge>
-                                <span className="text-[11px] text-muted-foreground">
-                                  {file.size}
-                                </span>
-                                <span className="text-[11px] text-muted-foreground">
-                                  {file.uploadDate}
-                                </span>
-                              </div>
-                            </div>
-                            <Eye className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+      {/* Clear + Count */}
+      <div className="flex items-center gap-2 ml-auto">
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs h-8 gap-1"
+            onClick={onClearFilters}
+          >
+            <X className="h-3 w-3" />
+            Clear Filters
+          </Button>
+        )}
+        <Badge variant="secondary" className="text-xs shrink-0">
+          {filteredCount === totalCount
+            ? `${totalCount} entries`
+            : `${filteredCount} of ${totalCount}`}
+        </Badge>
+      </div>
+    </div>
+  );
+}
 
-                  {/* Upload zone */}
-                  <div className="rounded-xl border-2 border-dashed border-border p-6 text-center hover:border-nav-accent/40 transition-colors">
-                    <Upload className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
-                    <p className="text-sm font-medium">
-                      Drop files here to upload
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      or click to browse &middot; PDF, XLSX, DOCX
-                    </p>
-                  </div>
-                </div>
-              </ScrollArea>
-            </>
+/* -------------------------------------------------------------------------- */
+/*  Grouped Data Table                                                         */
+/* -------------------------------------------------------------------------- */
+
+function HydroMatrixTable({
+  groupedEntries,
+  onRowClick,
+  selectedId,
+}: {
+  groupedEntries: Map<HydroIndexCategory, HydroMatrixEntry[]>;
+  onRowClick: (entry: HydroMatrixEntry) => void;
+  selectedId: string | null;
+}) {
+  return (
+    <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b bg-muted/30">
+              <th className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                Index ID
+              </th>
+              <th className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
+                System
+              </th>
+              <th className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[120px] hidden md:table-cell">
+                Material
+              </th>
+              <th className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Description
+              </th>
+              <th className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[120px] hidden lg:table-cell">
+                Sizes
+              </th>
+              <th className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[180px] hidden xl:table-cell">
+                Subcategory
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from(groupedEntries.entries()).map(([category, entries]) => (
+              <CategoryGroup
+                key={category}
+                category={category}
+                entries={entries}
+                onRowClick={onRowClick}
+                selectedId={selectedId}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CategoryGroup({
+  category,
+  entries,
+  onRowClick,
+  selectedId,
+}: {
+  category: HydroIndexCategory;
+  entries: HydroMatrixEntry[];
+  onRowClick: (entry: HydroMatrixEntry) => void;
+  selectedId: string | null;
+}) {
+  return (
+    <>
+      {/* Section header row */}
+      <tr className="bg-muted/40 border-y border-muted">
+        <td colSpan={6} className="px-4 py-2.5">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className={cn("text-[10px]", INDEX_CATEGORY_COLORS[category])}>
+              {category}
+            </Badge>
+            <span className="text-xs text-muted-foreground font-medium">
+              {entries.length} {entries.length === 1 ? "entry" : "entries"}
+            </span>
+          </div>
+        </td>
+      </tr>
+
+      {/* Data rows */}
+      {entries.map((entry) => (
+        <tr
+          key={entry.id}
+          className={cn(
+            "border-b last:border-b-0 hover:bg-muted/30 transition-colors cursor-pointer group",
+            selectedId === entry.id && "bg-nav-accent/5"
           )}
-        </SheetContent>
-      </Sheet>
-
-      {/* ------------------------------------------------------------------ */}
-      {/*  Create New Version Dialog                                          */}
-      {/* ------------------------------------------------------------------ */}
-      <Dialog open={createVersionOpen} onOpenChange={setCreateVersionOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create New Version</DialogTitle>
-            <DialogDescription>
-              {selectedProject?.projectName ?? "Project"} — next version will be v{((selectedProject?.versions.length ?? 0) + 1)}.0
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-5 pt-2">
-            {/* Pull from previous */}
-            {previousVersion && (
-              <div className="flex items-start gap-3 rounded-lg border p-4">
-                <Checkbox
-                  id="pull-previous"
-                  checked={pullFromPrevious}
-                  onCheckedChange={(checked) => setPullFromPrevious(checked === true)}
-                  className="mt-0.5"
-                />
-                <div className="flex-1">
-                  <Label htmlFor="pull-previous" className="text-sm font-medium cursor-pointer">
-                    Pull files from previous version
-                  </Label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Copy {selectedVersion?.files.length ?? 0} file{(selectedVersion?.files.length ?? 0) !== 1 ? "s" : ""} from {selectedVersion?.label ?? "current version"} as starting point
-                  </p>
-                  {pullFromPrevious && selectedVersion && (
-                    <div className="mt-3 space-y-1.5">
-                      {selectedVersion.files.map((f) => (
-                        <div key={f.id} className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Copy className="h-3 w-3 shrink-0" />
-                          <span className="truncate">{f.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+          onClick={() => onRowClick(entry)}
+        >
+          <td className="p-3">
+            <span className="font-mono text-[11px] text-muted-foreground group-hover:text-nav-accent transition-colors">
+              {entry.indexIdFull}
+            </span>
+          </td>
+          <td className="p-3">
+            <Badge variant="secondary" className={cn("text-[10px]", SYSTEM_CATEGORY_COLORS[entry.systemCategory])}>
+              {entry.systemCategory}
+            </Badge>
+          </td>
+          <td className="p-3 hidden md:table-cell">
+            {entry.materialCategory !== "n/a" ? (
+              <Badge variant="secondary" className={cn("text-[10px]", MATERIAL_CATEGORY_COLORS[entry.materialCategory])}>
+                {entry.materialCategory}
+              </Badge>
+            ) : (
+              <span className="text-xs text-muted-foreground/50">—</span>
             )}
+          </td>
+          <td className="p-3">
+            <p className="text-sm font-medium truncate max-w-[350px]" title={entry.description}>
+              {entry.description}
+            </p>
+            {entry.fittingMfr !== "n/a" && (
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Mfr: {entry.fittingMfr}
+              </p>
+            )}
+          </td>
+          <td className="p-3 hidden lg:table-cell">
+            <span className="text-xs text-muted-foreground">
+              {entry.sizes.includes("|")
+                ? entry.sizes.split("|").slice(0, 4).join(", ") +
+                  (entry.sizes.split("|").length > 4 ? "..." : "")
+                : entry.sizes}
+            </span>
+          </td>
+          <td className="p-3 hidden xl:table-cell">
+            <span className="text-xs text-muted-foreground truncate block max-w-[160px]" title={entry.indexSubcategory}>
+              {entry.indexSubcategory}
+            </span>
+          </td>
+        </tr>
+      ))}
+    </>
+  );
+}
 
-            {/* Upload new files */}
-            <div className="rounded-xl border-2 border-dashed border-border p-6 text-center hover:border-nav-accent/40 transition-colors cursor-pointer">
-              <Upload className="h-6 w-6 text-muted-foreground/50 mx-auto mb-2" />
-              <p className="text-sm font-medium">Upload additional files</p>
+/* -------------------------------------------------------------------------- */
+/*  Entry Detail Sheet                                                         */
+/* -------------------------------------------------------------------------- */
+
+function HydroEntryDetailSheet({
+  entry,
+  open,
+  onOpenChange,
+}: {
+  entry: HydroMatrixEntry | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  if (!entry) return null;
+
+  const details = [
+    { label: "Index ID", value: entry.indexIdFull, mono: true },
+    { label: "Trade", value: entry.trade },
+    { label: "Index Category", value: entry.indexCategory },
+    { label: "System Category", value: entry.systemCategory },
+    { label: "Material Category", value: entry.materialCategory },
+    { label: "Fitting Manufacturer", value: entry.fittingMfr },
+    { label: "Sizes", value: entry.sizes.includes("|") ? entry.sizes.split("|").join(", ") : entry.sizes },
+    { label: "Subcategory", value: entry.indexSubcategory },
+  ];
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="sm:max-w-lg w-full flex flex-col p-0">
+        <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0 pr-12">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="secondary" className={cn("text-[10px]", INDEX_CATEGORY_COLORS[entry.indexCategory])}>
+              {entry.indexCategory}
+            </Badge>
+            <Badge variant="secondary" className={cn("text-[10px]", SYSTEM_CATEGORY_COLORS[entry.systemCategory])}>
+              {entry.systemCategory}
+            </Badge>
+          </div>
+          <SheetTitle className="text-base leading-snug">
+            {entry.description}
+          </SheetTitle>
+          <SheetDescription className="font-mono text-xs">
+            {entry.indexIdFull}
+          </SheetDescription>
+        </SheetHeader>
+
+        <ScrollArea className="flex-1">
+          <div className="p-6 space-y-6">
+            {/* Full description */}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                Index Description
+              </p>
+              <div className="rounded-lg bg-muted/30 p-4">
+                <p className="text-sm leading-relaxed text-foreground/90">
+                  {entry.indexDescription}
+                </p>
+              </div>
+            </div>
+
+            {/* Key-value details */}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                Specification Details
+              </p>
+              <div className="space-y-3">
+                {details.map((d) => (
+                  <div key={d.label} className="flex items-start justify-between gap-4">
+                    <span className="text-sm text-muted-foreground shrink-0">{d.label}</span>
+                    <span
+                      className={cn(
+                        "text-sm font-medium text-right",
+                        d.mono && "font-mono text-xs"
+                      )}
+                    >
+                      {d.value === "n/a" ? (
+                        <span className="text-muted-foreground/50">N/A</span>
+                      ) : (
+                        d.value
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Import Template Dialog                                                     */
+/* -------------------------------------------------------------------------- */
+
+function HydroImportDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [step, setStep] = useState<"drop" | "preview" | "processing" | "done">("drop");
+  const [fileName, setFileName] = useState("");
+
+  const handleFileDrop = () => {
+    // Mock: simulate file selection
+    setFileName("Hydro Matrix Index Grid.xlsx");
+    setStep("preview");
+  };
+
+  const handleConfirm = () => {
+    setStep("processing");
+    setTimeout(() => {
+      setStep("done");
+    }, 1500);
+  };
+
+  const handleClose = (isOpen: boolean) => {
+    if (!isOpen) {
+      // Reset on close
+      setStep("drop");
+      setFileName("");
+    }
+    onOpenChange(isOpen);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Upload className="h-4 w-4" />
+            Import Template
+          </DialogTitle>
+          <DialogDescription>
+            Upload an XLSX template to update the Hydro Matrix Index Grid library.
+          </DialogDescription>
+        </DialogHeader>
+
+        {step === "drop" && (
+          <div className="space-y-4 pt-2">
+            <div
+              className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-10 text-center hover:border-nav-accent/40 transition-colors cursor-pointer"
+              onClick={handleFileDrop}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") handleFileDrop();
+              }}
+            >
+              <div className="mx-auto w-14 h-14 rounded-xl bg-muted flex items-center justify-center mb-3">
+                <FileSpreadsheet className="h-7 w-7 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium">Drop your XLSX template here</p>
               <p className="text-xs text-muted-foreground mt-1">
-                PDF, XLSX, DOCX up to 50MB each
+                or click to browse
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Accepts: .xlsx only &middot; Max size: 10 MB
+              </p>
+            </div>
+          </div>
+        )}
+
+        {step === "preview" && (
+          <div className="space-y-4 pt-2">
+            {/* File info */}
+            <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/10">
+              <div className="h-10 w-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                <FileSpreadsheet className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{fileName}</p>
+                <p className="text-xs text-muted-foreground">1.2 MB &middot; Ready to import</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0"
+                onClick={() => {
+                  setStep("drop");
+                  setFileName("");
+                }}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+
+            {/* Mock preview table */}
+            <div className="rounded-lg border overflow-hidden">
+              <div className="px-3 py-2 bg-muted/30 border-b">
+                <p className="text-xs font-medium text-muted-foreground">Preview (first 5 rows)</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="px-3 py-1.5 text-left text-muted-foreground font-medium">Index ID</th>
+                      <th className="px-3 py-1.5 text-left text-muted-foreground font-medium">Category</th>
+                      <th className="px-3 py-1.5 text-left text-muted-foreground font-medium">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { id: "01_01_01_00_005_XX", cat: "Pressure Testing", desc: "Hydrostatic @ 150 psi" },
+                      { id: "01_02_01_00_071_XX", cat: "Pipe", desc: "CS Sch 40 ERW - ASTM A-53" },
+                      { id: "01_03_01_00_035_00", cat: "Fittings", desc: "Black Malleable Iron 150#" },
+                      { id: "01_05_01_00_050_XX", cat: "Valves", desc: "Nibco BFV LD-1000 (Lugged)" },
+                      { id: "01_07_XX_00_001_XX", cat: "Insulation", desc: "1\" Insulation Thickness" },
+                    ].map((row) => (
+                      <tr key={row.id} className="border-b last:border-b-0">
+                        <td className="px-3 py-1.5 font-mono text-[10px] text-muted-foreground">{row.id}</td>
+                        <td className="px-3 py-1.5">{row.cat}</td>
+                        <td className="px-3 py-1.5 truncate max-w-[180px]">{row.desc}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="flex items-center gap-4 text-xs text-muted-foreground px-1">
+              <span className="font-medium">311 rows detected</span>
+              <span>&middot;</span>
+              <span>10 categories</span>
+              <span>&middot;</span>
+              <span>3 system types</span>
+            </div>
+
+            {/* Warning */}
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/10 p-3">
+              <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                This will replace the current library data. The existing entries will be overwritten.
               </p>
             </div>
 
-            {/* Actions */}
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setCreateVersionOpen(false)}>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setStep("drop"); setFileName(""); }}>
+                Back
+              </Button>
+              <Button variant="outline" onClick={() => handleClose(false)}>
                 Cancel
               </Button>
               <Button
-                className="gradient-accent text-white border-0 shadow-glow hover:opacity-90"
-                onClick={handleCreateVersion}
-                disabled={createVersionUploading}
+                className="gradient-gold text-white border-0"
+                onClick={handleConfirm}
               >
-                {createVersionUploading ? "Creating..." : "Create Version"}
+                Confirm Import
               </Button>
-            </div>
+            </DialogFooter>
           </div>
-        </DialogContent>
-      </Dialog>
+        )}
 
-      {/* ------------------------------------------------------------------ */}
-      {/*  Full-screen PDF Viewer Dialog                                      */}
-      {/* ------------------------------------------------------------------ */}
-      <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
-        <DialogContent className="max-w-[96vw] sm:max-w-[96vw] w-[96vw] h-[96vh] flex flex-col p-0 gap-0">
-          {viewingFile && (
-            <>
-              {/* Viewer Header */}
-              <div className="flex items-center justify-between px-5 py-3 border-b shrink-0 bg-card">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <Badge
-                    variant="secondary"
-                    className={`text-[10px] px-1.5 py-0 shrink-0 ${fileTypeConfig[viewingFile.type].color}`}
-                  >
-                    {fileTypeConfig[viewingFile.type].label}
-                  </Badge>
+        {step === "processing" && (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <Loader2 className="h-8 w-8 text-primary animate-spin mb-4" />
+            <p className="text-sm font-medium">Importing template...</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Parsing 311 rows across 10 categories
+            </p>
+          </div>
+        )}
 
-                  {/* File switcher dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 text-sm font-semibold hover:text-nav-accent transition-colors min-w-0 cursor-pointer"
-                      >
-                        <span className="truncate">{viewingFile.name}</span>
-                        <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-80">
-                      {viewerFiles.map((f, i) => {
-                        const ft = fileTypeConfig[f.type];
-                        const FIcon = ft.icon;
-                        return (
-                          <DropdownMenuItem
-                            key={f.id}
-                            className={
-                              f.id === viewingFile.id
-                                ? "bg-nav-accent/10 text-nav-accent"
-                                : ""
-                            }
-                            onClick={() => setViewingFile(f)}
-                          >
-                            <FIcon className="h-4 w-4 mr-2 shrink-0" />
-                            <span className="truncate">{f.name}</span>
-                            <span className="ml-auto text-[10px] text-muted-foreground pl-2 shrink-0">
-                              {i + 1}/{viewerFiles.length}
-                            </span>
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+        {step === "done" && (
+          <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
+            <div className="rounded-full bg-status-pre-approved/10 p-3">
+              <Check className="h-6 w-6 text-status-pre-approved" />
+            </div>
+            <p className="text-sm font-medium">Import complete!</p>
+            <p className="text-xs text-muted-foreground">
+              311 entries imported across 10 categories
+            </p>
+            <Button variant="outline" size="sm" onClick={() => handleClose(false)}>
+              Close
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
-                <div className="flex items-center gap-1.5 shrink-0 ml-4">
-                  <span className="text-xs text-muted-foreground mr-2">
-                    {currentFileIndex + 1} / {viewerFiles.length}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={handlePrevFile}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={handleNextFile}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  <DialogTitle className="sr-only">
-                    Document Viewer — {viewingFile.name}
-                  </DialogTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 ml-1"
-                    onClick={() => setViewerOpen(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+/* -------------------------------------------------------------------------- */
+/*  Main Page Component                                                        */
+/* -------------------------------------------------------------------------- */
 
-              {/* Viewer body — thumbnail sidebar + main view */}
-              <div className="flex flex-1 overflow-hidden">
-                {/* Thumbnail sidebar */}
-                <div className="w-48 border-r bg-muted/20 shrink-0 hidden md:block">
-                  <ScrollArea className="h-full">
-                    <div className="p-3 space-y-2">
-                      {viewerFiles.map((f) => {
-                        const ft = fileTypeConfig[f.type];
-                        const FIcon = ft.icon;
-                        const isActive = f.id === viewingFile.id;
-                        return (
-                          <button
-                            key={f.id}
-                            type="button"
-                            onClick={() => setViewingFile(f)}
-                            className={`w-full rounded-lg border p-2.5 text-left transition-all cursor-pointer ${
-                              isActive
-                                ? "border-nav-accent bg-nav-accent/5 ring-1 ring-nav-accent/30"
-                                : "border-border bg-card hover:bg-muted/30"
-                            }`}
-                          >
-                            <div className="aspect-[4/3] rounded bg-muted/40 flex items-center justify-center mb-2">
-                              <FIcon
-                                className={`h-6 w-6 ${
-                                  isActive
-                                    ? "text-nav-accent"
-                                    : "text-muted-foreground/50"
-                                }`}
-                              />
-                            </div>
-                            <p
-                              className={`text-[11px] font-medium truncate ${
-                                isActive ? "text-nav-accent" : "text-foreground"
-                              }`}
-                            >
-                              {f.name}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                              {f.size}
-                            </p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </ScrollArea>
-                </div>
+export default function ProjectIndexPage() {
+  const {
+    search,
+    setSearch,
+    categoryFilter,
+    setCategoryFilter,
+    systemFilter,
+    setSystemFilter,
+    materialFilter,
+    setMaterialFilter,
+    filteredEntries,
+    groupedEntries,
+    hasActiveFilters,
+    clearFilters,
+    selectedId,
+    setSelectedId,
+    selectedEntry,
+    totalCount,
+    filteredCount,
+    filteredCategoryCount,
+    filteredSystemCount,
+  } = useHydroMatrix();
 
-                {/* Main viewer area */}
-                <div className="flex-1 overflow-y-auto bg-muted/10">
-                  <div className="min-h-full flex flex-col items-center justify-center p-8">
-                    <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-                      <File className="h-8 w-8 text-muted-foreground/60" />
-                    </div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {viewingFile.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground text-center max-w-sm mt-2">
-                      Document preview will render here. This is a placeholder
-                      for the integrated file viewer.
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-3">
-                      <span>{viewingFile.size}</span>
-                      <span>Uploaded {viewingFile.uploadDate}</span>
-                    </div>
+  // Import dialog
+  const [importOpen, setImportOpen] = useState(false);
 
-                    {/* Mock page representation */}
-                    <div className="w-full max-w-lg mt-6 space-y-3">
-                      <div className="bg-background rounded-lg border shadow-sm p-6 space-y-3">
-                        <div className="h-3 w-3/4 bg-muted rounded" />
-                        <div className="h-2 w-full bg-muted/70 rounded" />
-                        <div className="h-2 w-full bg-muted/70 rounded" />
-                        <div className="h-2 w-5/6 bg-muted/70 rounded" />
-                        <div className="h-20 w-full bg-muted/40 rounded mt-4" />
-                        <div className="h-2 w-full bg-muted/70 rounded" />
-                        <div className="h-2 w-2/3 bg-muted/70 rounded" />
-                      </div>
-                      <div className="bg-background rounded-lg border shadow-sm p-6 space-y-3">
-                        <div className="h-3 w-1/2 bg-muted rounded" />
-                        <div className="h-2 w-full bg-muted/70 rounded" />
-                        <div className="h-2 w-4/5 bg-muted/70 rounded" />
-                        <div className="h-16 w-full bg-muted/40 rounded mt-4" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+  // Export state
+  const [exporting, setExporting] = useState(false);
+
+  // Detail sheet
+  const sheetOpen = selectedId !== null;
+
+  const handleRowClick = useCallback(
+    (entry: HydroMatrixEntry) => {
+      setSelectedId(entry.id);
+    },
+    [setSelectedId]
+  );
+
+  const handleSheetClose = useCallback(
+    (open: boolean) => {
+      if (!open) setSelectedId(null);
+    },
+    [setSelectedId]
+  );
+
+  const handleExport = useCallback(() => {
+    setExporting(true);
+    setTimeout(() => {
+      const entries = filteredEntries;
+      const headers = [
+        "Index ID Full",
+        "Trade",
+        "Index Category",
+        "System Category",
+        "Material Category",
+        "Description",
+        "Fitting Mfr",
+        "Sizes",
+        "Index Description",
+        "Index Subcategory",
+      ];
+      const rows = entries.map((e) =>
+        [
+          e.indexIdFull,
+          e.trade,
+          e.indexCategory,
+          e.systemCategory,
+          e.materialCategory,
+          e.description,
+          e.fittingMfr,
+          e.sizes,
+          e.indexDescription,
+          e.indexSubcategory,
+        ]
+          .map((v) => `"${v.replace(/"/g, '""')}"`)
+          .join(",")
+      );
+      const csvContent = [headers.join(","), ...rows].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "hydro-matrix-index.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+      setExporting(false);
+    }, 800);
+  }, [filteredEntries]);
+
+  return (
+    <div className="px-6 py-6 space-y-6 max-w-[1400px] mx-auto">
+      {/* Hero */}
+      <HeroSection
+        totalCount={totalCount}
+        categoryCount={filteredCategoryCount}
+        systemCount={filteredSystemCount}
+        onImport={() => setImportOpen(true)}
+        onExport={handleExport}
+        exporting={exporting}
+      />
+
+      {/* Filters */}
+      <FiltersBar
+        search={search}
+        onSearchChange={setSearch}
+        categoryFilter={categoryFilter}
+        onCategoryChange={setCategoryFilter}
+        systemFilter={systemFilter}
+        onSystemChange={setSystemFilter}
+        materialFilter={materialFilter}
+        onMaterialChange={setMaterialFilter}
+        hasActiveFilters={hasActiveFilters}
+        onClearFilters={clearFilters}
+        filteredCount={filteredCount}
+        totalCount={totalCount}
+      />
+
+      {/* Table or Empty state */}
+      {filteredEntries.length === 0 ? (
+        <EmptyState
+          icon={Search}
+          title="No entries match your filters"
+          description="Try adjusting your search or filter criteria to find the material specifications you need."
+        >
+          <Button variant="outline" onClick={clearFilters}>
+            <X className="mr-1.5 h-4 w-4" />
+            Clear Filters
+          </Button>
+        </EmptyState>
+      ) : (
+        <HydroMatrixTable
+          groupedEntries={groupedEntries}
+          onRowClick={handleRowClick}
+          selectedId={selectedId}
+        />
+      )}
+
+      {/* Detail Sheet */}
+      <HydroEntryDetailSheet
+        entry={selectedEntry}
+        open={sheetOpen}
+        onOpenChange={handleSheetClose}
+      />
+
+      {/* Import Dialog */}
+      <HydroImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+      />
     </div>
   );
 }

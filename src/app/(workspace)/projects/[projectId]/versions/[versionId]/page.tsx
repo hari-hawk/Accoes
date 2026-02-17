@@ -327,7 +327,7 @@ export default function VersionOverviewPage() {
               {version.processingProgress.log.map((entry, i) => (
                 <div key={i} className="flex gap-2 text-[11px] py-0.5">
                   <span className="text-muted-foreground/60 font-mono shrink-0">
-                    {new Date(entry.timestamp).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(entry.timestamp).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false })}
                   </span>
                   <span className={cn(
                     entry.level === "success" && "text-status-pre-approved",

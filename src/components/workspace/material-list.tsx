@@ -195,7 +195,7 @@ export function MaterialList({
             }
           >
             <SelectTrigger className="flex-1 h-8 text-xs">
-              <SelectValue placeholder="Project Specification (PS)" />
+              <SelectValue placeholder="Project Specifications (PS)" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>

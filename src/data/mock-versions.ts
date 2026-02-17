@@ -11,7 +11,7 @@ export const mockVersions: Version[] = [
     createdAt: "2025-08-20T09:00:00Z",
     updatedAt: "2025-09-15T16:00:00Z",
     createdBy: "user-1",
-    specificationRef: "Project Spec Rev A - Aug 2025",
+    specificationRef: "Project Specifications Rev A - Aug 2025",
     documentIds: ["doc-1", "doc-2", "doc-3", "doc-4", "doc-5"],
     confidenceSummary: {
       preApproved: 2,
@@ -30,7 +30,7 @@ export const mockVersions: Version[] = [
     createdAt: "2025-10-01T10:00:00Z",
     updatedAt: "2025-11-10T14:00:00Z",
     createdBy: "user-1",
-    specificationRef: "Project Spec Rev B - Oct 2025",
+    specificationRef: "Project Specifications Rev B - Oct 2025",
     documentIds: ["doc-6", "doc-7", "doc-8", "doc-9", "doc-10", "doc-11", "doc-12"],
     confidenceSummary: {
       preApproved: 5,
@@ -49,7 +49,7 @@ export const mockVersions: Version[] = [
     createdAt: "2025-11-20T08:00:00Z",
     updatedAt: "2025-12-20T16:30:00Z",
     createdBy: "user-2",
-    specificationRef: "Project Spec Rev B - Oct 2025",
+    specificationRef: "Project Specifications Rev B - Oct 2025",
     documentIds: ["doc-13", "doc-14", "doc-15", "doc-16", "doc-17", "doc-18", "doc-19", "doc-20", "doc-21", "doc-22"],
     confidenceSummary: {
       preApproved: 8,

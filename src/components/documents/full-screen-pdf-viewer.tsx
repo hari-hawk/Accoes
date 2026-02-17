@@ -53,7 +53,7 @@ export function FullScreenPdfViewer({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="max-w-[90vw] h-[85vh] p-0 gap-0 flex flex-col overflow-hidden"
+        className="max-w-[96vw] sm:max-w-[96vw] w-[96vw] h-[96vh] p-0 gap-0 flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b shrink-0">
@@ -78,8 +78,8 @@ export function FullScreenPdfViewer({
           {/* Main PDF area */}
           <div className="flex-1 flex flex-col min-w-0">
             <ScrollArea className="flex-1">
-              <div className="p-8 flex justify-center">
-                <div className="w-full max-w-3xl bg-white dark:bg-card rounded-lg shadow-sm border p-8 space-y-6">
+              <div className="p-6 flex justify-center">
+                <div className="w-full max-w-5xl bg-white dark:bg-card rounded-lg shadow-sm border p-8 space-y-6">
                   {/* Document header */}
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{subtitle || "Project Document"}</span>

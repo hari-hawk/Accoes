@@ -54,7 +54,7 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Project Specification (PS) Tab Content                                     */
+/*  Project Specifications (PS) Tab Content                                    */
 /* -------------------------------------------------------------------------- */
 
 function PSTabContent({
@@ -574,7 +574,7 @@ export function EvidencePanel({
               >
                 <TabsList className="grid w-full max-w-xs grid-cols-2">
                   <TabsTrigger value="project_assets" className="text-xs">
-                    Project Specification
+                    Project Specifications
                   </TabsTrigger>
                   <TabsTrigger value="performance_index" className="text-xs">
                     Project Index
@@ -620,7 +620,7 @@ export function EvidencePanel({
                   No{" "}
                   {activeCategory === "performance_index"
                     ? "Project Index"
-                    : "Project Specification"}{" "}
+                    : "Project Specifications"}{" "}
                   validation data yet
                 </p>
                 <p className="text-xs mt-1">

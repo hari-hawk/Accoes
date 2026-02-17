@@ -175,7 +175,7 @@ export default function ReviewPage() {
                   onCheckedChange={(v) => setApprovePS(!!v)}
                 />
                 <span className="text-sm font-medium">
-                  Project Specification (PS)
+                  Project Specifications (PS)
                 </span>
               </label>
               <label className="flex items-center gap-3 cursor-pointer">

@@ -122,7 +122,7 @@ export function DocumentPreview({
   // XLSX and DOCX use the wider Sheet-based viewer
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-[85vw] p-0">
+      <SheetContent side="right" className="w-full sm:max-w-[96vw] p-0">
         <SheetHeader className="flex flex-row items-center justify-between border-b px-4 py-3 space-y-0">
           <SheetTitle className="text-sm font-medium truncate pr-4">
             {document.fileName}

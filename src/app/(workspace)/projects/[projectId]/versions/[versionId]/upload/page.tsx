@@ -80,8 +80,8 @@ export default function UploadPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="rev-a">Project Spec Rev A</SelectItem>
-                <SelectItem value="rev-b">Project Spec Rev B (Latest)</SelectItem>
+                <SelectItem value="rev-a">Project Specifications Rev A</SelectItem>
+                <SelectItem value="rev-b">Project Specifications Rev B (Latest)</SelectItem>
               </SelectContent>
             </Select>
           </div>

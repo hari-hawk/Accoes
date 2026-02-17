@@ -91,7 +91,7 @@ export function DiscrepancyTable({
                   Material Matrix
                 </th>
                 <th className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                  Project Spec
+                  Project Specifications
                 </th>
                 <th className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">
                   Project Index

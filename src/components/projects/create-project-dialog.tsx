@@ -4,6 +4,8 @@ import { useState } from "react";
 import {
   Upload,
   FileSpreadsheet,
+  FileText,
+  FileType,
   ChevronRight,
   ChevronLeft,
   Check,
@@ -11,7 +13,7 @@ import {
   X,
   MapPin,
   Briefcase,
-  Building2,
+  Plus,
 } from "lucide-react";
 import {
   Dialog,
@@ -31,19 +33,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { mockUsers } from "@/data/mock-users";
 import type { ProjectStatus, UserRole } from "@/data/types";
 
 /* -------------------------------------------------------------------------- */
-/*  Steps                                                                      */
+/*  Steps — 3-step flow: Upload → Details → Access                            */
 /* -------------------------------------------------------------------------- */
 
 const steps = [
-  { label: "Upload", description: "Material Matrix" },
+  { label: "Upload", description: "Material Files" },
   { label: "Details", description: "Project Info" },
   { label: "Access", description: "Share Access" },
-  { label: "Confirm", description: "Review & Create" },
 ];
+
+interface UploadedFile {
+  id: string;
+  name: string;
+  size: string;
+  type: "pdf" | "xlsx" | "docx";
+}
 
 interface MemberEntry {
   userId: string;
@@ -58,6 +67,12 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
+const fileTypeConfig: Record<string, { icon: typeof FileText; color: string }> = {
+  pdf: { icon: FileText, color: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" },
+  xlsx: { icon: FileSpreadsheet, color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  docx: { icon: FileType, color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" },
+};
+
 /* -------------------------------------------------------------------------- */
 /*  Component                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -71,8 +86,8 @@ export function CreateProjectDialog({
 }) {
   const [step, setStep] = useState(0);
 
-  // Step 1: Upload
-  const [uploadedFile, setUploadedFile] = useState<string | null>(null);
+  // Step 1: Upload — multiple files
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
   // Step 2: Auto-extracted fields (mock)
   const [projectName, setProjectName] = useState("");
@@ -86,13 +101,38 @@ export function CreateProjectDialog({
   const [addEmail, setAddEmail] = useState("");
   const [addRole, setAddRole] = useState<UserRole>("submitter");
 
-  const handleUpload = () => {
-    // Simulate upload + extraction
-    setUploadedFile("Material_Matrix_2026.xlsx");
-    setProjectName("New Commercial Tower");
-    setJobId("NCT-2026-001");
-    setLocation("Chicago, IL");
-    setClient("Apex Development Corp");
+  // Mock file counter for unique IDs
+  const [fileCounter, setFileCounter] = useState(0);
+
+  const handleUploadFiles = () => {
+    // Simulate uploading a batch of files
+    const mockBatch: UploadedFile[] = [
+      { id: `f-${fileCounter}`, name: "Material_Matrix_2026.xlsx", size: "2.4 MB", type: "xlsx" },
+      { id: `f-${fileCounter + 1}`, name: "Structural_Steel_Shop_Drawings.pdf", size: "4.8 MB", type: "pdf" },
+      { id: `f-${fileCounter + 2}`, name: "HVAC_Equipment_Schedule.pdf", size: "1.2 MB", type: "pdf" },
+    ];
+    setFileCounter((c) => c + 3);
+    setUploadedFiles((prev) => [...prev, ...mockBatch]);
+
+    // Mock auto-extraction from first upload
+    if (uploadedFiles.length === 0) {
+      setProjectName("New Commercial Tower");
+      setJobId("NCT-2026-001");
+      setLocation("Chicago, IL");
+      setClient("Apex Development Corp");
+    }
+  };
+
+  const handleAddMoreFiles = () => {
+    const extra: UploadedFile[] = [
+      { id: `f-${fileCounter}`, name: `Additional_Document_${fileCounter}.pdf`, size: "1.1 MB", type: "pdf" },
+    ];
+    setFileCounter((c) => c + 1);
+    setUploadedFiles((prev) => [...prev, ...extra]);
+  };
+
+  const handleRemoveFile = (fileId: string) => {
+    setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId));
   };
 
   const handleAddMember = () => {
@@ -118,7 +158,8 @@ export function CreateProjectDialog({
     onOpenChange(false);
     // Reset
     setStep(0);
-    setUploadedFile(null);
+    setUploadedFiles([]);
+    setFileCounter(0);
     setProjectName("");
     setJobId("");
     setLocation("");
@@ -128,10 +169,9 @@ export function CreateProjectDialog({
   };
 
   const canNext =
-    (step === 0 && uploadedFile) ||
+    (step === 0 && uploadedFiles.length > 0) ||
     (step === 1 && projectName.trim() && jobId.trim()) ||
-    step === 2 ||
-    step === 3;
+    step === 2;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -139,7 +179,7 @@ export function CreateProjectDialog({
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>Create New Project</DialogTitle>
           <DialogDescription>
-            Upload a Material Matrix to get started
+            Upload material files to get started
           </DialogDescription>
         </DialogHeader>
 
@@ -171,55 +211,91 @@ export function CreateProjectDialog({
         </div>
 
         {/* Step Content */}
-        <div className="px-6 py-5 min-h-[280px]">
-          {/* Step 1: Upload Material Matrix */}
+        <div className="px-6 py-5 min-h-[300px]">
+          {/* Step 1: Upload Material Files — Multiple */}
           {step === 0 && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Upload a Material Matrix file. Project details will be
-                auto-extracted.
+                Upload material files for this project. You can upload multiple
+                files at once. Project details will be auto-extracted.
               </p>
-              {!uploadedFile ? (
+
+              {uploadedFiles.length === 0 ? (
                 <div
                   className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-8 text-center hover:border-nav-accent/40 transition-colors cursor-pointer"
-                  onClick={handleUpload}
+                  onClick={handleUploadFiles}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") handleUpload();
+                    if (e.key === "Enter" || e.key === " ") handleUploadFiles();
                   }}
                 >
                   <div className="mx-auto w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
                     <Upload className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="text-sm font-medium">
-                    Click to upload Material Matrix
+                    Click to upload files
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    PDF or Excel (.xlsx) up to 50MB
+                    PDF, Excel (.xlsx), Word (.docx) — up to 50MB each
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    You can select multiple files
                   </p>
                 </div>
               ) : (
-                <div className="flex items-center gap-3 p-4 rounded-xl border bg-muted/20">
-                  <div className="h-10 w-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                    <FileSpreadsheet className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {uploadedFile}
+                <div className="space-y-3">
+                  {/* File list */}
+                  <ScrollArea className={uploadedFiles.length > 4 ? "h-[200px]" : ""}>
+                    <div className="space-y-2 pr-2">
+                      {uploadedFiles.map((file) => {
+                        const ft = fileTypeConfig[file.type] ?? fileTypeConfig.pdf;
+                        const FileIcon = ft.icon;
+                        return (
+                          <div
+                            key={file.id}
+                            className="flex items-center gap-3 p-3 rounded-lg border bg-muted/10"
+                          >
+                            <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${ft.color}`}>
+                              <FileIcon className="h-4 w-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">
+                                {file.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {file.size}
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                              onClick={() => handleRemoveFile(file.id)}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+
+                  {/* Summary + Add more */}
+                  <div className="flex items-center justify-between pt-1">
+                    <p className="text-xs text-muted-foreground">
+                      {uploadedFiles.length} file{uploadedFiles.length !== 1 ? "s" : ""} uploaded
                     </p>
-                    <p className="text-xs text-status-pre-approved mt-0.5">
-                      Uploaded successfully — fields extracted
-                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      onClick={handleAddMoreFiles}
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add More Files
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0"
-                    onClick={() => setUploadedFile(null)}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
                 </div>
               )}
             </div>
@@ -299,7 +375,8 @@ export function CreateProjectDialog({
           {step === 2 && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Add team members and assign roles for this project.
+                Add team members and assign roles. You can skip this step and add
+                members later.
               </p>
 
               {/* Add member input */}
@@ -380,64 +457,6 @@ export function CreateProjectDialog({
               )}
             </div>
           )}
-
-          {/* Step 4: Confirmation */}
-          {step === 3 && (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Review and confirm the project details.
-              </p>
-
-              <div className="rounded-xl border bg-muted/20 p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-semibold">{projectName}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <Briefcase className="h-3.5 w-3.5" />
-                    {jobId}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {location}
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground">{client}</p>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {status === "in_progress" ? "In Progress" : "Active"}
-                  </Badge>
-                  {uploadedFile && (
-                    <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                      <FileSpreadsheet className="h-3 w-3 mr-1" />
-                      {uploadedFile}
-                    </Badge>
-                  )}
-                </div>
-                {members.length > 0 && (
-                  <div className="pt-2 border-t">
-                    <p className="text-xs font-medium text-muted-foreground mb-1.5">
-                      {members.length} member{members.length !== 1 ? "s" : ""} added
-                    </p>
-                    <div className="flex -space-x-2">
-                      {members.map((m) => {
-                        const user = mockUsers.find((u) => u.id === m.userId);
-                        if (!user) return null;
-                        return (
-                          <Avatar key={m.userId} className="h-7 w-7 border-2 border-card">
-                            <AvatarFallback className="text-[10px] font-bold gradient-accent text-white">
-                              {getInitials(user.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Footer with navigation */}
@@ -456,26 +475,38 @@ export function CreateProjectDialog({
               </>
             )}
           </Button>
-          {step < 3 ? (
-            <Button
-              size="sm"
-              disabled={!canNext}
-              onClick={() => setStep(step + 1)}
-              className="gap-1"
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              onClick={handleCreate}
-              className="gradient-gold text-white border-0 gap-1"
-            >
-              <Check className="h-4 w-4" />
-              Create Project
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {step === 2 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCreate}
+                className="gap-1"
+              >
+                Skip & Create
+              </Button>
+            )}
+            {step < 2 ? (
+              <Button
+                size="sm"
+                disabled={!canNext}
+                onClick={() => setStep(step + 1)}
+                className="gap-1"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={handleCreate}
+                className="gradient-gold text-white border-0 gap-1"
+              >
+                <Check className="h-4 w-4" />
+                Create Project
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -426,6 +426,11 @@ function CommentsActivityPanel({
             placeholder="Write a comment..."
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && commentText.trim()) {
+                setCommentText("");
+              }
+            }}
             className="flex-1 text-xs h-8"
           />
           <Button size="icon" className="h-8 w-8 shrink-0">

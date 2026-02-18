@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "global_viewer" | "submitter" | "reviewer";
+export type UserRole = "admin" | "global_viewer" | "submitter" | "reviewer" | "collaborator" | "viewer";
 
 export type ProjectStatus =
   | "in_progress"

@@ -214,22 +214,6 @@ function SettingsPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (v
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium">Auto-save Drafts</p>
-                  <p className="text-xs text-muted-foreground">Save work automatically every 5 min</p>
-                </div>
-                <div className="h-5 w-9 rounded-full bg-muted relative cursor-pointer">
-                  <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow" />
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Default Export Format</p>
-                  <p className="text-xs text-muted-foreground">Preferred report format</p>
-                </div>
-                <span className="text-sm font-medium text-muted-foreground">PDF</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
                   <p className="text-sm font-medium">Language</p>
                   <p className="text-xs text-muted-foreground">Interface language</p>
                 </div>

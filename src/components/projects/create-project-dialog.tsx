@@ -42,7 +42,7 @@ import type { ProjectStatus, UserRole } from "@/data/types";
 /* -------------------------------------------------------------------------- */
 
 const steps = [
-  { label: "Upload", description: "Material Files" },
+  { label: "Upload", description: "Upload Documents" },
   { label: "Details", description: "Project Info" },
   { label: "Access", description: "Share Access" },
 ];
@@ -51,7 +51,8 @@ interface UploadedFile {
   id: string;
   name: string;
   size: string;
-  type: "pdf" | "xlsx" | "docx";
+  type: "pdf" | "xlsx" | "docx" | "csv";
+  category: "material_index" | "specification";
 }
 
 interface MemberEntry {
@@ -70,8 +71,23 @@ function getInitials(name: string): string {
 const fileTypeConfig: Record<string, { icon: typeof FileText; color: string }> = {
   pdf: { icon: FileText, color: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" },
   xlsx: { icon: FileSpreadsheet, color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  csv: { icon: FileSpreadsheet, color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
   docx: { icon: FileType, color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" },
 };
+
+/** Determine category from file extension: CSV → Material Index Grid, everything else → Project Specification */
+function categorizeFile(fileName: string): "material_index" | "specification" {
+  return fileName.toLowerCase().endsWith(".csv") ? "material_index" : "specification";
+}
+
+/** Get file extension type */
+function getFileType(fileName: string): UploadedFile["type"] {
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  if (ext === "csv") return "csv";
+  if (ext === "xlsx" || ext === "xls") return "xlsx";
+  if (ext === "docx" || ext === "doc") return "docx";
+  return "pdf";
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Component                                                                  */
@@ -99,19 +115,29 @@ export function CreateProjectDialog({
   // Step 3: Share access
   const [members, setMembers] = useState<MemberEntry[]>([]);
   const [addEmail, setAddEmail] = useState("");
-  const [addRole, setAddRole] = useState<UserRole>("submitter");
+  const [addRole, setAddRole] = useState<UserRole>("collaborator");
 
   // Mock file counter for unique IDs
   const [fileCounter, setFileCounter] = useState(0);
 
   const handleUploadFiles = () => {
-    // Simulate uploading a batch of files
-    const mockBatch: UploadedFile[] = [
-      { id: `f-${fileCounter}`, name: "Material_Matrix_2026.xlsx", size: "2.4 MB", type: "xlsx" },
-      { id: `f-${fileCounter + 1}`, name: "Structural_Steel_Shop_Drawings.pdf", size: "4.8 MB", type: "pdf" },
-      { id: `f-${fileCounter + 2}`, name: "HVAC_Equipment_Schedule.pdf", size: "1.2 MB", type: "pdf" },
+    // Simulate uploading a batch of files — mix of CSV (Material Index Grid) and non-CSV (Project Specification)
+    const mockNames = [
+      "Material_Index_Grid_2026.csv",
+      "Hangers_Supports_Hardware.csv",
+      "Structural_Steel_Shop_Drawings.pdf",
+      "HVAC_Equipment_Schedule.pdf",
+      "Specification_Volume_1.pdf",
     ];
-    setFileCounter((c) => c + 3);
+    const mockSizes = ["1.2 MB", "0.8 MB", "4.8 MB", "1.2 MB", "3.5 MB"];
+    const mockBatch: UploadedFile[] = mockNames.map((name, i) => ({
+      id: `f-${fileCounter + i}`,
+      name,
+      size: mockSizes[i],
+      type: getFileType(name),
+      category: categorizeFile(name),
+    }));
+    setFileCounter((c) => c + mockNames.length);
     setUploadedFiles((prev) => [...prev, ...mockBatch]);
 
     // Mock auto-extraction from first upload
@@ -124,8 +150,9 @@ export function CreateProjectDialog({
   };
 
   const handleAddMoreFiles = () => {
+    const name = `Additional_Document_${fileCounter}.pdf`;
     const extra: UploadedFile[] = [
-      { id: `f-${fileCounter}`, name: `Additional_Document_${fileCounter}.pdf`, size: "1.1 MB", type: "pdf" },
+      { id: `f-${fileCounter}`, name, size: "1.1 MB", type: getFileType(name), category: categorizeFile(name) },
     ];
     setFileCounter((c) => c + 1);
     setUploadedFiles((prev) => [...prev, ...extra]);
@@ -179,7 +206,7 @@ export function CreateProjectDialog({
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>Create New Project</DialogTitle>
           <DialogDescription>
-            Upload material files to get started
+            Upload documents to get started
           </DialogDescription>
         </DialogHeader>
 
@@ -216,8 +243,9 @@ export function CreateProjectDialog({
           {step === 0 && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Upload material files for this project. You can upload multiple
-                files at once. Project details will be auto-extracted.
+                Upload documents for this project. CSV files are categorized as
+                Material Index Grid; other files as Project Specification.
+                Project details will be auto-extracted.
               </p>
 
               {uploadedFiles.length === 0 ? (
@@ -245,39 +273,72 @@ export function CreateProjectDialog({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {/* File list */}
+                  {/* File list — grouped by category */}
                   <ScrollArea className={uploadedFiles.length > 4 ? "h-[200px]" : ""}>
                     <div className="space-y-2 pr-2">
-                      {uploadedFiles.map((file) => {
-                        const ft = fileTypeConfig[file.type] ?? fileTypeConfig.pdf;
-                        const FileIcon = ft.icon;
-                        return (
-                          <div
-                            key={file.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border bg-muted/10"
-                          >
-                            <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${ft.color}`}>
-                              <FileIcon className="h-4 w-4" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">
-                                {file.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {file.size}
-                              </p>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                              onClick={() => handleRemoveFile(file.id)}
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </Button>
+                      {/* Material Index Grid files (CSV) */}
+                      {uploadedFiles.filter((f) => f.category === "material_index").length > 0 && (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                              Material Index Grid
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground">
+                              {uploadedFiles.filter((f) => f.category === "material_index").length} file{uploadedFiles.filter((f) => f.category === "material_index").length !== 1 ? "s" : ""}
+                            </span>
                           </div>
-                        );
-                      })}
+                          {uploadedFiles.filter((f) => f.category === "material_index").map((file) => {
+                            const ft = fileTypeConfig[file.type] ?? fileTypeConfig.pdf;
+                            const FileIcon = ft.icon;
+                            return (
+                              <div key={file.id} className="flex items-center gap-3 p-2.5 rounded-lg border bg-muted/10">
+                                <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${ft.color}`}>
+                                  <FileIcon className="h-4 w-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{file.name}</p>
+                                  <p className="text-xs text-muted-foreground">{file.size}</p>
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveFile(file.id)}>
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Project Specification files (non-CSV) */}
+                      {uploadedFiles.filter((f) => f.category === "specification").length > 0 && (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-[10px] bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                              Project Specification
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground">
+                              {uploadedFiles.filter((f) => f.category === "specification").length} file{uploadedFiles.filter((f) => f.category === "specification").length !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                          {uploadedFiles.filter((f) => f.category === "specification").map((file) => {
+                            const ft = fileTypeConfig[file.type] ?? fileTypeConfig.pdf;
+                            const FileIcon = ft.icon;
+                            return (
+                              <div key={file.id} className="flex items-center gap-3 p-2.5 rounded-lg border bg-muted/10">
+                                <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${ft.color}`}>
+                                  <FileIcon className="h-4 w-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{file.name}</p>
+                                  <p className="text-xs text-muted-foreground">{file.size}</p>
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveFile(file.id)}>
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </ScrollArea>
 
@@ -397,13 +458,12 @@ export function CreateProjectDialog({
                   value={addRole}
                   onValueChange={(v) => setAddRole(v as UserRole)}
                 >
-                  <SelectTrigger className="w-[120px] shrink-0">
+                  <SelectTrigger className="w-[130px] shrink-0">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="submitter">Submitter</SelectItem>
-                    <SelectItem value="reviewer">Reviewer</SelectItem>
-                    <SelectItem value="global_viewer">Viewer</SelectItem>
+                    <SelectItem value="collaborator">Collaborator</SelectItem>
+                    <SelectItem value="viewer">Viewer</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button size="sm" onClick={handleAddMember}>
@@ -435,8 +495,8 @@ export function CreateProjectDialog({
                             {user.email}
                           </p>
                         </div>
-                        <Badge variant="secondary" className="text-[10px] shrink-0">
-                          {m.role === "global_viewer" ? "Viewer" : m.role.charAt(0).toUpperCase() + m.role.slice(1)}
+                        <Badge variant="secondary" className="text-[10px] shrink-0 capitalize">
+                          {m.role === "global_viewer" ? "Viewer" : m.role === "submitter" ? "Collaborator" : m.role}
                         </Badge>
                         <Button
                           variant="ghost"
@@ -476,16 +536,6 @@ export function CreateProjectDialog({
             )}
           </Button>
           <div className="flex items-center gap-2">
-            {step === 2 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCreate}
-                className="gap-1"
-              >
-                Skip & Create
-              </Button>
-            )}
             {step < 2 ? (
               <Button
                 size="sm"

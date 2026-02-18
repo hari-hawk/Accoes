@@ -552,10 +552,6 @@ export function ProjectList() {
     setSearch,
     statusFilter,
     setStatusFilter,
-    jobFilter,
-    setJobFilter,
-    locationFilter,
-    setLocationFilter,
     viewMode,
     setViewMode,
     sortBy,
@@ -591,10 +587,6 @@ export function ProjectList() {
         onSearchChange={setSearch}
         statusFilter={statusFilter}
         onStatusChange={setStatusFilter}
-        jobFilter={jobFilter}
-        onJobChange={setJobFilter}
-        locationFilter={locationFilter}
-        onLocationChange={setLocationFilter}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         sortBy={sortBy}

@@ -5,17 +5,11 @@ import { mockProjects } from "@/data/mock-projects";
 import type { ProjectStatus } from "@/data/types";
 
 export type ViewMode = "grid" | "list";
-export type SortBy = "updated" | "name" | "status";
-
-// Derive unique job IDs and locations from mock data
-export const allJobIds = Array.from(new Set(mockProjects.map((p) => p.jobId)));
-export const allLocations = Array.from(new Set(mockProjects.map((p) => p.location)));
+export type SortBy = "updated" | "name-asc" | "name-desc";
 
 export function useProjects() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | "all">("all");
-  const [jobFilter, setJobFilter] = useState<string>("all");
-  const [locationFilter, setLocationFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [sortBy, setSortBy] = useState<SortBy>("updated");
 
@@ -36,20 +30,12 @@ export function useProjects() {
       result = result.filter((p) => p.status === statusFilter);
     }
 
-    if (jobFilter !== "all") {
-      result = result.filter((p) => p.jobId === jobFilter);
-    }
-
-    if (locationFilter !== "all") {
-      result = result.filter((p) => p.location === locationFilter);
-    }
-
     result.sort((a, b) => {
       switch (sortBy) {
-        case "name":
+        case "name-asc":
           return a.name.localeCompare(b.name);
-        case "status":
-          return a.status.localeCompare(b.status);
+        case "name-desc":
+          return b.name.localeCompare(a.name);
         case "updated":
         default:
           return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
@@ -57,7 +43,7 @@ export function useProjects() {
     });
 
     return result;
-  }, [search, statusFilter, jobFilter, locationFilter, sortBy]);
+  }, [search, statusFilter, sortBy]);
 
   return {
     projects: filteredProjects,
@@ -65,10 +51,6 @@ export function useProjects() {
     setSearch: useCallback((v: string) => setSearch(v), []),
     statusFilter,
     setStatusFilter,
-    jobFilter,
-    setJobFilter,
-    locationFilter,
-    setLocationFilter,
     viewMode,
     setViewMode,
     sortBy,

@@ -12,17 +12,12 @@ import {
 } from "@/components/ui/select";
 import type { ProjectStatus } from "@/data/types";
 import type { ViewMode, SortBy } from "@/hooks/use-projects";
-import { allJobIds, allLocations } from "@/hooks/use-projects";
 
 export function ProjectFilters({
   search,
   onSearchChange,
   statusFilter,
   onStatusChange,
-  jobFilter,
-  onJobChange,
-  locationFilter,
-  onLocationChange,
   viewMode,
   onViewModeChange,
   sortBy,
@@ -32,10 +27,6 @@ export function ProjectFilters({
   onSearchChange: (value: string) => void;
   statusFilter: ProjectStatus | "all";
   onStatusChange: (value: ProjectStatus | "all") => void;
-  jobFilter: string;
-  onJobChange: (value: string) => void;
-  locationFilter: string;
-  onLocationChange: (value: string) => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   sortBy: SortBy;
@@ -68,32 +59,6 @@ export function ProjectFilters({
             <SelectItem value="completed">Completed</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={jobFilter} onValueChange={onJobChange}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Job" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Jobs</SelectItem>
-            {allJobIds.map((jid) => (
-              <SelectItem key={jid} value={jid}>
-                {jid}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={locationFilter} onValueChange={onLocationChange}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Location" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Locations</SelectItem>
-            {allLocations.map((loc) => (
-              <SelectItem key={loc} value={loc}>
-                {loc}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Select
           value={sortBy}
           onValueChange={(v) => onSortChange(v as SortBy)}
@@ -103,8 +68,8 @@ export function ProjectFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="updated">Last Updated</SelectItem>
-            <SelectItem value="name">Name</SelectItem>
-            <SelectItem value="status">Status</SelectItem>
+            <SelectItem value="name-asc">A → Z</SelectItem>
+            <SelectItem value="name-desc">Z → A</SelectItem>
           </SelectContent>
         </Select>
       </div>

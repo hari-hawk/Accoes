@@ -18,6 +18,9 @@ import {
   Check,
   Loader2,
   X,
+  TrendingUp,
+  Clock,
+  FileStack,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -73,6 +76,28 @@ function formatFileSize(bytes: number): string {
 
 function HeroSection() {
   const activeCount = mockProjects.filter((p) => p.status === "active").length;
+  const completedCount = mockProjects.filter((p) => p.status === "completed").length;
+  const inProgressCount = mockProjects.filter((p) => p.status === "in_progress").length;
+  const totalDocs = mockProjects.reduce((sum, p) => sum + p.totalDocuments, 0);
+  const projectsWithConfidence = mockProjects.filter((p) => p.confidenceSummary.overallConfidence > 0);
+  const avgConfidence =
+    projectsWithConfidence.length > 0
+      ? Math.round(
+          projectsWithConfidence.reduce(
+            (sum, p) => sum + p.confidenceSummary.overallConfidence,
+            0
+          ) / projectsWithConfidence.length
+        )
+      : 0;
+
+  const stats = [
+    { label: "Total Projects", value: mockProjects.length, icon: FolderKanban },
+    { label: "Active", value: activeCount, icon: Activity },
+    { label: "In Progress", value: inProgressCount, icon: Clock },
+    { label: "Completed", value: completedCount, icon: CheckCircle2 },
+    { label: "Avg. Confidence", value: `${avgConfidence}%`, icon: TrendingUp },
+    { label: "Documents", value: totalDocs, icon: FileStack },
+  ];
 
   return (
     <section
@@ -81,39 +106,37 @@ function HeroSection() {
     >
       {/* Decorative circles */}
       <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/4" aria-hidden="true" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-white/3 translate-y-1/2 -translate-x-1/4" aria-hidden="true" />
       {/* Dot pattern overlay */}
       <div className="absolute inset-0 dot-pattern opacity-40" aria-hidden="true" />
 
-      <div className="relative flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">Welcome back, Sarah</h1>
-          <p className="text-white/70 mt-0.5 text-sm">
-            Here&apos;s an overview of your submittal validation projects
-          </p>
-        </div>
-        <Link
-          href="/projects/create"
-          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md text-sm font-semibold gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity"
-          aria-label="Create a new project"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          New Project
-        </Link>
+      <div className="relative">
+        <h1 className="text-xl font-bold tracking-tight">Welcome back, Sarah</h1>
+        <p className="text-white/70 mt-0.5 text-sm">
+          Here&apos;s an overview of your submittal validation projects
+        </p>
       </div>
 
-      {/* Inline compact stats */}
-      <div className="relative flex items-center gap-6 mt-4 pt-4 border-t border-white/10" role="group" aria-label="Project statistics">
-        {[
-          { label: "Total Projects", value: mockProjects.length, icon: FolderKanban },
-          { label: "Active", value: activeCount, icon: Activity },
-        ].map((stat) => {
+      {/* Stats grid */}
+      <div
+        className="relative grid grid-cols-3 sm:grid-cols-6 gap-4 mt-5 pt-5 border-t border-white/10"
+        role="group"
+        aria-label="Project statistics"
+      >
+        {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="flex items-center gap-2.5" aria-label={`${stat.label}: ${stat.value}`}>
-              <Icon className="h-4 w-4 text-nav-gold" aria-hidden="true" />
+            <div
+              key={stat.label}
+              className="flex flex-col items-center text-center gap-1.5 py-2 px-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] transition-colors"
+              aria-label={`${stat.label}: ${stat.value}`}
+            >
+              <div className="h-8 w-8 rounded-lg bg-white/10 flex items-center justify-center">
+                <Icon className="h-4 w-4 text-nav-gold" aria-hidden="true" />
+              </div>
               <div>
                 <p className="text-lg font-bold leading-none">{stat.value}</p>
-                <p className="text-[10px] text-white/50 font-medium uppercase tracking-wider mt-0.5">
+                <p className="text-[9px] text-white/50 font-medium uppercase tracking-wider mt-1">
                   {stat.label}
                 </p>
               </div>

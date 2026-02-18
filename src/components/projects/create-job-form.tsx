@@ -573,7 +573,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
                 setPriority(v as "high" | "medium" | "low")
               }
             >
-              <SelectTrigger id="priority" className="h-10">
+              <SelectTrigger id="priority" className="h-10 w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { SearchInput } from "@/components/shared/search-input";
 import { cn } from "@/lib/utils";
+import { VALIDATION_STATUS_CONFIG } from "@/lib/constants";
 import type { MaterialItem } from "@/hooks/use-materials";
 import type { ValidationStatus, DecisionStatus } from "@/data/types";
 
@@ -127,8 +128,9 @@ function MaterialListItem({
           {item.document.specSectionTitle}
         </p>
 
-        {/* Score chips — PS/PI when available, overall fallback */}
+        {/* Score chips + status/decision badges */}
         <div className="flex items-center gap-2 mt-2 flex-wrap">
+          {/* Score chips — left side */}
           {hasSubScores ? (
             <>
               <ScoreChip label="PS" score={psScore} />
@@ -138,11 +140,27 @@ function MaterialListItem({
             <ScoreChip label="Score" score={overallScore} />
           )}
 
-          {effectiveDecision && effectiveDecision !== "pending" && (
-            <span className="ml-auto text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize shrink-0">
-              {effectiveDecision.replace(/_/g, " ")}
-            </span>
-          )}
+          {/* Status + Decision badges — pushed to far right */}
+          <div className="ml-auto flex items-center gap-1.5 shrink-0">
+            {/* Validation status badge — always visible */}
+            {status && (
+              <span
+                className={cn(
+                  "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none",
+                  VALIDATION_STATUS_CONFIG[status].bgColor,
+                  VALIDATION_STATUS_CONFIG[status].color
+                )}
+              >
+                {VALIDATION_STATUS_CONFIG[status].label}
+              </span>
+            )}
+            {/* Decision badge — only when decided (not pending) */}
+            {effectiveDecision && effectiveDecision !== "pending" && (
+              <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
+                {effectiveDecision.replace(/_/g, " ")}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -191,7 +209,7 @@ export function MaterialList({
       {/* Filter header */}
       <div className="border-b p-3 space-y-2 shrink-0">
         <SearchInput
-          placeholder="Search from Material Matrix"
+          placeholder="Search from Material Index Grid"
           value={search}
           onChange={onSearchChange}
         />
@@ -260,7 +278,7 @@ export function MaterialList({
 
       {/* Material items — scrollable */}
       <ScrollArea className="flex-1">
-        <div className="w-full overflow-hidden">
+        <div className="w-full">
           {materials.map((item) => (
             <MaterialListItem
               key={item.document.id}

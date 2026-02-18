@@ -45,7 +45,6 @@ export default function ReviewPage() {
     selectedMaterial,
     checkedIds,
     toggleCheck,
-    clearChecks,
     decisions,
     updateDecision,
     batchApprove,
@@ -88,7 +87,7 @@ export default function ReviewPage() {
     <div className="flex h-full flex-col">
       {/* Batch Actions Bar */}
       {checkedIds.size > 0 && (
-        <div className="flex items-center justify-between gap-3 border-b bg-primary/5 px-4 py-2">
+        <div className="flex items-center justify-between gap-3 border-b bg-primary/5 px-4 py-2 shrink-0">
           <span className="text-sm font-medium">
             {checkedIds.size} item{checkedIds.size !== 1 ? "s" : ""} selected
           </span>
@@ -102,22 +101,20 @@ export default function ReviewPage() {
               Revisit
             </Button>
             <Button
-              size="sm"
+              size="icon"
               variant="outline"
+              className="h-7 w-7"
               onClick={() => setCommentDialogOpen(true)}
+              aria-label="Add comment"
             >
-              <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
-              Add Comment
-            </Button>
-            <Button size="sm" variant="ghost" onClick={clearChecks}>
-              Clear
+              <MessageSquare className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
       )}
 
       {/* Split Layout */}
-      <ResizablePanelGroup orientation="horizontal" className="flex-1">
+      <ResizablePanelGroup orientation="horizontal" className="flex-1 min-h-0">
         <ResizablePanel defaultSize={40} minSize={25}>
           <MaterialList
             materials={materials}

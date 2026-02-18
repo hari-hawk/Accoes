@@ -218,7 +218,7 @@ function ProjectListRow({
             <Link
               href={`/projects/${project.id}/versions/${project.latestVersionId}/review`}
               className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-nav-accent hover:bg-muted/50 transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none"
-              aria-label={`View material matrix for ${project.name}`}
+              aria-label={`View material index grid for ${project.name}`}
             >
               <ShieldCheck className="h-4 w-4" aria-hidden="true" />
             </Link>
@@ -255,7 +255,7 @@ function ProjectListRow({
             <span
               className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/30 cursor-not-allowed"
               role="img"
-              aria-label="Material Matrix unavailable — no versions"
+              aria-label="Material Index Grid unavailable — no versions"
             >
               <ShieldCheck className="h-4 w-4" aria-hidden="true" />
             </span>

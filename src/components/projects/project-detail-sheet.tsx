@@ -574,7 +574,7 @@ export function ProjectDetailSheet({
                     <Upload className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <p className="text-sm font-medium">
-                    Drop material matrix files here
+                    Drop material index grid files here
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     PDF, XLSX, DOCX up to 50MB each

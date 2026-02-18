@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
   FileText,
   CheckCircle2,
   AlertTriangle,
   XCircle,
   BarChart3,
-  ArrowUpRight,
   Clock,
   FileType,
   TrendingUp,
@@ -24,12 +22,6 @@ import {
   Check,
   Loader2,
   BookOpen,
-  Eye,
-  ZoomIn,
-  ZoomOut,
-  ChevronLeft,
-  ChevronRight,
-  RotateCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,24 +37,17 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWorkspace } from "@/providers/workspace-provider";
 import { formatPercentage } from "@/lib/format";
-import { getDocumentsByVersion } from "@/data/mock-documents";
-import { getValidationsByVersion } from "@/data/mock-validations";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
 /*  Constants                                                                   */
 /* -------------------------------------------------------------------------- */
 
-const statusConfig = {
-  pre_approved: { label: "Pre-Approved", color: "bg-status-pre-approved-bg text-status-pre-approved", icon: CheckCircle2 },
-  review_required: { label: "Review Required", color: "bg-status-review-required-bg text-status-review-required", icon: AlertTriangle },
-  action_mandatory: { label: "Action Mandatory", color: "bg-status-action-mandatory-bg text-status-action-mandatory", icon: XCircle },
-};
-
 const fileIconMap: Record<string, typeof FileText> = {
   pdf: FileText,
   xlsx: FileSpreadsheet,
   docx: FileType,
+  csv: FileSpreadsheet,
 };
 
 function formatFileSize(bytes: number): string {
@@ -83,178 +68,23 @@ const recentActivity = [
   { id: 8, action: "Document approved", detail: "Electrical Panel Schedule — Approved with notes", time: "8 hours ago", type: "success" as const, user: "Sarah Wilson" },
 ];
 
-// Mock project specification documents — Volume-based naming
+// Mock project specification documents — UCD naming convention
 const mockProjectSpecs = [
-  { id: "ps-1", fileName: "Project Specifications - Volume 1.pdf", fileType: "pdf" as const, fileSize: 15728640, uploadedAt: "2025-08-10T09:00:00Z", totalPages: 342 },
-  { id: "ps-2", fileName: "Project Specifications - Volume 2.pdf", fileType: "pdf" as const, fileSize: 12582912, uploadedAt: "2025-08-10T09:05:00Z", totalPages: 278 },
-  { id: "ps-3", fileName: "Project Specifications - Volume 3.pdf", fileType: "pdf" as const, fileSize: 9437184, uploadedAt: "2025-08-10T09:10:00Z", totalPages: 196 },
+  { id: "ps-1", fileName: "UCD_Project9592330_Project_Specification_Volume_1_2026-02.pdf", fileType: "pdf" as const, fileSize: 16482304, uploadedAt: "2026-02-05T09:00:00Z", totalPages: 342 },
+  { id: "ps-2", fileName: "UCD_Project9592330_Project_Specification_Volume_2_2026-02.pdf", fileType: "pdf" as const, fileSize: 13107200, uploadedAt: "2026-02-05T09:05:00Z", totalPages: 278 },
+];
+
+// Mock Material Index Grid source files — 3 CSV files
+const mockMaterialIndexGridFiles = [
+  { id: "mig-1", fileName: "UCD_Project9592330_Plumbing_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 524288, uploadedAt: "2026-02-05T10:00:00Z" },
+  { id: "mig-2", fileName: "UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 491520, uploadedAt: "2026-02-05T10:05:00Z" },
+  { id: "mig-3", fileName: "UCD_Project9592330_Mechanical_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 458752, uploadedAt: "2026-02-05T10:10:00Z" },
 ];
 
 interface MockUploadFile {
   id: string;
   name: string;
   size: string;
-}
-
-/* -------------------------------------------------------------------------- */
-/*  PDF Preview Dialog — 90%+ screen coverage                                  */
-/* -------------------------------------------------------------------------- */
-
-function PdfPreviewDialog({
-  open,
-  onOpenChange,
-  title,
-  totalPages,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  totalPages: number;
-}) {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [zoom, setZoom] = useState(100);
-
-  const handlePrevPage = () => setCurrentPage((p) => Math.max(1, p - 1));
-  const handleNextPage = () => setCurrentPage((p) => Math.min(totalPages, p + 1));
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        showCloseButton={false}
-        className="max-w-[95vw] sm:max-w-[95vw] w-[95vw] h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-xl"
-      >
-        {/* Header toolbar */}
-        <div className="flex items-center justify-between px-5 py-3 border-b shrink-0 bg-background">
-          <div className="min-w-0 flex-1">
-            <DialogTitle className="text-sm font-semibold truncate">{title}</DialogTitle>
-            <p className="text-xs text-muted-foreground mt-0.5">Project Specification Document</p>
-          </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Download document">
-              <Download className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => onOpenChange(false)}
-              aria-label="Close preview"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* PDF content area — fills remaining space */}
-        <ScrollArea className="flex-1 min-h-0 bg-muted/30">
-          <div className="flex justify-center p-4 sm:p-6">
-            <div
-              className="w-full max-w-5xl bg-white dark:bg-card rounded-lg shadow-md border overflow-hidden"
-              style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center" }}
-            >
-              {/* Simulated PDF page */}
-              <div className="p-8 sm:p-12 space-y-6 min-h-[800px]">
-                {/* Document header */}
-                <div className="flex items-center justify-between text-xs text-muted-foreground border-b pb-4">
-                  <span className="font-medium">{title}</span>
-                  <span>Page {currentPage} of {totalPages}</span>
-                </div>
-
-                <h2 className="text-lg font-bold uppercase tracking-wide">
-                  {title}
-                </h2>
-
-                {/* Simulated spec content */}
-                <div className="space-y-5 text-sm text-muted-foreground leading-relaxed">
-                  <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">PART 1 — GENERAL</h3>
-                  <div>
-                    <h4 className="text-xs font-bold text-foreground">1.1 SUMMARY</h4>
-                    <p className="mt-1">A. Section includes water-cooled, centrifugal liquid chillers with variable-speed drives.</p>
-                    <p className="mt-1">B. Related Requirements:</p>
-                    <ul className="list-disc pl-6 mt-1 space-y-0.5">
-                      <li>Section 23 05 00 — Common Work Results for HVAC</li>
-                      <li>Section 23 05 93 — Testing, Adjusting, and Balancing for HVAC</li>
-                      <li>Section 23 21 13 — Hydronic Piping</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-foreground">1.2 PERFORMANCE REQUIREMENTS</h4>
-                    <p className="mt-1">A. Minimum cooling capacity: 500 tons at ARI 550/590 conditions.</p>
-                    <p className="mt-1">B. Variable speed drives required for capacity modulation and energy efficiency.</p>
-                    <p className="mt-1">C. Energy Efficiency:</p>
-                    <ul className="list-disc pl-6 mt-1 space-y-0.5">
-                      <li>Full Load: Maximum 0.560 kW/ton</li>
-                      <li>IPLV: Maximum 0.340 kW/ton</li>
-                      <li>NPLV: Maximum 0.380 kW/ton</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-foreground">1.3 SUBMITTALS</h4>
-                    <p className="mt-1">A. Product Data: Include rated capacities and operating characteristics.</p>
-                    <p className="mt-1">B. Shop Drawings: Include plans, elevations, sections, and details.</p>
-                    <p className="mt-1">C. Certificates: Energy efficiency certifications per ASHRAE 90.1.</p>
-                  </div>
-                  <h3 className="text-xs font-bold text-foreground uppercase tracking-wider pt-4">PART 2 — PRODUCTS</h3>
-                  <div>
-                    <h4 className="text-xs font-bold text-foreground">2.1 MANUFACTURERS</h4>
-                    <p className="mt-1">A. Basis-of-Design: Trane CenTraVac, or equal by:</p>
-                    <ul className="list-disc pl-6 mt-1 space-y-0.5">
-                      <li>Carrier Corporation</li>
-                      <li>Johnson Controls (York)</li>
-                      <li>Daikin Applied</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-foreground">2.2 CHILLER ASSEMBLY</h4>
-                    <p className="mt-1">A. Factory-assembled, single-piece water chiller.</p>
-                    <p className="mt-1">B. Compressor: Hermetic centrifugal, direct-drive with VFD.</p>
-                    <p className="mt-1">C. Refrigerant: R-134a or R-1233zd(E) low-GWP option.</p>
-                  </div>
-                  <h3 className="text-xs font-bold text-foreground uppercase tracking-wider pt-4">PART 3 — EXECUTION</h3>
-                  <div>
-                    <h4 className="text-xs font-bold text-foreground">3.1 INSTALLATION</h4>
-                    <p className="mt-1">A. Install chillers in accordance with manufacturer&apos;s instructions and applicable codes.</p>
-                    <p className="mt-1">B. Coordinate with structural engineer for pad and vibration isolation requirements.</p>
-                    <p className="mt-1">C. Provide clearance for tube pull and maintenance access per manufacturer specifications.</p>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="pt-6 border-t text-center text-[10px] text-muted-foreground/60 italic">
-                  Project Specification Document — Page {currentPage} of {totalPages}
-                </div>
-              </div>
-            </div>
-          </div>
-        </ScrollArea>
-
-        {/* Bottom toolbar — page navigation + zoom */}
-        <div className="flex items-center justify-center gap-2 px-4 py-2.5 border-t bg-background shrink-0">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setZoom((z) => Math.max(25, z - 25))} aria-label="Zoom out">
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <span className="text-xs font-medium w-12 text-center tabular-nums">{zoom}%</span>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setZoom((z) => Math.min(200, z + 25))} aria-label="Zoom in">
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-          <div className="w-px h-5 bg-border mx-1" aria-hidden="true" />
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrevPage} disabled={currentPage <= 1} aria-label="Previous page">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-xs font-medium min-w-[80px] text-center tabular-nums">
-            {currentPage} / {totalPages}
-          </span>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleNextPage} disabled={currentPage >= totalPages} aria-label="Next page">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <div className="w-px h-5 bg-border mx-1" aria-hidden="true" />
-          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Rotate page">
-            <RotateCw className="h-4 w-4" />
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -295,7 +125,7 @@ function HeroBanner({
             <div className="flex items-center gap-1.5 mb-1">
               <FileText className="h-3.5 w-3.5 text-nav-gold" aria-hidden="true" />
               <span className="text-[11px] text-white/60 font-medium uppercase tracking-wider">
-                Material Matrix
+                Material Index Grid
               </span>
             </div>
             <p className="text-xl font-bold">{confidenceSummary.total}</p>
@@ -352,8 +182,6 @@ function ProjectSpecificationsCard({
   const [selectedSpecIds, setSelectedSpecIds] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
-  const [previewSpec, setPreviewSpec] = useState<typeof mockProjectSpecs[number] | null>(null);
-
   const allSelected = mockProjectSpecs.length > 0 && selectedSpecIds.size === mockProjectSpecs.length;
 
   const toggleSpec = (specId: string) => {
@@ -429,15 +257,12 @@ function ProjectSpecificationsCard({
         {/* Select all bar */}
         {mockProjectSpecs.length > 0 && (
           <div className="px-5 py-2 border-b bg-muted/20 flex items-center justify-between">
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <Checkbox
-                checked={allSelected}
-                onCheckedChange={toggleAll}
-                className="h-3.5 w-3.5"
-                aria-label={allSelected ? "Deselect all specifications" : "Select all specifications"}
-              />
-              <span className="text-xs text-muted-foreground">Select all</span>
-            </label>
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={toggleAll}
+              className="h-3.5 w-3.5"
+              aria-label={allSelected ? "Deselect all specifications" : "Select all specifications"}
+            />
             {selectedSpecIds.size > 0 && (
               <span className="text-xs text-muted-foreground tabular-nums">
                 {selectedSpecIds.size} of {mockProjectSpecs.length} selected
@@ -491,63 +316,46 @@ function ProjectSpecificationsCard({
                   </div>
                 </div>
 
-                {/* Action button: View */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-nav-accent shrink-0"
-                  onClick={() => setPreviewSpec(spec)}
-                  aria-label={`View ${spec.fileName}`}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* PDF Preview Dialog */}
-      {previewSpec && (
-        <PdfPreviewDialog
-          open={!!previewSpec}
-          onOpenChange={(open) => { if (!open) setPreviewSpec(null); }}
-          title={previewSpec.fileName}
-          totalPages={previewSpec.totalPages}
-        />
-      )}
     </>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Material Matrix Section                                                    */
+/*  Material Index Grid Section                                                */
 /* -------------------------------------------------------------------------- */
 
-function MaterialMatrixCard({
-  documents,
-  validations,
-  projectId,
-  versionId,
+function MaterialIndexGridCard({
   onUpload,
 }: {
-  documents: ReturnType<typeof getDocumentsByVersion>;
-  validations: ReturnType<typeof getValidationsByVersion>;
-  projectId: string;
-  versionId: string;
   onUpload: () => void;
 }) {
-  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
 
-  const allSelected = documents.length > 0 && selectedDocIds.size === documents.length;
+  const files = mockMaterialIndexGridFiles;
+  const allSelected = files.length > 0 && selectedIds.size === files.length;
+
+  const toggleFile = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const toggleAll = () => {
     if (allSelected) {
-      setSelectedDocIds(new Set());
+      setSelectedIds(new Set());
     } else {
-      setSelectedDocIds(new Set(documents.map((d) => d.id)));
+      setSelectedIds(new Set(files.map((f) => f.id)));
     }
   };
 
@@ -566,17 +374,16 @@ function MaterialMatrixCard({
       <div className="px-5 py-4 border-b flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Layers className="h-4 w-4 text-primary" aria-hidden="true" />
-          <h3 className="font-semibold text-sm">Material Matrix</h3>
+          <h3 className="font-semibold text-sm">Material Index Grid</h3>
         </div>
         <div className="flex items-center gap-2">
-          {/* Export button — visible when documents are selected */}
-          {selectedDocIds.size > 0 && (
+          {selectedIds.size > 0 && (
             <Button
               size="sm"
               className="h-7 text-xs gap-1 gradient-gold text-white border-0 hover:opacity-90 transition-opacity"
               onClick={handleExport}
               disabled={exporting}
-              aria-label={`Export ${selectedDocIds.size} selected document${selectedDocIds.size !== 1 ? "s" : ""}`}
+              aria-label={`Export ${selectedIds.size} selected file${selectedIds.size !== 1 ? "s" : ""}`}
             >
               {exporting ? (
                 <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
@@ -585,11 +392,11 @@ function MaterialMatrixCard({
               ) : (
                 <Download className="h-3 w-3" aria-hidden="true" />
               )}
-              {exportComplete ? "Exported!" : `Export (${selectedDocIds.size})`}
+              {exportComplete ? "Exported!" : `Export (${selectedIds.size})`}
             </Button>
           )}
           <Badge variant="secondary" className="text-xs">
-            {documents.length} files
+            {files.length} files
           </Badge>
           <Button
             size="sm"
@@ -603,112 +410,62 @@ function MaterialMatrixCard({
         </div>
       </div>
 
-      {/* Select all bar — shown when documents exist */}
-      {documents.length > 0 && (
+      {/* Select all bar */}
+      {files.length > 0 && (
         <div className="px-5 py-2 border-b bg-muted/20 flex items-center justify-between">
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <Checkbox
-              checked={allSelected}
-              onCheckedChange={toggleAll}
-              className="h-3.5 w-3.5"
-              aria-label={allSelected ? "Deselect all documents" : "Select all documents"}
-            />
-            <span className="text-xs text-muted-foreground">Select all</span>
-          </label>
-          {selectedDocIds.size > 0 && (
+          <Checkbox
+            checked={allSelected}
+            onCheckedChange={toggleAll}
+            className="h-3.5 w-3.5"
+            aria-label={allSelected ? "Deselect all files" : "Select all files"}
+          />
+          {selectedIds.size > 0 && (
             <span className="text-xs text-muted-foreground tabular-nums">
-              {selectedDocIds.size} of {documents.length} selected
+              {selectedIds.size} of {files.length} selected
             </span>
           )}
         </div>
       )}
 
-      {/* Document list */}
-      {documents.length > 0 ? (
-        <div className="divide-y" role="list" aria-label="Material matrix documents">
-          {documents.map((doc) => {
-            const validation = validations.find((v) => v.documentId === doc.id);
-            const config = validation ? statusConfig[validation.status] : null;
-            const StatusIcon = config?.icon;
-            const FileIcon = fileIconMap[doc.fileType] ?? FileText;
-            const isChecked = selectedDocIds.has(doc.id);
+      {/* File list */}
+      <div className="divide-y" role="list" aria-label="Material index grid source files">
+        {files.map((file) => {
+          const FileIcon = fileIconMap[file.fileType] ?? FileText;
+          const isChecked = selectedIds.has(file.id);
 
-            return (
-              <div
-                key={doc.id}
-                className={cn(
-                  "flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors group/doc",
-                  isChecked && "bg-nav-accent/5"
-                )}
-                role="listitem"
-              >
-                {/* Checkbox */}
-                <Checkbox
-                  checked={isChecked}
-                  onCheckedChange={() => {
-                    setSelectedDocIds((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(doc.id)) next.delete(doc.id);
-                      else next.add(doc.id);
-                      return next;
-                    });
-                  }}
-                  aria-label={`Select ${doc.fileName}`}
-                  className="shrink-0"
-                />
-
-                {/* Clickable document link area */}
-                <Link
-                  href={`/projects/${projectId}/versions/${versionId}/review?item=${doc.id}`}
-                  className="flex items-center gap-4 flex-1 min-w-0"
-                >
-                  <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                    <FileIcon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {doc.fileName}
-                    </p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs font-mono font-semibold text-nav-accent">
-                        {doc.specSection}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {formatFileSize(doc.fileSize)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0 pr-2">
-                    {config && StatusIcon ? (
-                      <Badge variant="secondary" className={cn("text-[11px]", config.color)}>
-                        <StatusIcon className="h-3 w-3 mr-1" aria-hidden="true" />
-                        {config.label}
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-[11px]">Pending</Badge>
-                    )}
-                    <ArrowUpRight className="h-4 w-4 text-muted-foreground/0 group-hover/doc:text-muted-foreground transition-colors" aria-hidden="true" />
-                  </div>
-                </Link>
+          return (
+            <div
+              key={file.id}
+              className={cn(
+                "flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors",
+                isChecked && "bg-nav-accent/5"
+              )}
+              role="listitem"
+            >
+              <Checkbox
+                checked={isChecked}
+                onCheckedChange={() => toggleFile(file.id)}
+                aria-label={`Select ${file.fileName}`}
+                className="shrink-0"
+              />
+              <div className="h-9 w-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                <FileIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
               </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <FileText className="h-10 w-10 text-muted-foreground/40 mb-3" aria-hidden="true" />
-          <p className="text-sm font-medium text-muted-foreground">No documents uploaded yet</p>
-          <p className="text-xs text-muted-foreground/70 mt-1">Upload documents to start the AI validation process</p>
-          <Button
-            size="sm"
-            className="mt-4 gap-1"
-            onClick={onUpload}
-          >
-            <Upload className="h-3.5 w-3.5" aria-hidden="true" />
-            Upload Files
-          </Button>
-        </div>
-      )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{file.fileName}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[11px] text-muted-foreground">
+                    {formatFileSize(file.fileSize)}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {new Date(file.uploadedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -720,10 +477,8 @@ function MaterialMatrixCard({
 export default function VersionOverviewPage() {
   const { project, version } = useWorkspace();
   const { confidenceSummary } = version;
-  const documents = getDocumentsByVersion(version.id);
-  const validations = getValidationsByVersion(version.id);
 
-  // Upload dialog state (for Material Matrix)
+  // Upload dialog state (for Material Index Grid)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadFiles, setUploadFiles] = useState<MockUploadFile[]>([]);
   const [uploadCounter, setUploadCounter] = useState(0);
@@ -745,7 +500,7 @@ export default function VersionOverviewPage() {
           ? "text-status-action-mandatory"
           : "text-muted-foreground";
 
-  // Material Matrix upload handlers
+  // Material Index Grid upload handlers
   const handleSimulateUpload = () => {
     const batch: MockUploadFile[] = [
       { id: `up-${uploadCounter}`, name: "New_Submittal_Document.pdf", size: "3.2 MB" },
@@ -807,6 +562,7 @@ export default function VersionOverviewPage() {
   };
 
   return (
+    <div className="h-full overflow-auto">
     <main className="p-6 space-y-6 max-w-[1400px] mx-auto">
       {/* Hero Banner */}
       <HeroBanner
@@ -819,14 +575,10 @@ export default function VersionOverviewPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left column: Material Matrix (top) + Project Specifications (bottom) */}
+        {/* Left column: Material Index Grid (top) + Project Specifications (bottom) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Material Matrix — at the top */}
-          <MaterialMatrixCard
-            documents={documents}
-            validations={validations}
-            projectId={project.id}
-            versionId={version.id}
+          {/* Material Index Grid — at the top */}
+          <MaterialIndexGridCard
             onUpload={() => setUploadDialogOpen(true)}
           />
 
@@ -836,8 +588,8 @@ export default function VersionOverviewPage() {
           />
         </div>
 
-        {/* Right column — Version Details + Activity */}
-        <div className="space-y-6">
+        {/* Right column — Version Details + Activity (sticky sidebar) */}
+        <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
           {/* Version Info Card */}
           <div className="rounded-xl border bg-card shadow-card p-5">
             <h3 className="font-semibold text-sm flex items-center gap-2 mb-4">
@@ -890,12 +642,12 @@ export default function VersionOverviewPage() {
           </div>
 
           {/* Recent Activity */}
-          <div className="rounded-xl border bg-card shadow-card p-5">
+          <div className="rounded-xl border bg-card shadow-card p-5 overflow-hidden">
             <h3 className="font-semibold text-sm flex items-center gap-2 mb-4">
               <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
               Recent Activity
             </h3>
-            <ScrollArea className="max-h-[320px]">
+            <ScrollArea className="max-h-[280px]">
               <div className="space-y-3 pr-2">
                 {recentActivity.map((activity) => (
                   <div key={activity.id} className="flex gap-3">
@@ -968,7 +720,7 @@ export default function VersionOverviewPage() {
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/*  Upload Files Dialog (Material Matrix)                              */}
+      {/*  Upload Files Dialog (Material Index Grid)                            */}
       {/* ------------------------------------------------------------------ */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -1170,5 +922,6 @@ export default function VersionOverviewPage() {
       </Dialog>
 
     </main>
+    </div>
   );
 }

@@ -88,7 +88,7 @@ export function DiscrepancyTable({
                   Item
                 </th>
                 <th className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                  Material Matrix
+                  Material Index Grid
                 </th>
                 <th className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
                   Project Specifications
@@ -137,7 +137,7 @@ export function DiscrepancyTable({
                     </td>
                     <td className="p-3 hidden lg:table-cell">
                       <p className="text-xs text-muted-foreground max-w-[200px] truncate">
-                        {item.materialMatrixValue}
+                        {item.materialIndexGridValue}
                       </p>
                     </td>
                     <td className="p-3 hidden lg:table-cell">

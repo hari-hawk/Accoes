@@ -76,6 +76,7 @@ export default function ExportPage() {
   };
 
   return (
+    <div className="h-full overflow-auto">
     <div className="mx-auto max-w-3xl p-6 space-y-6">
       <div>
         <h2 className="text-xl font-semibold">Export Report</h2>
@@ -173,7 +174,7 @@ export default function ExportPage() {
             <div className="p-5 space-y-4 text-sm">
               <div>
                 <h4 className="font-semibold text-base">
-                  Material Matrix Validation Report
+                  Material Index Grid Validation Report
                 </h4>
                 <p className="text-muted-foreground">
                   {project.name} - {version.name}
@@ -267,6 +268,7 @@ export default function ExportPage() {
           </Button>
         </div>
       )}
+    </div>
     </div>
   );
 }

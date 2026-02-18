@@ -40,7 +40,7 @@ const statusIcons: Record<DiscrepancyStatus, typeof CheckCircle2> = {
 };
 
 const sourceIcons = [
-  { label: "Material Matrix", icon: Table2, color: "text-blue-500" },
+  { label: "Material Index Grid", icon: Table2, color: "text-blue-500" },
   { label: "Project Specifications", icon: BookOpen, color: "text-purple-500" },
   { label: "Project Index", icon: FileText, color: "text-amber-500" },
 ];
@@ -56,7 +56,7 @@ export function ItemDetailPanel({
   const StatusIcon = statusIcons[item.status];
 
   const comparisonData = [
-    { source: "Material Matrix", value: item.materialMatrixValue },
+    { source: "Material Index Grid", value: item.materialIndexGridValue },
     { source: "Project Specifications", value: item.projectSpecValue },
     { source: "Project Index", value: item.projectIndexValue },
   ];

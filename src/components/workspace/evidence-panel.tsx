@@ -444,7 +444,7 @@ function CommentsActivityPanel({
 export function EvidencePanel({
   material,
   decision,
-  onDecide: _onDecide,
+  onDecide,
   activeCategory = "overall",
   onCategoryChange,
   projectId,
@@ -456,7 +456,6 @@ export function EvidencePanel({
   onCategoryChange?: (category: ValidationCategory) => void;
   projectId?: string;
 }) {
-  void _onDecide; // Reserved for future use
   const { document } = material;
   const [showComments, setShowComments] = useState(false);
   const [pdfOpen, setPdfOpen] = useState(false);
@@ -476,7 +475,7 @@ export function EvidencePanel({
   };
 
   const activeValidation = getActiveValidation();
-  const _effectiveDecision = decision ?? activeValidation?.decision ?? "pending";
+  const effectiveDecision = decision ?? activeValidation?.decision ?? "pending";
 
   // Build citations for PDF viewer from evidence items
   const citations: Citation[] = (activeValidation?.evidenceItems ?? [])
@@ -531,9 +530,15 @@ export function EvidencePanel({
             <div className="flex items-center gap-2 shrink-0">
               {/* Status dropdown */}
               <Select
-                value={activeValidation?.status ?? "review_required"}
-                onValueChange={() => {
-                  /* mock — no-op */
+                value={
+                  effectiveDecision === "approved" || effectiveDecision === "revisit"
+                    ? effectiveDecision
+                    : (activeValidation?.status ?? "review_required")
+                }
+                onValueChange={(value) => {
+                  if (value === "approved" || value === "revisit") {
+                    onDecide(value as DecisionStatus);
+                  }
                 }}
               >
                 <SelectTrigger className="h-8 w-[160px] text-xs">

@@ -197,7 +197,7 @@ export interface MaterialItem {
   itemName: string;
   description: string;
   specSection: string;
-  materialMatrixValue: string;
+  materialIndexGridValue: string;
   projectSpecValue: string;
   projectIndexValue: string;
   status: DiscrepancyStatus;

@@ -127,8 +127,8 @@ export const mockProjects: Project[] = [
     updatedAt: "2026-01-28T15:00:00Z",
     ownerId: "user-2",
     memberIds: ["user-1", "user-2", "user-3"],
-    versionIds: [],
-    latestVersionId: "",
+    versionIds: ["ver-10"],
+    latestVersionId: "ver-10",
     totalDocuments: 12,
     confidenceSummary: {
       preApproved: 8,
@@ -150,8 +150,8 @@ export const mockProjects: Project[] = [
     updatedAt: "2026-01-10T12:00:00Z",
     ownerId: "user-1",
     memberIds: ["user-1", "user-4"],
-    versionIds: [],
-    latestVersionId: "",
+    versionIds: ["ver-11"],
+    latestVersionId: "ver-11",
     totalDocuments: 20,
     confidenceSummary: {
       preApproved: 15,
@@ -173,8 +173,8 @@ export const mockProjects: Project[] = [
     updatedAt: "2025-10-30T16:00:00Z",
     ownerId: "user-3",
     memberIds: ["user-1", "user-2", "user-3"],
-    versionIds: [],
-    latestVersionId: "",
+    versionIds: ["ver-12"],
+    latestVersionId: "ver-12",
     totalDocuments: 26,
     confidenceSummary: {
       preApproved: 22,
@@ -196,8 +196,8 @@ export const mockProjects: Project[] = [
     updatedAt: "2026-02-01T09:00:00Z",
     ownerId: "user-1",
     memberIds: ["user-1"],
-    versionIds: [],
-    latestVersionId: "",
+    versionIds: ["ver-13"],
+    latestVersionId: "ver-13",
     totalDocuments: 0,
     confidenceSummary: {
       preApproved: 0,

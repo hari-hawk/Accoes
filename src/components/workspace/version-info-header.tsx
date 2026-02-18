@@ -38,6 +38,12 @@ export function VersionInfoHeader({
             <StatusIndicator status={version.status} />
           </div>
           <div className="flex items-center gap-3 mt-1">
+            <span className="text-xs text-muted-foreground truncate shrink-0">
+              {project.client}
+            </span>
+            <span className="text-xs font-mono text-muted-foreground shrink-0">
+              {project.jobId}
+            </span>
             <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
               <FileText className="h-3 w-3" />
               {version.documentIds.length} docs

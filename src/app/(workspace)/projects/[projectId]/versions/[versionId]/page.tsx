@@ -502,6 +502,168 @@ function MaterialIndexGridCard({
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Project Insights Section — full-width stats bar                            */
+/* -------------------------------------------------------------------------- */
+
+function ProjectInsightsSection({
+  project,
+  confidence,
+  confidenceColor,
+  totalDocs,
+}: {
+  project: { stage: string; memberIds: string[]; createdAt: string; updatedAt: string; totalDocuments: number };
+  confidence: number;
+  confidenceColor: string;
+  totalDocs: number;
+}) {
+  // Compute how many days the project has been active
+  const daysSinceCreation = Math.max(
+    1,
+    Math.floor(
+      (new Date().getTime() - new Date(project.createdAt).getTime()) /
+        (1000 * 60 * 60 * 24)
+    )
+  );
+
+  // Determine stage progress (4 stages: review_required → action_mandatory → pre_approved → approved)
+  const stageOrder = ["review_required", "action_mandatory", "pre_approved", "approved"];
+  const stageIndex = stageOrder.indexOf(project.stage);
+  const stageProgress = stageIndex >= 0 ? stageIndex + 1 : 1;
+  const stageLabels = ["Review Required", "Action Mandatory", "Pre-Approved", "Approved"];
+
+  // Mock verified count: based on confidence, e.g. if confidence is 78% and 22 docs, ~17 are verified
+  const verifiedDocs =
+    confidence > 0 && totalDocs > 0
+      ? Math.round((confidence / 100) * totalDocs)
+      : 0;
+
+  return (
+    <section
+      className="rounded-xl border bg-card shadow-card overflow-hidden"
+      aria-label="Project insights"
+    >
+      <div className="px-5 py-4 border-b flex items-center gap-2">
+        <BarChart3 className="h-4 w-4 text-primary" aria-hidden="true" />
+        <h3 className="font-semibold text-sm">Project Insights</h3>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0">
+        {/* Stat 1: Workflow Stage */}
+        <div className="p-4">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
+            Workflow Stage
+          </p>
+          <p className="text-lg font-bold">
+            {stageLabels[stageIndex] ?? project.stage}
+          </p>
+          <div className="flex items-center gap-1 mt-2">
+            {stageOrder.map((s, i) => (
+              <div
+                key={s}
+                className={cn(
+                  "h-1.5 flex-1 rounded-full transition-colors",
+                  i < stageProgress ? "bg-nav-accent" : "bg-muted"
+                )}
+                aria-hidden="true"
+              />
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Stage {stageProgress} of {stageOrder.length}
+          </p>
+        </div>
+
+        {/* Stat 2: Document Verification */}
+        <div className="p-4">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
+            Documents Verified
+          </p>
+          <p className="text-lg font-bold">
+            {verifiedDocs}{" "}
+            <span className="text-sm font-normal text-muted-foreground">/ {totalDocs}</span>
+          </p>
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-2">
+            <div
+              className="h-full rounded-full bg-status-pre-approved transition-all duration-500"
+              style={{ width: totalDocs > 0 ? `${(verifiedDocs / totalDocs) * 100}%` : "0%" }}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            {totalDocs > 0 ? `${Math.round((verifiedDocs / totalDocs) * 100)}% verified` : "No documents yet"}
+          </p>
+        </div>
+
+        {/* Stat 3: Confidence Score */}
+        <div className="p-4">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
+            Confidence Score
+          </p>
+          <p className={cn("text-lg font-bold", confidenceColor)}>
+            {confidence > 0 ? `${confidence}%` : "Pending"}
+          </p>
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-2">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-500",
+                confidence >= 80
+                  ? "bg-status-pre-approved"
+                  : confidence >= 60
+                    ? "bg-status-review-required"
+                    : confidence > 0
+                      ? "bg-status-action-mandatory"
+                      : "bg-muted-foreground/30"
+              )}
+              style={{ width: confidence > 0 ? `${confidence}%` : "0%" }}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            {confidence >= 80
+              ? "Strong — ready for approval"
+              : confidence >= 60
+                ? "Moderate — review recommended"
+                : confidence > 0
+                  ? "Low — action needed"
+                  : "Awaiting AI processing"}
+          </p>
+        </div>
+
+        {/* Stat 4: Project Timeline */}
+        <div className="p-4">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
+            Project Timeline
+          </p>
+          <p className="text-lg font-bold">
+            {daysSinceCreation}{" "}
+            <span className="text-sm font-normal text-muted-foreground">days</span>
+          </p>
+          <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Users className="h-3 w-3" aria-hidden="true" />
+              {project.memberIds.length} member{project.memberIds.length !== 1 ? "s" : ""}
+            </span>
+            <span className="text-muted-foreground/40">·</span>
+            <span>
+              Updated{" "}
+              {new Date(project.updatedAt).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+              })}
+            </span>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Since {new Date(project.createdAt).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Main Page Component                                                        */
 /* -------------------------------------------------------------------------- */
 
@@ -606,6 +768,14 @@ export default function VersionOverviewPage() {
         confidenceSummary={confidenceSummary}
         confidence={confidence}
         confidenceColor={confidenceColor}
+      />
+
+      {/* Project Insights — full-width stats bar */}
+      <ProjectInsightsSection
+        project={project}
+        confidence={confidence}
+        confidenceColor={confidenceColor}
+        totalDocs={confidenceSummary.total}
       />
 
       <div className="grid gap-6 lg:grid-cols-3">

@@ -23,6 +23,8 @@ import {
   Check,
   Loader2,
   BookOpen,
+  ChevronRight,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWorkspace } from "@/providers/workspace-provider";
+import { FullScreenPdfViewer } from "@/components/documents/full-screen-pdf-viewer";
 import { formatPercentage } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -183,8 +186,10 @@ function HeroBanner({
 
 function ProjectSpecificationsCard({
   onReUpload,
+  onPreview,
 }: {
   onReUpload: () => void;
+  onPreview: (spec: typeof mockProjectSpecs[number]) => void;
 }) {
   const [selectedSpecIds, setSelectedSpecIds] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
@@ -326,6 +331,16 @@ function ProjectSpecificationsCard({
                   </div>
                 </div>
 
+                {/* Preview button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 text-muted-foreground/0 group-hover/spec:text-muted-foreground hover:!text-primary transition-colors"
+                  onClick={() => onPreview(spec)}
+                  aria-label={`Preview ${spec.fileName}`}
+                >
+                  <Eye className="h-4 w-4" aria-hidden="true" />
+                </Button>
               </div>
             );
           })}
@@ -452,7 +467,7 @@ function MaterialIndexGridCard({
             <div
               key={file.id}
               className={cn(
-                "flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors cursor-pointer",
+                "flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors cursor-pointer group/row",
                 isChecked && "bg-nav-accent/5"
               )}
               role="listitem"
@@ -479,6 +494,7 @@ function MaterialIndexGridCard({
                   </span>
                 </div>
               </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/0 group-hover/row:text-muted-foreground transition-colors shrink-0" aria-hidden="true" />
             </div>
           );
         })}
@@ -501,6 +517,9 @@ export default function VersionOverviewPage() {
   const [uploadFiles, setUploadFiles] = useState<MockUploadFile[]>([]);
   const [uploadCounter, setUploadCounter] = useState(0);
   const [uploading, setUploading] = useState(false);
+
+  // PDF preview state for Project Specifications
+  const [previewSpec, setPreviewSpec] = useState<typeof mockProjectSpecs[number] | null>(null);
 
   // Re-upload dialog for Project Specifications
   const [specUploadOpen, setSpecUploadOpen] = useState(false);
@@ -606,6 +625,7 @@ export default function VersionOverviewPage() {
           {/* Project Specifications — at the bottom */}
           <ProjectSpecificationsCard
             onReUpload={() => setSpecUploadOpen(true)}
+            onPreview={(spec) => setPreviewSpec(spec)}
           />
         </div>
 
@@ -941,6 +961,15 @@ export default function VersionOverviewPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* PDF Preview Viewer for Project Specifications */}
+      <FullScreenPdfViewer
+        open={!!previewSpec}
+        onOpenChange={(open) => { if (!open) setPreviewSpec(null); }}
+        title={previewSpec?.fileName ?? ""}
+        subtitle="Project Specification"
+        totalPages={previewSpec?.totalPages ?? 100}
+      />
 
     </main>
     </div>

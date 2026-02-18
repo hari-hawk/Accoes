@@ -140,25 +140,35 @@ function MaterialListItem({
             <ScoreChip label="Score" score={overallScore} />
           )}
 
-          {/* Status + Decision badges — pushed to far right */}
+          {/* Single status badge — pushed to far right */}
           <div className="ml-auto flex items-center gap-1.5 shrink-0">
-            {/* Validation status badge — always visible */}
-            {status && (
+            {effectiveDecision && effectiveDecision !== "pending" ? (
+              /* Show decision badge when user has made a decision */
               <span
                 className={cn(
-                  "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none",
-                  VALIDATION_STATUS_CONFIG[status].bgColor,
-                  VALIDATION_STATUS_CONFIG[status].color
+                  "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none capitalize",
+                  effectiveDecision === "approved"
+                    ? "bg-status-pre-approved-bg text-status-pre-approved"
+                    : effectiveDecision === "revisit"
+                      ? "bg-status-review-required-bg text-status-review-required"
+                      : "bg-muted text-muted-foreground"
                 )}
               >
-                {VALIDATION_STATUS_CONFIG[status].label}
-              </span>
-            )}
-            {/* Decision badge — only when decided (not pending) */}
-            {effectiveDecision && effectiveDecision !== "pending" && (
-              <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
                 {effectiveDecision.replace(/_/g, " ")}
               </span>
+            ) : (
+              /* Show AI validation status when no decision has been made */
+              status && (
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none",
+                    VALIDATION_STATUS_CONFIG[status].bgColor,
+                    VALIDATION_STATUS_CONFIG[status].color
+                  )}
+                >
+                  {VALIDATION_STATUS_CONFIG[status].label}
+                </span>
+              )
             )}
           </div>
         </div>
@@ -277,26 +287,28 @@ export function MaterialList({
       </div>
 
       {/* Material items — scrollable */}
-      <ScrollArea className="flex-1">
-        <div className="w-full">
-          {materials.map((item) => (
-            <MaterialListItem
-              key={item.document.id}
-              item={item}
-              isSelected={selectedId === item.document.id}
-              isChecked={checkedIds.has(item.document.id)}
-              decision={decisions[item.document.id]}
-              onSelect={() => onSelect(item.document.id)}
-              onToggleCheck={() => onToggleCheck(item.document.id)}
-            />
-          ))}
-          {materials.length === 0 && (
-            <div className="p-8 text-center text-sm text-muted-foreground">
-              No materials match your filters.
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+      <div className="flex-1 min-h-0 relative">
+        <ScrollArea className="absolute inset-0">
+          <div className="w-full">
+            {materials.map((item) => (
+              <MaterialListItem
+                key={item.document.id}
+                item={item}
+                isSelected={selectedId === item.document.id}
+                isChecked={checkedIds.has(item.document.id)}
+                decision={decisions[item.document.id]}
+                onSelect={() => onSelect(item.document.id)}
+                onToggleCheck={() => onToggleCheck(item.document.id)}
+              />
+            ))}
+            {materials.length === 0 && (
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                No materials match your filters.
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
 }

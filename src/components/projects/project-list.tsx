@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   Plus,
   FolderKanban,
-  Activity,
   Eye,
   ShieldCheck,
   Download,
@@ -18,9 +17,6 @@ import {
   Check,
   Loader2,
   X,
-  TrendingUp,
-  Clock,
-  FileStack,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -75,11 +71,17 @@ function formatFileSize(bytes: number): string {
 /* -------------------------------------------------------------------------- */
 
 function HeroSection() {
+  /* ---- Computed metrics ---- */
   const activeCount = mockProjects.filter((p) => p.status === "active").length;
-  const completedCount = mockProjects.filter((p) => p.status === "completed").length;
   const inProgressCount = mockProjects.filter((p) => p.status === "in_progress").length;
-  const totalDocs = mockProjects.reduce((sum, p) => sum + p.totalDocuments, 0);
-  const projectsWithConfidence = mockProjects.filter((p) => p.confidenceSummary.overallConfidence > 0);
+  const completedCount = mockProjects.filter((p) => p.status === "completed").length;
+  const onHoldCount = mockProjects.filter((p) => p.status === "on_hold").length;
+  const totalProjects = mockProjects.length;
+
+  // Overall Confidence — average across scored projects
+  const projectsWithConfidence = mockProjects.filter(
+    (p) => p.confidenceSummary.overallConfidence > 0
+  );
   const avgConfidence =
     projectsWithConfidence.length > 0
       ? Math.round(
@@ -90,14 +92,24 @@ function HeroSection() {
         )
       : 0;
 
-  const stats = [
-    { label: "Total Projects", value: mockProjects.length, icon: FolderKanban },
-    { label: "Active", value: activeCount, icon: Activity },
-    { label: "In Progress", value: inProgressCount, icon: Clock },
-    { label: "Completed", value: completedCount, icon: CheckCircle2 },
-    { label: "Avg. Confidence", value: `${avgConfidence}%`, icon: TrendingUp },
-    { label: "Documents", value: totalDocs, icon: FileStack },
-  ];
+  // Compliance Rate — pre-approved vs total items across ALL projects
+  const totalPreApproved = mockProjects.reduce(
+    (sum, p) => sum + p.confidenceSummary.preApproved,
+    0
+  );
+  const totalItems = mockProjects.reduce(
+    (sum, p) => sum + p.confidenceSummary.total,
+    0
+  );
+  const compliancePct = totalItems > 0 ? Math.round((totalPreApproved / totalItems) * 100) : 0;
+
+  // SVG ring dimensions
+  const ringRadius = 52;
+  const circumference = 2 * Math.PI * ringRadius;
+  const dashOffset = circumference * (1 - avgConfidence / 100);
+
+  // Pipeline bar segment widths
+  const pipelineBarTotal = totalProjects || 1; // avoid /0
 
   return (
     <section
@@ -117,32 +129,187 @@ function HeroSection() {
         </p>
       </div>
 
-      {/* Stats grid */}
+      {/* 3 Business-Impact Metric Cards */}
       <div
-        className="relative grid grid-cols-3 sm:grid-cols-6 gap-4 mt-5 pt-5 border-t border-white/10"
+        className="relative grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 pt-5 border-t border-white/10"
         role="group"
-        aria-label="Project statistics"
+        aria-label="Business impact metrics"
       >
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={stat.label}
-              className="flex flex-col items-center text-center gap-1.5 py-2 px-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] transition-colors"
-              aria-label={`${stat.label}: ${stat.value}`}
+        {/* Card 1 — Overall Confidence */}
+        <div
+          className="rounded-xl bg-white/[0.06] backdrop-blur-sm p-5 flex items-center gap-4"
+          aria-label={`Overall confidence: ${avgConfidence}%`}
+        >
+          <svg
+            width="120"
+            height="120"
+            viewBox="0 0 120 120"
+            className="shrink-0"
+            aria-hidden="true"
+          >
+            <circle
+              cx="60"
+              cy="60"
+              r={ringRadius}
+              fill="none"
+              stroke="rgba(255,255,255,0.1)"
+              strokeWidth="8"
+            />
+            <circle
+              cx="60"
+              cy="60"
+              r={ringRadius}
+              fill="none"
+              stroke="var(--nav-gold)"
+              strokeWidth="8"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={dashOffset}
+              transform="rotate(-90 60 60)"
+              className="transition-all duration-700"
+            />
+            <text
+              x="60"
+              y="55"
+              textAnchor="middle"
+              className="fill-white font-bold"
+              fontSize="28"
             >
-              <div className="h-8 w-8 rounded-lg bg-white/10 flex items-center justify-center">
-                <Icon className="h-4 w-4 text-nav-gold" aria-hidden="true" />
-              </div>
-              <div>
-                <p className="text-lg font-bold leading-none">{stat.value}</p>
-                <p className="text-[9px] text-white/50 font-medium uppercase tracking-wider mt-1">
-                  {stat.label}
-                </p>
-              </div>
+              {avgConfidence}%
+            </text>
+            <text
+              x="60"
+              y="75"
+              textAnchor="middle"
+              className="fill-white/50"
+              fontSize="10"
+            >
+              CONFIDENCE
+            </text>
+          </svg>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-white/70 uppercase tracking-wider">
+              Overall Confidence
+            </p>
+            <p className="text-3xl font-bold mt-1">{avgConfidence}%</p>
+            <p className="text-xs text-white/50 mt-1">
+              Across {projectsWithConfidence.length} scored project{projectsWithConfidence.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+        </div>
+
+        {/* Card 2 — Review Pipeline */}
+        <div
+          className="rounded-xl bg-white/[0.06] backdrop-blur-sm p-5 flex flex-col justify-between"
+          aria-label={`Review pipeline: ${activeCount + inProgressCount} projects`}
+        >
+          <div>
+            <p className="text-sm font-semibold text-white/70 uppercase tracking-wider">
+              Review Pipeline
+            </p>
+            <p className="text-3xl font-bold mt-1">
+              {activeCount + inProgressCount}
+            </p>
+            <p className="text-xs text-white/50 mt-1">
+              {activeCount} Active + {inProgressCount} In Progress
+            </p>
+          </div>
+
+          {/* Mini stacked bar */}
+          <div className="mt-4">
+            <div className="flex h-2 rounded-full overflow-hidden bg-white/10" aria-hidden="true">
+              {activeCount > 0 && (
+                <div
+                  className="h-full"
+                  style={{
+                    width: `${(activeCount / pipelineBarTotal) * 100}%`,
+                    backgroundColor: "#3b82f6",
+                  }}
+                />
+              )}
+              {inProgressCount > 0 && (
+                <div
+                  className="h-full"
+                  style={{
+                    width: `${(inProgressCount / pipelineBarTotal) * 100}%`,
+                    backgroundColor: "#f59e0b",
+                  }}
+                />
+              )}
+              {completedCount > 0 && (
+                <div
+                  className="h-full"
+                  style={{
+                    width: `${(completedCount / pipelineBarTotal) * 100}%`,
+                    backgroundColor: "#22c55e",
+                  }}
+                />
+              )}
+              {onHoldCount > 0 && (
+                <div
+                  className="h-full"
+                  style={{
+                    width: `${(onHoldCount / pipelineBarTotal) * 100}%`,
+                    backgroundColor: "#6b7280",
+                  }}
+                />
+              )}
             </div>
-          );
-        })}
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
+              <span className="flex items-center gap-1 text-[10px] text-white/50">
+                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#3b82f6" }} />
+                Active
+              </span>
+              <span className="flex items-center gap-1 text-[10px] text-white/50">
+                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#f59e0b" }} />
+                In Progress
+              </span>
+              <span className="flex items-center gap-1 text-[10px] text-white/50">
+                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#22c55e" }} />
+                Completed
+              </span>
+              <span className="flex items-center gap-1 text-[10px] text-white/50">
+                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#6b7280" }} />
+                On Hold
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3 — Compliance Rate */}
+        <div
+          className="rounded-xl bg-white/[0.06] backdrop-blur-sm p-5 flex flex-col justify-between"
+          aria-label={`Compliance rate: ${totalPreApproved} of ${totalItems} items pre-approved (${compliancePct}%)`}
+        >
+          <div>
+            <p className="text-sm font-semibold text-white/70 uppercase tracking-wider">
+              Compliance Rate
+            </p>
+            <p className="text-3xl font-bold mt-1">
+              {totalPreApproved}{" "}
+              <span className="text-lg font-normal text-white/50">/ {totalItems}</span>
+            </p>
+            <p className="text-xs text-white/50 mt-1">
+              Pre-approved items — {compliancePct}%
+            </p>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-4">
+            <div className="flex h-2 rounded-full overflow-hidden bg-white/10" aria-hidden="true">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${compliancePct}%`,
+                  backgroundColor: "var(--nav-gold)",
+                }}
+              />
+            </div>
+            <p className="text-[10px] text-white/50 mt-1.5 text-right">
+              {compliancePct}% compliant
+            </p>
+          </div>
+        </div>
       </div>
     </section>
   );

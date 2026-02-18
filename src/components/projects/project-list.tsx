@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Plus,
   FolderKanban,
-  Eye,
-  ShieldCheck,
   Download,
   FileText,
   FileSpreadsheet,
@@ -308,13 +307,14 @@ function HeroSection() {
 
 function ProjectListRow({
   project,
-  onClick,
+  onNameClick,
   onDownloadReport,
 }: {
   project: Project;
-  onClick: (project: Project) => void;
+  onNameClick: (project: Project) => void;
   onDownloadReport: (project: Project) => void;
 }) {
+  const router = useRouter();
   const confidence = project.confidenceSummary.overallConfidence;
   const confidenceColor =
     confidence >= 80
@@ -326,29 +326,49 @@ function ProjectListRow({
           : "text-muted-foreground";
 
   const hasVersions = !!project.latestVersionId;
+  const overviewHref = `/projects/${project.id}/versions/${project.latestVersionId}`;
 
   // Check if project has documents in its latest version
   const hasDocuments = hasVersions && getDocumentsByVersion(
     getVersionsByProject(project.id).find((v) => v.id === project.latestVersionId)?.id ?? ""
   ).length > 0;
 
+  const handleRowClick = () => {
+    if (hasVersions) {
+      router.push(overviewHref);
+    } else {
+      onNameClick(project);
+    }
+  };
+
   return (
     <div
       className="flex items-center gap-4 px-4 py-3 border-b last:border-b-0 hover:bg-muted/30 transition-colors cursor-pointer"
-      onClick={() => onClick(project)}
+      onClick={handleRowClick}
       role="row"
       tabIndex={0}
       aria-label={`${project.name}, Job ${project.jobId}, ${confidence > 0 ? `${confidence}% confidence` : "Pending"}`}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onClick(project);
+          handleRowClick();
         }
       }}
     >
       {/* Name + Job ID */}
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold truncate">{project.name}</p>
+        <p className="text-sm font-semibold truncate">
+          <button
+            type="button"
+            className="hover:underline hover:text-nav-accent cursor-pointer transition-colors text-left"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNameClick(project);
+            }}
+          >
+            {project.name}
+          </button>
+        </p>
         <p className="text-xs font-mono text-muted-foreground truncate">{project.jobId}</p>
       </div>
 
@@ -375,7 +395,7 @@ function ProjectListRow({
         </time>
       </div>
 
-      {/* 3 action icons */}
+      {/* Download action */}
       <div
         className="shrink-0 flex items-center gap-1"
         onClick={(e) => e.stopPropagation()}
@@ -384,66 +404,34 @@ function ProjectListRow({
         aria-label="Project actions"
       >
         {hasVersions ? (
-          <>
-            <Link
-              href={`/projects/${project.id}/versions/${project.latestVersionId}`}
-              className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-nav-accent hover:bg-muted/50 transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none"
-              aria-label={`View overview for ${project.name}`}
-            >
-              <Eye className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <Link
-              href={`/projects/${project.id}/versions/${project.latestVersionId}/review`}
-              className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-nav-accent hover:bg-muted/50 transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none"
-              aria-label={`View material index grid for ${project.name}`}
-            >
-              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <button
-              type="button"
-              className={cn(
-                "inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none",
-                hasDocuments
-                  ? "text-muted-foreground hover:text-nav-accent hover:bg-muted/50"
-                  : "text-muted-foreground/30 cursor-not-allowed"
-              )}
-              aria-label={
-                hasDocuments
-                  ? `Download report for ${project.name}`
-                  : `No documents available for ${project.name}`
-              }
-              disabled={!hasDocuments}
-              onClick={() => {
-                if (hasDocuments) onDownloadReport(project);
-              }}
-            >
-              <Download className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </>
+          <button
+            type="button"
+            className={cn(
+              "inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none",
+              hasDocuments
+                ? "text-muted-foreground hover:text-nav-accent hover:bg-muted/50"
+                : "text-muted-foreground/30 cursor-not-allowed"
+            )}
+            aria-label={
+              hasDocuments
+                ? `Download report for ${project.name}`
+                : `No documents available for ${project.name}`
+            }
+            disabled={!hasDocuments}
+            onClick={() => {
+              if (hasDocuments) onDownloadReport(project);
+            }}
+          >
+            <Download className="h-4 w-4" aria-hidden="true" />
+          </button>
         ) : (
-          <>
-            <span
-              className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/30 cursor-not-allowed"
-              role="img"
-              aria-label="Overview unavailable — no versions"
-            >
-              <Eye className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <span
-              className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/30 cursor-not-allowed"
-              role="img"
-              aria-label="Material Index Grid unavailable — no versions"
-            >
-              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <span
-              className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/30 cursor-not-allowed"
-              role="img"
-              aria-label="Download report unavailable — no versions"
-            >
-              <Download className="h-4 w-4" aria-hidden="true" />
-            </span>
-          </>
+          <span
+            className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/30 cursor-not-allowed"
+            role="img"
+            aria-label="Download report unavailable — no versions"
+          >
+            <Download className="h-4 w-4" aria-hidden="true" />
+          </span>
         )}
       </div>
     </div>
@@ -768,7 +756,7 @@ export function ProjectList() {
             <ProjectCard
               key={project.id}
               project={project}
-              onCardClick={handleCardClick}
+              onNameClick={handleCardClick}
               onDownloadReport={handleDownloadReport}
             />
           ))}
@@ -782,13 +770,13 @@ export function ProjectList() {
             <div className="shrink-0" role="columnheader">Status</div>
             <div className="shrink-0 w-16 text-right" role="columnheader" aria-label="Confidence">Conf.</div>
             <div className="shrink-0 w-24 text-right hidden lg:block" role="columnheader">Created</div>
-            <div className="shrink-0 w-[104px]" role="columnheader" aria-label="Actions" />
+            <div className="shrink-0 w-10" role="columnheader" aria-label="Actions" />
           </div>
           {projects.map((project) => (
             <ProjectListRow
               key={project.id}
               project={project}
-              onClick={handleCardClick}
+              onNameClick={handleCardClick}
               onDownloadReport={handleDownloadReport}
             />
           ))}

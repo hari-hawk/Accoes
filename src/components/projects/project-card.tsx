@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
-  Eye,
-  ShieldCheck,
   Download,
   MapPin,
   Calendar,
@@ -37,13 +35,14 @@ function getInitials(name: string) {
 
 export function ProjectCard({
   project,
-  onCardClick,
+  onNameClick,
   onDownloadReport,
 }: {
   project: Project;
-  onCardClick?: (project: Project) => void;
+  onNameClick?: (project: Project) => void;
   onDownloadReport?: (project: Project) => void;
 }) {
+  const router = useRouter();
   const confidence = project.confidenceSummary.overallConfidence;
   const confidenceColor =
     confidence >= 80
@@ -77,9 +76,8 @@ export function ProjectCard({
   const visibleMembers = members.slice(0, 3);
   const overflowCount = members.length - visibleMembers.length;
 
-  // Action link hrefs
+  // Navigation href
   const overviewHref = `/projects/${project.id}/versions/${project.latestVersionId}`;
-  const materialIndexGridHref = `/projects/${project.id}/versions/${project.latestVersionId}/review`;
 
   return (
     <article
@@ -92,22 +90,41 @@ export function ProjectCard({
       {/* Clickable card body */}
       <div
         className="p-5 cursor-pointer"
-        onClick={() => onCardClick?.(project)}
+        onClick={() => {
+          if (hasVersions) {
+            router.push(overviewHref);
+          } else {
+            onNameClick?.(project);
+          }
+        }}
         role="button"
         tabIndex={0}
-        aria-label={`View details for ${project.name}`}
+        aria-label={hasVersions ? `Open overview for ${project.name}` : `View details for ${project.name}`}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            onCardClick?.(project);
+            if (hasVersions) {
+              router.push(overviewHref);
+            } else {
+              onNameClick?.(project);
+            }
           }
         }}
       >
         {/* Row 1: Name + Status */}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold truncate group-hover:text-nav-accent transition-colors">
-              {project.name}
+            <h3 className="text-base font-semibold truncate transition-colors">
+              <button
+                type="button"
+                className="hover:underline hover:text-nav-accent cursor-pointer transition-colors text-left"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNameClick?.(project);
+                }}
+              >
+                {project.name}
+              </button>
             </h3>
             <p className="mt-0.5 text-xs font-mono text-muted-foreground">
               {project.jobId}
@@ -190,7 +207,7 @@ export function ProjectCard({
           </div>
         </div>
 
-        {/* Row 6: 3 icon+text action links */}
+        {/* Row 6: Download Report action */}
         <div
           className="mt-4 pt-3 border-t flex items-center gap-4"
           onClick={(e) => e.stopPropagation()}
@@ -199,69 +216,35 @@ export function ProjectCard({
           aria-label="Quick actions"
         >
           {hasVersions ? (
-            <>
-              <Link
-                href={overviewHref}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-nav-accent transition-colors font-medium focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-sm outline-none px-0.5"
-                aria-label={`View overview for ${project.name}`}
-              >
-                <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                Overview
-              </Link>
-              <Link
-                href={materialIndexGridHref}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-nav-accent transition-colors font-medium focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-sm outline-none px-0.5"
-                aria-label={`View material matrix for ${project.name}`}
-              >
-                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                Material Index Grid
-              </Link>
-              <button
-                type="button"
-                className={cn(
-                  "flex items-center gap-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-sm outline-none px-0.5",
-                  hasDocuments
-                    ? "text-muted-foreground hover:text-nav-accent"
-                    : "text-muted-foreground/40 cursor-not-allowed"
-                )}
-                disabled={!hasDocuments}
-                onClick={() => {
-                  if (hasDocuments) onDownloadReport?.(project);
-                }}
-                aria-label={
-                  hasDocuments
-                    ? `Download report for ${project.name}`
-                    : `No documents available for ${project.name}`
-                }
-              >
-                <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                Download Report
-              </button>
-            </>
+            <button
+              type="button"
+              className={cn(
+                "flex items-center gap-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-sm outline-none px-0.5",
+                hasDocuments
+                  ? "text-muted-foreground hover:text-nav-accent"
+                  : "text-muted-foreground/40 cursor-not-allowed"
+              )}
+              disabled={!hasDocuments}
+              onClick={() => {
+                if (hasDocuments) onDownloadReport?.(project);
+              }}
+              aria-label={
+                hasDocuments
+                  ? `Download report for ${project.name}`
+                  : `No documents available for ${project.name}`
+              }
+            >
+              <Download className="h-3.5 w-3.5" aria-hidden="true" />
+              Download Report
+            </button>
           ) : (
-            <>
-              <span
-                className="flex items-center gap-1.5 text-xs text-muted-foreground/40 font-medium cursor-not-allowed"
-                aria-label="Overview unavailable — no versions"
-              >
-                <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                Overview
-              </span>
-              <span
-                className="flex items-center gap-1.5 text-xs text-muted-foreground/40 font-medium cursor-not-allowed"
-                aria-label="Material Index Grid unavailable — no versions"
-              >
-                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                Material Index Grid
-              </span>
-              <span
-                className="flex items-center gap-1.5 text-xs text-muted-foreground/40 font-medium cursor-not-allowed"
-                aria-label="Download report unavailable — no versions"
-              >
-                <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                Download Report
-              </span>
-            </>
+            <span
+              className="flex items-center gap-1.5 text-xs text-muted-foreground/40 font-medium cursor-not-allowed"
+              aria-label="Download report unavailable — no versions"
+            >
+              <Download className="h-3.5 w-3.5" aria-hidden="true" />
+              Download Report
+            </span>
           )}
         </div>
       </div>

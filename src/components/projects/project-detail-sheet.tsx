@@ -27,6 +27,7 @@ import {
   ArrowRightLeft,
   Layers,
   BookOpen,
+  Eye,
 } from "lucide-react";
 import {
   Sheet,
@@ -65,6 +66,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FullScreenPdfViewer } from "@/components/documents/full-screen-pdf-viewer";
 import { StatusIndicator } from "@/components/shared/status-indicator";
 import { mockUsers, currentUser } from "@/data/mock-users";
 import { getVersionsByProject } from "@/data/mock-versions";
@@ -184,8 +186,8 @@ const mockMigFiles = [
 ];
 
 const mockSpecFiles = [
-  { id: "ps-1", fileName: "UCD_Project9592330_Project_Specification_Volume_1_2026-02.pdf", fileType: "pdf", fileSize: 16482304 },
-  { id: "ps-2", fileName: "UCD_Project9592330_Project_Specification_Volume_2_2026-02.pdf", fileType: "pdf", fileSize: 13107200 },
+  { id: "ps-1", fileName: "UCD_Project9592330_Project_Specification_Volume_1_2026-02.pdf", fileType: "pdf", fileSize: 16482304, totalPages: 342 },
+  { id: "ps-2", fileName: "UCD_Project9592330_Project_Specification_Volume_2_2026-02.pdf", fileType: "pdf", fileSize: 13107200, totalPages: 278 },
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -197,34 +199,40 @@ function CollapsibleSection({
   icon: Icon,
   count,
   defaultOpen = false,
+  id,
   children,
 }: {
   title: string;
   icon: typeof FileText;
   count: number;
   defaultOpen?: boolean;
+  id: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const contentId = `${id}-content`;
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="border rounded-lg overflow-hidden" role="region" aria-labelledby={id}>
       <button
         type="button"
-        className="flex items-center gap-2 w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors"
+        id={id}
+        className="flex items-center gap-2 w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-inset outline-none"
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls={contentId}
       >
         {open ? (
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
         ) : (
-          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
         )}
-        <Icon className="h-3.5 w-3.5 text-primary shrink-0" />
+        <Icon className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden="true" />
         <span className="text-xs font-semibold flex-1">{title}</span>
         <Badge variant="secondary" className="text-[10px]">
           {count}
         </Badge>
       </button>
-      {open && <div className="border-t">{children}</div>}
+      {open && <div id={contentId} className="border-t" role="group" aria-label={`${title} items`}>{children}</div>}
     </div>
   );
 }
@@ -247,7 +255,7 @@ function InlineSharePanel({
   const owner = members.find((u) => u.role === "admin") ?? members[0];
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 space-y-5" role="region" aria-label="Share access settings">
       {/* Back button + title */}
       <div className="flex items-center gap-2">
         <Button
@@ -255,24 +263,26 @@ function InlineSharePanel({
           size="icon"
           className="h-7 w-7 shrink-0"
           onClick={onBack}
+          aria-label="Go back to project details"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         </Button>
         <h4 className="text-sm font-semibold flex items-center gap-2">
-          <Share2 className="h-4 w-4 text-primary" />
+          <Share2 className="h-4 w-4 text-primary" aria-hidden="true" />
           Share Access
         </h4>
       </div>
 
       {/* Add member input */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2" role="search" aria-label="Add team member">
         <div className="flex-1 relative">
-          <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <Input
             placeholder="Add by name or email..."
             value={addEmail}
             onChange={(e) => setAddEmail(e.target.value)}
             className="pl-9"
+            aria-label="Search for a team member by name or email"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 // Mock add — in production this would search and add
@@ -418,7 +428,7 @@ export function ProjectDetailSheet({
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [activityFilter, setActivityFilter] = useState("3d");
-  const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set());
+  const [previewSpec, setPreviewSpec] = useState<typeof mockSpecFiles[number] | null>(null);
 
   const isAdmin = currentUser.role === "admin";
 
@@ -447,15 +457,6 @@ export function ProjectDetailSheet({
   const filteredLogs = activityLogs.filter(
     (log) => Date.now() - new Date(log.timestamp).getTime() <= filterMs
   );
-
-  const toggleDocExpand = (docId: string) => {
-    setExpandedDocs((prev) => {
-      const next = new Set(prev);
-      if (next.has(docId)) next.delete(docId);
-      else next.add(docId);
-      return next;
-    });
-  };
 
   const startEdit = () => {
     setEditName(project.name);
@@ -534,7 +535,8 @@ export function ProjectDetailSheet({
         </SheetHeader>
 
         {/* Scrollable content */}
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 relative">
+        <ScrollArea className="absolute inset-0">
           {/* ============================================================ */}
           {/*  Inline Share Panel (replaces content when showShare=true)   */}
           {/* ============================================================ */}
@@ -713,8 +715,9 @@ export function ProjectDetailSheet({
                     icon={Layers}
                     count={mockMigFiles.length}
                     defaultOpen
+                    id="section-mig"
                   >
-                    <div className="divide-y">
+                    <div className="divide-y" role="list" aria-label="Material Index Grid files">
                       {mockMigFiles.map((file) => {
                         const ftConfig = fileTypeConfig[file.fileType] ?? fileTypeConfig.csv;
                         const FileIcon = ftConfig.icon;
@@ -722,9 +725,10 @@ export function ProjectDetailSheet({
                           <div
                             key={file.id}
                             className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors"
+                            role="listitem"
                           >
                             <div className="h-7 w-7 rounded-md bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0">
-                              <FileIcon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                              <FileIcon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium truncate">
@@ -740,24 +744,26 @@ export function ProjectDetailSheet({
                     </div>
                   </CollapsibleSection>
 
-                  {/* Section 2: Project Specifications */}
+                  {/* Section 2: Project Specifications — with preview */}
                   <CollapsibleSection
                     title="Project Specifications"
                     icon={BookOpen}
                     count={mockSpecFiles.length}
                     defaultOpen
+                    id="section-specs"
                   >
-                    <div className="divide-y">
+                    <div className="divide-y" role="list" aria-label="Project specification documents">
                       {mockSpecFiles.map((file) => {
                         const ftConfig = fileTypeConfig[file.fileType] ?? fileTypeConfig.pdf;
                         const FileIcon = ftConfig.icon;
                         return (
                           <div
                             key={file.id}
-                            className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors"
+                            className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors group/spec"
+                            role="listitem"
                           >
                             <div className="h-7 w-7 rounded-md bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-                              <FileIcon className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                              <FileIcon className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium truncate">
@@ -767,65 +773,15 @@ export function ProjectDetailSheet({
                                 {formatFileSize(file.fileSize)}
                               </span>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CollapsibleSection>
-
-                  {/* Section 3: Material Items (from mock-documents) */}
-                  <CollapsibleSection
-                    title="Material Items"
-                    icon={FileText}
-                    count={allDocs.length}
-                  >
-                    <div className="divide-y">
-                      {allDocs.map((doc) => {
-                        const isExpanded = expandedDocs.has(doc.id);
-                        return (
-                          <div key={doc.id}>
-                            <button
-                              type="button"
-                              className="flex items-center gap-3 px-3 py-2.5 w-full text-left hover:bg-muted/30 transition-colors"
-                              onClick={() => toggleDocExpand(doc.id)}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 shrink-0 text-muted-foreground/0 group-hover/spec:text-muted-foreground hover:!text-primary transition-colors"
+                              onClick={() => setPreviewSpec(file)}
+                              aria-label={`Preview ${file.fileName}`}
                             >
-                              {isExpanded ? (
-                                <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
-                              ) : (
-                                <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium truncate">
-                                  {doc.fileName}
-                                </p>
-                              </div>
-                              <span className="text-[10px] font-mono text-muted-foreground shrink-0">
-                                {doc.specSection}
-                              </span>
-                            </button>
-                            {isExpanded && (
-                              <div className="px-3 pb-2.5 pl-9">
-                                <div className="rounded-md bg-muted/30 p-2.5 space-y-1">
-                                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-                                    Item Description
-                                  </p>
-                                  <p className="text-xs text-foreground/80">
-                                    {doc.specSectionTitle}
-                                  </p>
-                                  <div className="flex items-center gap-2 pt-1">
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-[10px]"
-                                    >
-                                      {doc.specSection}
-                                    </Badge>
-                                    <span className="text-[10px] text-muted-foreground">
-                                      {formatFileSize(doc.fileSize)}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
+                              <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                            </Button>
                           </div>
                         );
                       })}
@@ -833,9 +789,19 @@ export function ProjectDetailSheet({
                   </CollapsibleSection>
 
                   {/* Upload drop zone */}
-                  <div className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-6 text-center hover:border-nav-accent/40 transition-colors cursor-pointer">
+                  <div
+                    className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-6 text-center hover:border-nav-accent/40 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 outline-none"
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Drop files here to upload or click to select"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
                     <div className="mx-auto w-10 h-10 rounded-lg bg-muted flex items-center justify-center mb-3">
-                      <Upload className="h-5 w-5 text-muted-foreground" />
+                      <Upload className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
                     </div>
                     <p className="text-sm font-medium">
                       Drop files here to upload
@@ -870,7 +836,7 @@ export function ProjectDetailSheet({
                   </div>
 
                   {filteredLogs.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-3" role="feed" aria-label="Recent activity feed">
                       {filteredLogs.map((log) => {
                         const user = mockUsers.find(
                           (u) => u.id === log.userId
@@ -957,7 +923,7 @@ export function ProjectDetailSheet({
                   )}
 
                   {/* Comment input */}
-                  <div className="flex items-center gap-2 mt-4 pt-3 border-t">
+                  <div className="flex items-center gap-2 mt-4 pt-3 border-t" role="form" aria-label="Add a comment">
                     <Input
                       placeholder="Write a comment..."
                       value={commentText}
@@ -966,13 +932,15 @@ export function ProjectDetailSheet({
                         if (e.key === "Enter") handleSendComment();
                       }}
                       className="flex-1 text-sm"
+                      aria-label="Comment text"
                     />
                     <Button
                       size="sm"
                       className="shrink-0 gap-1.5"
                       onClick={handleSendComment}
+                      aria-label="Send comment"
                     >
-                      <Send className="h-3.5 w-3.5" />
+                      <Send className="h-3.5 w-3.5" aria-hidden="true" />
                       Send
                     </Button>
                   </div>
@@ -985,7 +953,7 @@ export function ProjectDetailSheet({
               {isAdmin && (
                 <>
                   <Separator />
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between" role="region" aria-label="Delete project">
                     <p className="text-xs text-muted-foreground">
                       Permanently delete this project and all data.
                     </p>
@@ -1037,6 +1005,16 @@ export function ProjectDetailSheet({
             </div>
           )}
         </ScrollArea>
+        </div>
+
+        {/* PDF Preview Viewer for Project Specifications */}
+        <FullScreenPdfViewer
+          open={!!previewSpec}
+          onOpenChange={(open) => { if (!open) setPreviewSpec(null); }}
+          title={previewSpec?.fileName ?? ""}
+          subtitle="Project Specification"
+          totalPages={previewSpec?.totalPages ?? 100}
+        />
       </SheetContent>
     </Sheet>
   );

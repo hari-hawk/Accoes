@@ -79,15 +79,16 @@ function MaterialListItem({
   return (
     <div
       className={cn(
-        "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b",
+        "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-inset outline-none",
         isSelected
           ? "bg-primary/8 dark:bg-primary/12"
           : "hover:bg-muted/50"
       )}
       onClick={onSelect}
-      role="button"
+      role="listitem"
       tabIndex={0}
-      aria-label={`Select ${item.document.fileName}`}
+      aria-label={`${item.document.fileName.replace(/\.[^/.]+$/, "")} — ${item.document.specSectionTitle}`}
+      aria-selected={isSelected}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -215,9 +216,9 @@ export function MaterialList({
     materials.every((m) => checkedIds.has(m.document.id));
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden" role="region" aria-label="Material list panel">
       {/* Filter header */}
-      <div className="border-b p-3 space-y-2 shrink-0">
+      <div className="border-b p-3 space-y-2 shrink-0" role="search" aria-label="Filter materials">
         <SearchInput
           placeholder="Search from Material Index Grid"
           value={search}
@@ -269,17 +270,17 @@ export function MaterialList({
             />
             <span className="text-muted-foreground">Select all</span>
           </label>
-          <div className="flex items-center gap-2 ml-auto">
-            <span className="flex items-center gap-1 text-status-pre-approved">
-              <CheckCircle2 className="h-3 w-3" />
+          <div className="flex items-center gap-2 ml-auto" role="group" aria-label="Status counts">
+            <span className="flex items-center gap-1 text-status-pre-approved" aria-label={`${preApprovedCount} pre-approved`}>
+              <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
               {preApprovedCount}
             </span>
-            <span className="flex items-center gap-1 text-status-review-required">
-              <AlertTriangle className="h-3 w-3" />
+            <span className="flex items-center gap-1 text-status-review-required" aria-label={`${reviewCount} review required`}>
+              <AlertTriangle className="h-3 w-3" aria-hidden="true" />
               {reviewCount}
             </span>
-            <span className="flex items-center gap-1 text-status-action-mandatory">
-              <XCircle className="h-3 w-3" />
+            <span className="flex items-center gap-1 text-status-action-mandatory" aria-label={`${actionCount} action mandatory`}>
+              <XCircle className="h-3 w-3" aria-hidden="true" />
               {actionCount}
             </span>
           </div>
@@ -289,7 +290,7 @@ export function MaterialList({
       {/* Material items — scrollable */}
       <div className="flex-1 min-h-0 relative">
         <ScrollArea className="absolute inset-0">
-          <div className="w-full">
+          <div className="w-full" role="list" aria-label="Material items">
             {materials.map((item) => (
               <MaterialListItem
                 key={item.document.id}

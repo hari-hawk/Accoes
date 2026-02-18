@@ -212,7 +212,7 @@ export function CreateProjectDialog({
 
         {/* Step Indicator */}
         <div className="px-6 py-3 border-b bg-muted/20">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" role="list" aria-label="Project creation steps">
             {steps.map((s, i) => (
               <div key={s.label} className="flex items-center gap-2 flex-1">
                 <div
@@ -370,20 +370,22 @@ export function CreateProjectDialog({
               </p>
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">
+                  <label htmlFor="project-name" className="text-xs font-medium text-muted-foreground">
                     Project Name
                   </label>
                   <Input
+                    id="project-name"
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
                     placeholder="Project name..."
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">
+                  <label htmlFor="project-client" className="text-xs font-medium text-muted-foreground">
                     Client
                   </label>
                   <Input
+                    id="project-client"
                     value={client}
                     onChange={(e) => setClient(e.target.value)}
                     placeholder="Client name..."
@@ -391,20 +393,22 @@ export function CreateProjectDialog({
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                      <Briefcase className="h-3 w-3" /> Job ID
+                    <label htmlFor="project-job-id" className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                      <Briefcase className="h-3 w-3" aria-hidden="true" /> Job ID
                     </label>
                     <Input
+                      id="project-job-id"
                       value={jobId}
                       onChange={(e) => setJobId(e.target.value)}
                       placeholder="JOB-2026-001"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> Location
+                    <label htmlFor="project-location" className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3 w-3" aria-hidden="true" /> Location
                     </label>
                     <Input
+                      id="project-location"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                       placeholder="City, State"
@@ -436,8 +440,8 @@ export function CreateProjectDialog({
           {step === 2 && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Add team members and assign roles. You can skip this step and add
-                members later.
+                Add team members and assign roles. Members can be added or
+                updated later from the project settings.
               </p>
 
               {/* Add member input */}
@@ -511,8 +515,8 @@ export function CreateProjectDialog({
                   })}
                 </div>
               ) : (
-                <div className="py-6 text-center text-sm text-muted-foreground">
-                  No members added yet. You can skip this step.
+                <div className="py-6 text-center text-sm text-muted-foreground" role="status">
+                  No members added yet.
                 </div>
               )}
             </div>

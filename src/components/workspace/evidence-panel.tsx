@@ -327,14 +327,15 @@ function CommentsActivityPanel({
   const projectComments = getProjectComments(projectId);
 
   return (
-    <div className="w-[320px] border-l flex flex-col h-full shrink-0">
+    <div className="w-[320px] border-l flex flex-col h-full shrink-0" role="complementary" aria-label="Comments and activity panel">
       <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-        <h3 className="text-sm font-semibold">Comments & Activity</h3>
+        <h3 className="text-sm font-semibold" id="comments-panel-title">Comments & Activity</h3>
         <Button
           variant="ghost"
           size="sm"
           className="h-7 text-xs"
           onClick={onClose}
+          aria-label="Close comments panel"
         >
           Close
         </Button>
@@ -420,7 +421,7 @@ function CommentsActivityPanel({
       </ScrollArea>
 
       {/* Comment input */}
-      <div className="border-t p-3 shrink-0">
+      <div className="border-t p-3 shrink-0" role="form" aria-label="Add a comment">
         <div className="flex items-center gap-2">
           <Input
             placeholder="Write a comment..."
@@ -432,9 +433,10 @@ function CommentsActivityPanel({
               }
             }}
             className="flex-1 text-xs h-8"
+            aria-label="Comment text"
           />
-          <Button size="icon" className="h-8 w-8 shrink-0">
-            <Send className="h-3.5 w-3.5" />
+          <Button size="icon" className="h-8 w-8 shrink-0" aria-label="Send comment">
+            <Send className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -514,14 +516,14 @@ export function EvidencePanel({
         : "text-status-action-mandatory";
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full" role="region" aria-label="Evidence review panel">
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <div className="px-5 py-4 border-b shrink-0 space-y-3">
           {/* Title row */}
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <h3 className="text-base font-semibold leading-tight truncate">
+              <h3 className="text-base font-semibold leading-tight truncate" id="evidence-panel-title">
                 {document.fileName.replace(/\.[^/.]+$/, "")}
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
@@ -571,8 +573,10 @@ export function EvidencePanel({
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => setShowComments(!showComments)}
+                aria-label={showComments ? "Hide comments and activity" : "Show comments and activity"}
+                aria-expanded={showComments}
               >
-                <MessageSquare className="h-4 w-4" />
+                <MessageSquare className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
           </div>
@@ -617,7 +621,8 @@ export function EvidencePanel({
         </div>
 
         {/* Content area */}
-        <ScrollArea className="flex-1">
+        <div className="flex-1 min-h-0 relative">
+        <ScrollArea className="absolute inset-0">
           <div className="p-5">
             {activeValidation ? (
               activeCategory === "performance_index" ? (
@@ -645,6 +650,7 @@ export function EvidencePanel({
             )}
           </div>
         </ScrollArea>
+        </div>
       </div>
 
       {/* Comments & Activity side panel */}

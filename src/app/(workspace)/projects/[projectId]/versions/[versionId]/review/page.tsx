@@ -87,7 +87,7 @@ export default function ReviewPage() {
     <div className="flex h-full flex-col">
       {/* Batch Actions Bar */}
       {checkedIds.size > 0 && (
-        <div className="flex items-center justify-between gap-3 border-b bg-primary/5 px-4 py-2 shrink-0">
+        <div className="flex items-center justify-between gap-3 border-b bg-primary/5 px-4 py-2 shrink-0" role="toolbar" aria-label="Batch actions for selected items">
           <span className="text-sm font-medium">
             {checkedIds.size} item{checkedIds.size !== 1 ? "s" : ""} selected
           </span>
@@ -181,7 +181,13 @@ export default function ReviewPage() {
               placeholder="Type your comment..."
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && commentText.trim() && (commentPS || commentPI)) {
+                  handleBatchComment();
+                }
+              }}
               className="w-full"
+              aria-label="Comment text"
             />
           </div>
           <DialogFooter>

@@ -16,7 +16,6 @@ import {
   XCircle,
   Check,
   Loader2,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -80,7 +79,7 @@ function HeroSection() {
 
   // Overall Confidence — average across scored projects
   const projectsWithConfidence = mockProjects.filter(
-    (p) => p.confidenceSummary.overallConfidence > 0
+    (p) => p.confidenceSummary.total > 0 && p.confidenceSummary.overallConfidence > 0
   );
   const avgConfidence =
     projectsWithConfidence.length > 0
@@ -220,56 +219,44 @@ function HeroSection() {
             <div className="flex h-2 rounded-full overflow-hidden bg-white/10" aria-hidden="true">
               {activeCount > 0 && (
                 <div
-                  className="h-full"
-                  style={{
-                    width: `${(activeCount / pipelineBarTotal) * 100}%`,
-                    backgroundColor: "#3b82f6",
-                  }}
+                  className="h-full bg-chart-1"
+                  style={{ width: `${(activeCount / pipelineBarTotal) * 100}%` }}
                 />
               )}
               {inProgressCount > 0 && (
                 <div
-                  className="h-full"
-                  style={{
-                    width: `${(inProgressCount / pipelineBarTotal) * 100}%`,
-                    backgroundColor: "#f59e0b",
-                  }}
+                  className="h-full bg-chart-5"
+                  style={{ width: `${(inProgressCount / pipelineBarTotal) * 100}%` }}
                 />
               )}
               {completedCount > 0 && (
                 <div
-                  className="h-full"
-                  style={{
-                    width: `${(completedCount / pipelineBarTotal) * 100}%`,
-                    backgroundColor: "#22c55e",
-                  }}
+                  className="h-full bg-chart-3"
+                  style={{ width: `${(completedCount / pipelineBarTotal) * 100}%` }}
                 />
               )}
               {onHoldCount > 0 && (
                 <div
-                  className="h-full"
-                  style={{
-                    width: `${(onHoldCount / pipelineBarTotal) * 100}%`,
-                    backgroundColor: "#6b7280",
-                  }}
+                  className="h-full bg-muted-foreground"
+                  style={{ width: `${(onHoldCount / pipelineBarTotal) * 100}%` }}
                 />
               )}
             </div>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               <span className="flex items-center gap-1 text-[10px] text-white/50">
-                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#3b82f6" }} />
+                <span className="inline-block w-2 h-2 rounded-full bg-chart-1" />
                 Active
               </span>
               <span className="flex items-center gap-1 text-[10px] text-white/50">
-                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#f59e0b" }} />
+                <span className="inline-block w-2 h-2 rounded-full bg-chart-5" />
                 In Progress
               </span>
               <span className="flex items-center gap-1 text-[10px] text-white/50">
-                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#22c55e" }} />
+                <span className="inline-block w-2 h-2 rounded-full bg-chart-3" />
                 Completed
               </span>
               <span className="flex items-center gap-1 text-[10px] text-white/50">
-                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#6b7280" }} />
+                <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground" />
                 On Hold
               </span>
             </div>

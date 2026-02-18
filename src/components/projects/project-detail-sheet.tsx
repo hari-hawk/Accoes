@@ -577,7 +577,7 @@ export function ProjectDetailSheet({
                     Drop material index grid files here
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    PDF, XLSX, DOCX up to 50MB each
+                    PDF, XLSX, DOCX, CSV up to 50MB each
                   </p>
                 </div>
               </TabsContent>

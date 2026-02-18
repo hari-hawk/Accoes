@@ -237,7 +237,7 @@ export function CreateProjectDialog({
                     Click to upload files
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    PDF, Excel (.xlsx), Word (.docx) — up to 50MB each
+                    PDF, Excel (.xlsx), Word (.docx), CSV — up to 50MB each
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     You can select multiple files

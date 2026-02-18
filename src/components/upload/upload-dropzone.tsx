@@ -9,6 +9,7 @@ const ACCEPTED_TYPES = {
   "application/pdf": [".pdf"],
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+  "text/csv": [".csv"],
 };
 
 export function UploadDropzone({
@@ -47,7 +48,7 @@ export function UploadDropzone({
         {isDragActive ? "Drop files here" : "Drop files or click to upload"}
       </p>
       <p className="mt-1 text-sm text-muted-foreground">
-        Supports PDF, XLSX, and DOCX (max 100 MB per file)
+        Supports PDF, XLSX, DOCX, and CSV (max 100 MB per file)
       </p>
       <div className="mt-4 flex items-center gap-4">
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -61,6 +62,10 @@ export function UploadDropzone({
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <File className="h-3.5 w-3.5" />
           DOCX
+        </div>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <FileSpreadsheet className="h-3.5 w-3.5" />
+          CSV
         </div>
       </div>
     </div>

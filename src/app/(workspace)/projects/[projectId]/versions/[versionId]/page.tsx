@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   FileText,
   CheckCircle2,
@@ -263,12 +264,15 @@ function ProjectSpecificationsCard({
         {/* Select all bar */}
         {mockProjectSpecs.length > 0 && (
           <div className="px-5 py-2 border-b bg-muted/20 flex items-center justify-between">
-            <Checkbox
-              checked={allSelected}
-              onCheckedChange={toggleAll}
-              className="h-3.5 w-3.5"
-              aria-label={allSelected ? "Deselect all specifications" : "Select all specifications"}
-            />
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <Checkbox
+                checked={allSelected}
+                onCheckedChange={toggleAll}
+                className="h-3.5 w-3.5"
+                aria-label={allSelected ? "Deselect all specifications" : "Select all specifications"}
+              />
+              <span className="text-xs text-muted-foreground">Select all</span>
+            </label>
             {selectedSpecIds.size > 0 && (
               <span className="text-xs text-muted-foreground tabular-nums">
                 {selectedSpecIds.size} of {mockProjectSpecs.length} selected
@@ -338,8 +342,10 @@ function ProjectSpecificationsCard({
 
 function MaterialIndexGridCard({
   onUpload,
+  onFileClick,
 }: {
   onUpload: () => void;
+  onFileClick?: (fileId: string) => void;
 }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
@@ -419,12 +425,15 @@ function MaterialIndexGridCard({
       {/* Select all bar */}
       {files.length > 0 && (
         <div className="px-5 py-2 border-b bg-muted/20 flex items-center justify-between">
-          <Checkbox
-            checked={allSelected}
-            onCheckedChange={toggleAll}
-            className="h-3.5 w-3.5"
-            aria-label={allSelected ? "Deselect all files" : "Select all files"}
-          />
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={toggleAll}
+              className="h-3.5 w-3.5"
+              aria-label={allSelected ? "Deselect all files" : "Select all files"}
+            />
+            <span className="text-xs text-muted-foreground">Select all</span>
+          </label>
           {selectedIds.size > 0 && (
             <span className="text-xs text-muted-foreground tabular-nums">
               {selectedIds.size} of {files.length} selected
@@ -433,47 +442,47 @@ function MaterialIndexGridCard({
         </div>
       )}
 
-      {/* File list — scrollable for long lists */}
-      <ScrollArea className="max-h-[360px]">
-        <div className="divide-y" role="list" aria-label="Material index grid source files">
-          {files.map((file) => {
-            const FileIcon = fileIconMap[file.fileType] ?? FileText;
-            const isChecked = selectedIds.has(file.id);
+      {/* File list */}
+      <div className="divide-y" role="list" aria-label="Material index grid source files">
+        {files.map((file) => {
+          const FileIcon = fileIconMap[file.fileType] ?? FileText;
+          const isChecked = selectedIds.has(file.id);
 
-            return (
-              <div
-                key={file.id}
-                className={cn(
-                  "flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors",
-                  isChecked && "bg-nav-accent/5"
-                )}
-                role="listitem"
-              >
-                <Checkbox
-                  checked={isChecked}
-                  onCheckedChange={() => toggleFile(file.id)}
-                  aria-label={`Select ${file.fileName}`}
-                  className="shrink-0"
-                />
-                <div className="h-9 w-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                  <FileIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{file.fileName}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[11px] text-muted-foreground">
-                      {formatFileSize(file.fileSize)}
-                    </span>
-                    <span className="text-[11px] text-muted-foreground">
-                      {new Date(file.uploadedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
-                    </span>
-                  </div>
+          return (
+            <div
+              key={file.id}
+              className={cn(
+                "flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors cursor-pointer",
+                isChecked && "bg-nav-accent/5"
+              )}
+              role="listitem"
+              onClick={() => onFileClick?.(file.id)}
+            >
+              <Checkbox
+                checked={isChecked}
+                onCheckedChange={() => toggleFile(file.id)}
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`Select ${file.fileName}`}
+                className="shrink-0"
+              />
+              <div className="h-9 w-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                <FileIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{file.fileName}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[11px] text-muted-foreground">
+                    {formatFileSize(file.fileSize)}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {new Date(file.uploadedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                  </span>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </ScrollArea>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -484,6 +493,7 @@ function MaterialIndexGridCard({
 
 export default function VersionOverviewPage() {
   const { project, version } = useWorkspace();
+  const router = useRouter();
   const { confidenceSummary } = version;
 
   // Upload dialog state (for Material Index Grid)
@@ -511,8 +521,8 @@ export default function VersionOverviewPage() {
   // Material Index Grid upload handlers
   const handleSimulateUpload = () => {
     const batch: MockUploadFile[] = [
-      { id: `up-${uploadCounter}`, name: "New_Submittal_Document.pdf", size: "3.2 MB" },
-      { id: `up-${uploadCounter + 1}`, name: "Updated_Equipment_Schedule.xlsx", size: "1.5 MB" },
+      { id: `up-${uploadCounter}`, name: "UCD_HobbsVet_Electrical_Matrix_Index_Grid_v1.csv", size: "480 KB" },
+      { id: `up-${uploadCounter + 1}`, name: "UCD_HobbsVet_Fire_Protection_Matrix_Index_Grid_v1.csv", size: "320 KB" },
     ];
     setUploadCounter((c) => c + 2);
     setUploadFiles((prev) => [...prev, ...batch]);
@@ -521,7 +531,7 @@ export default function VersionOverviewPage() {
   const handleAddOneMore = () => {
     setUploadFiles((prev) => [
       ...prev,
-      { id: `up-${uploadCounter}`, name: `Additional_File_${uploadCounter + 1}.pdf`, size: "1.0 MB" },
+      { id: `up-${uploadCounter}`, name: `UCD_Additional_Matrix_Index_Grid_${uploadCounter + 1}.csv`, size: "256 KB" },
     ]);
     setUploadCounter((c) => c + 1);
   };
@@ -588,6 +598,9 @@ export default function VersionOverviewPage() {
           {/* Material Index Grid — at the top */}
           <MaterialIndexGridCard
             onUpload={() => setUploadDialogOpen(true)}
+            onFileClick={() => {
+              router.push(`/projects/${project.id}/versions/${version.id}/review`);
+            }}
           />
 
           {/* Project Specifications — at the bottom */}
@@ -759,7 +772,7 @@ export default function VersionOverviewPage() {
                 </div>
                 <p className="text-sm font-medium">Click to select files</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  PDF, Excel, Word — up to 50MB each
+                  CSV files — up to 50MB each
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   You can select multiple files

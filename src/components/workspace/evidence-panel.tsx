@@ -531,13 +531,15 @@ export function EvidencePanel({
               {/* Status dropdown */}
               <Select
                 value={
-                  effectiveDecision === "approved" || effectiveDecision === "revisit"
+                  effectiveDecision !== "pending"
                     ? effectiveDecision
                     : (activeValidation?.status ?? "review_required")
                 }
                 onValueChange={(value) => {
                   if (value === "approved" || value === "revisit") {
                     onDecide(value as DecisionStatus);
+                  } else if (value === "pending") {
+                    onDecide("pending" as DecisionStatus);
                   }
                 }}
               >
@@ -545,6 +547,9 @@ export function EvidencePanel({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="pending">Pending (Reset)</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="revisit">Revisit</SelectItem>
                   <SelectItem value="pre_approved">Pre-Approved</SelectItem>
                   <SelectItem value="review_required">
                     Review Required
@@ -552,8 +557,6 @@ export function EvidencePanel({
                   <SelectItem value="action_mandatory">
                     Action Mandatory
                   </SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="revisit">Revisit</SelectItem>
                 </SelectContent>
               </Select>
 

@@ -4,16 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Upload,
-  Plus,
   X,
-  Link2,
   UserPlus,
   Briefcase,
   MapPin,
   Calendar,
   Hash,
   Users,
-  FileText,
+  Building2,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -28,7 +26,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
@@ -37,7 +34,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { FileUploadCard } from "@/components/projects/file-upload-card";
 import { useDrafts, type DraftData } from "@/providers/draft-provider";
 import { generateJobId } from "@/lib/job-id-generator";
@@ -55,11 +51,6 @@ interface UploadedFile {
   size: string;
   type: "pdf" | "xlsx" | "docx" | "csv" | "other";
   category: "material_metrics" | "project_specification" | "project_documents";
-}
-
-interface LinkEntry {
-  id: string;
-  url: string;
 }
 
 interface MemberEntry {
@@ -85,16 +76,12 @@ function categorizeFile(
   const lower = fileName.toLowerCase();
   const ext = lower.split(".").pop() ?? "";
 
-  // Extension-based
   if (["csv", "xls", "xlsx"].includes(ext)) return "material_metrics";
   if (ext === "pdf") return "project_specification";
-
-  // Name-based
   if (lower.includes("matrix") || lower.includes("metric"))
     return "material_metrics";
   if (lower.includes("spec") || lower.includes("specification"))
     return "project_specification";
-
   return "project_documents";
 }
 
@@ -113,10 +100,7 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-const categoryConfig: Record<
-  string,
-  { label: string; color: string }
-> = {
+const categoryConfig: Record<string, { label: string; color: string }> = {
   material_metrics: {
     label: "Material Metrics",
     color:
@@ -147,6 +131,51 @@ const roleConfig: Record<string, { label: string; color: string }> = {
 };
 
 /* -------------------------------------------------------------------------- */
+/*  Section Card — reusable wrapper for visual consistency                     */
+/* -------------------------------------------------------------------------- */
+
+function SectionCard({
+  icon: Icon,
+  title,
+  description,
+  children,
+  className,
+}: {
+  icon: typeof Briefcase;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      className={cn(
+        "rounded-2xl border bg-card shadow-card overflow-hidden",
+        className
+      )}
+    >
+      {/* Section header */}
+      <div className="flex items-center gap-3 px-6 py-4 border-b bg-muted/30">
+        <div className="h-8 w-8 rounded-lg gradient-accent flex items-center justify-center shrink-0">
+          <Icon className="h-4 w-4 text-white" aria-hidden="true" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold leading-tight">{title}</h2>
+          {description && (
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {description}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Section body */}
+      <div className="p-6">{children}</div>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Mock upload data                                                           */
 /* -------------------------------------------------------------------------- */
 
@@ -155,7 +184,10 @@ const mockBatchFiles = [
   { name: "10.14.25 specs.xls", bytes: 204800 },
   { name: "08.14.25 mechanicaldrawings.pdf", bytes: 204800 },
   { name: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v1.csv", bytes: 524288 },
-  { name: "UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv", bytes: 491520 },
+  {
+    name: "UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv",
+    bytes: 491520,
+  },
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -175,28 +207,21 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
     initialDraft?.files ?? []
   );
 
-  // Link state
-  const [links, setLinks] = useState<LinkEntry[]>(
-    initialDraft?.links ?? []
-  );
-  const [linkInput, setLinkInput] = useState("");
-
   // Job details state
   const [jobId, setJobId] = useState(initialDraft?.jobId ?? "");
-  const [customerName, setCustomerName] = useState(
+  const [projectName, setProjectName] = useState(
     initialDraft?.customerName ?? ""
   );
+  const [companyClient, setCompanyClient] = useState(
+    initialDraft?.assignedEstimator ?? ""
+  );
+  const [createdDate, setCreatedDate] = useState(
+    initialDraft?.bidDate ?? new Date().toISOString().split("T")[0]
+  );
+  const [location, setLocation] = useState(initialDraft?.notes ?? "");
   const [priority, setPriority] = useState<"high" | "medium" | "low">(
     initialDraft?.priority ?? "high"
   );
-  const [bidDate, setBidDate] = useState(initialDraft?.bidDate ?? "");
-  const [points, setPoints] = useState(initialDraft?.points ?? 0);
-  const [assignedEstimator, setAssignedEstimator] = useState(
-    initialDraft?.assignedEstimator ?? ""
-  );
-
-  // Notes
-  const [notes, setNotes] = useState(initialDraft?.notes ?? "");
 
   // Access control
   const [members, setMembers] = useState<MemberEntry[]>(
@@ -217,16 +242,16 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
 
   const hasData =
     files.length > 0 ||
-    links.length > 0 ||
-    jobId.trim() ||
-    customerName.trim() ||
-    notes.trim();
+    jobId.trim() !== "" ||
+    projectName.trim() !== "" ||
+    companyClient.trim() !== "" ||
+    location.trim() !== "";
 
   const canCreate =
     files.length > 0 &&
     jobId.trim() !== "" &&
-    customerName.trim() !== "" &&
-    assignedEstimator.trim() !== "";
+    projectName.trim() !== "" &&
+    companyClient.trim() !== "";
 
   // Group files by category
   const filesByCategory = files.reduce(
@@ -257,42 +282,16 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
 
     // Auto-populate on first upload
     if (isFirstUpload) {
-      setCustomerName("Henry Thomas");
-      setJobId(generateJobId("Henry Thomas"));
-      setAssignedEstimator("Jacob Swan");
-      setBidDate("2024-05-05");
-      setPoints(8);
+      setProjectName("Riverside Commercial Tower");
+      setJobId(generateJobId("Riverside Commercial Tower"));
+      setCompanyClient("Henry Thomas Construction LLC");
+      setCreatedDate(new Date().toISOString().split("T")[0]);
+      setLocation("Sacramento, CA");
     }
-  };
-
-  const handleAddMoreFiles = () => {
-    const newFile: UploadedFile = {
-      id: `file-${uploadCounter}-${Date.now()}`,
-      name: `Additional_Document_${uploadCounter + 1}.pdf`,
-      size: "1.2 MB",
-      type: "pdf",
-      category: categorizeFile(`Additional_Document_${uploadCounter + 1}.pdf`),
-    };
-    setUploadCounter((c) => c + 1);
-    setFiles((prev) => [...prev, newFile]);
   };
 
   const handleRemoveFile = (fileId: string) => {
     setFiles((prev) => prev.filter((f) => f.id !== fileId));
-  };
-
-  const handleAddLink = () => {
-    const url = linkInput.trim();
-    if (!url) return;
-    setLinks((prev) => [
-      ...prev,
-      { id: `link-${Date.now()}`, url },
-    ]);
-    setLinkInput("");
-  };
-
-  const handleRemoveLink = (linkId: string) => {
-    setLinks((prev) => prev.filter((l) => l.id !== linkId));
   };
 
   const handleAddMember = () => {
@@ -319,7 +318,6 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
   };
 
   const handleCreate = () => {
-    // Mock creation — in production this would call an API
     router.push("/projects");
   };
 
@@ -340,14 +338,14 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
         type: f.type,
         category: f.category,
       })),
-      links,
+      links: [],
       jobId,
-      customerName,
+      customerName: projectName,
       priority,
-      bidDate,
-      points,
-      assignedEstimator,
-      notes,
+      bidDate: createdDate,
+      points: 0,
+      assignedEstimator: companyClient,
+      notes: location,
       members: members.map((m) => ({
         userId: m.userId,
         role: m.role as "collaborator" | "viewer",
@@ -367,19 +365,18 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
   /* ---------------------------------------------------------------------- */
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* ================================================================ */}
       {/*  Section 1: Upload Documents                                      */}
       {/* ================================================================ */}
-      <section>
-        <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
-          <Upload className="h-4 w-4 text-primary" aria-hidden="true" />
-          Upload Documents
-        </h2>
-
+      <SectionCard
+        icon={Upload}
+        title="Upload Documents"
+        description="Drag & drop your project files to begin automated processing"
+      >
         {/* Drop zone */}
         <div
-          className="rounded-xl border-2 border-dashed border-nav-accent/30 p-8 text-center hover:border-nav-accent/60 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 outline-none bg-nav-accent/[0.02]"
+          className="rounded-xl border-2 border-dashed border-nav-accent/30 p-10 text-center hover:border-nav-accent/60 hover:bg-nav-accent/[0.03] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 outline-none"
           role="button"
           tabIndex={0}
           aria-label="Click to select files for upload"
@@ -391,23 +388,26 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
             }
           }}
         >
-          <div className="mx-auto w-12 h-12 rounded-xl bg-nav-accent/10 flex items-center justify-center mb-3">
-            <Upload className="h-6 w-6 text-nav-accent" aria-hidden="true" />
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-nav-accent/10 flex items-center justify-center mb-4">
+            <Upload
+              className="h-7 w-7 text-nav-accent"
+              aria-hidden="true"
+            />
           </div>
           <p className="text-sm font-medium">
             Drag &amp; drop files or{" "}
-            <span className="text-nav-accent font-semibold">
+            <span className="text-nav-accent font-semibold underline underline-offset-2">
               click to browse
             </span>
           </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Upload your files (PDF, DWG, RVT, MAJ — Max 10MB each)
+          <p className="text-xs text-muted-foreground mt-1.5">
+            PDF, DWG, RVT, CSV, XLS — Max 10MB each
           </p>
         </div>
 
         {/* Uploaded file cards — grouped by category */}
         {files.length > 0 && (
-          <div className="mt-4 space-y-4">
+          <div className="mt-6 space-y-5">
             {(
               [
                 "material_metrics",
@@ -421,15 +421,19 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
 
               return (
                 <div key={cat}>
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-2.5">
                     <Badge
                       variant="secondary"
-                      className={cn("text-[10px] font-bold", config.color)}
+                      className={cn(
+                        "text-[10px] font-bold px-2 py-0.5",
+                        config.color
+                      )}
                     >
                       {config.label}
                     </Badge>
-                    <span className="text-[10px] text-muted-foreground">
-                      ({catFiles.length})
+                    <span className="text-[11px] text-muted-foreground font-medium">
+                      {catFiles.length} file
+                      {catFiles.length !== 1 ? "s" : ""}
                     </span>
                   </div>
                   <div
@@ -451,131 +455,117 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
                 </div>
               );
             })}
-
-            {/* Add more files button */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              onClick={handleAddMoreFiles}
-            >
-              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-              Add More Files
-            </Button>
           </div>
         )}
-      </section>
+      </SectionCard>
 
       {/* ================================================================ */}
-      {/*  Section 2: Add Link(s)                                           */}
+      {/*  Section 2: Job Details — 3-column grid                           */}
       {/* ================================================================ */}
-      <section>
-        <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
-          <Link2 className="h-4 w-4 text-primary" aria-hidden="true" />
-          Add link(s)
-        </h2>
-
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder="Enter URL"
-            value={linkInput}
-            onChange={(e) => setLinkInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleAddLink();
-            }}
-            className="flex-1"
-            aria-label="Enter a URL to add"
-          />
-          <Button
-            size="sm"
-            className="shrink-0 gradient-accent text-white border-0"
-            onClick={handleAddLink}
-            disabled={!linkInput.trim()}
-          >
-            Add
-          </Button>
-        </div>
-
-        {links.length > 0 && (
-          <div className="mt-3 space-y-2">
-            {links.map((link) => (
-              <div
-                key={link.id}
-                className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-muted/30 group"
-              >
-                <Link2
-                  className="h-3.5 w-3.5 text-nav-accent shrink-0"
-                  aria-hidden="true"
-                />
-                <span className="text-sm text-nav-accent truncate flex-1">
-                  {link.url}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => handleRemoveLink(link.id)}
-                  aria-label={`Remove link ${link.url}`}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <Separator />
-
-      {/* ================================================================ */}
-      {/*  Section 3: Job Details                                           */}
-      {/* ================================================================ */}
-      <section>
-        <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
-          <Briefcase className="h-4 w-4 text-primary" aria-hidden="true" />
-          Job Details
-        </h2>
-
-        <div className="grid grid-cols-3 gap-4">
+      <SectionCard
+        icon={Briefcase}
+        title="Job Details"
+        description="Core project information — auto-populated from uploaded files"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-5 gap-y-5">
           {/* Row 1 */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <label
               htmlFor="job-id"
-              className="text-xs font-medium text-muted-foreground"
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
             >
+              <Hash className="h-3 w-3" aria-hidden="true" />
               Job ID <span className="text-destructive">*</span>
             </label>
             <Input
               id="job-id"
-              placeholder="Enter job ID"
+              placeholder="e.g. ACX-2026-001"
               value={jobId}
               onChange={(e) => setJobId(e.target.value)}
               aria-required="true"
+              className="h-10"
             />
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <label
-              htmlFor="customer-name"
-              className="text-xs font-medium text-muted-foreground"
+              htmlFor="project-name"
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
             >
-              Customer Name <span className="text-destructive">*</span>
+              <Briefcase className="h-3 w-3" aria-hidden="true" />
+              Project Name <span className="text-destructive">*</span>
             </label>
             <Input
-              id="customer-name"
-              placeholder="Enter customer name"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
+              id="project-name"
+              placeholder="Enter project name"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
               aria-required="true"
+              className="h-10"
             />
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-2">
+            <label
+              htmlFor="company-client"
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+            >
+              <Building2 className="h-3 w-3" aria-hidden="true" />
+              Company / Client <span className="text-destructive">*</span>
+            </label>
+            <Input
+              id="company-client"
+              placeholder="Enter company or client name"
+              value={companyClient}
+              onChange={(e) => setCompanyClient(e.target.value)}
+              aria-required="true"
+              className="h-10"
+            />
+          </div>
+
+          {/* Row 2 */}
+          <div className="space-y-2">
+            <label
+              htmlFor="created-date"
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+            >
+              <Calendar className="h-3 w-3" aria-hidden="true" />
+              Created Date <span className="text-destructive">*</span>
+            </label>
+            <Input
+              id="created-date"
+              type="date"
+              value={createdDate}
+              onChange={(e) => setCreatedDate(e.target.value)}
+              aria-required="true"
+              className="h-10"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="location"
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+            >
+              <MapPin className="h-3 w-3" aria-hidden="true" />
+              Location
+            </label>
+            <Input
+              id="location"
+              placeholder="City, State"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="h-10"
+            />
+          </div>
+
+          <div className="space-y-2">
             <label
               htmlFor="priority"
-              className="text-xs font-medium text-muted-foreground"
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
             >
-              Priority <span className="text-destructive">*</span>
+              <Briefcase className="h-3 w-3" aria-hidden="true" />
+              Priority
             </label>
             <Select
               value={priority}
@@ -583,7 +573,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
                 setPriority(v as "high" | "medium" | "low")
               }
             >
-              <SelectTrigger id="priority">
+              <SelectTrigger id="priority" className="h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -593,97 +583,19 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Row 2 */}
-          <div className="space-y-1.5">
-            <label
-              htmlFor="bid-date"
-              className="text-xs font-medium text-muted-foreground flex items-center gap-1"
-            >
-              <Calendar className="h-3 w-3" aria-hidden="true" />
-              Bid Date
-            </label>
-            <Input
-              id="bid-date"
-              type="date"
-              value={bidDate}
-              onChange={(e) => setBidDate(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label
-              htmlFor="points"
-              className="text-xs font-medium text-muted-foreground flex items-center gap-1"
-            >
-              <Hash className="h-3 w-3" aria-hidden="true" />
-              Points
-            </label>
-            <Input
-              id="points"
-              type="number"
-              min={0}
-              placeholder="Placeholder"
-              value={points || ""}
-              onChange={(e) => setPoints(Number(e.target.value) || 0)}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label
-              htmlFor="assigned-estimator"
-              className="text-xs font-medium text-muted-foreground flex items-center gap-1"
-            >
-              <MapPin className="h-3 w-3" aria-hidden="true" />
-              Assigned Estimator <span className="text-destructive">*</span>
-            </label>
-            <Input
-              id="assigned-estimator"
-              placeholder="Enter estimator name"
-              value={assignedEstimator}
-              onChange={(e) => setAssignedEstimator(e.target.value)}
-              aria-required="true"
-            />
-          </div>
         </div>
-      </section>
-
-      <Separator />
+      </SectionCard>
 
       {/* ================================================================ */}
-      {/*  Section 4: Notes / Comments                                      */}
+      {/*  Section 3: Access Control                                        */}
       {/* ================================================================ */}
-      <section>
-        <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
-          <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
-          Notes / Comments
-        </h2>
-
-        <Textarea
-          placeholder="Add any additional notes or comments about this project..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="min-h-[100px] resize-y"
-          aria-label="Project notes and comments"
-        />
-        <p className="text-[11px] text-muted-foreground mt-2">
-          This information will be saved with the project record
-        </p>
-      </section>
-
-      <Separator />
-
-      {/* ================================================================ */}
-      {/*  Section 5: Access Control                                        */}
-      {/* ================================================================ */}
-      <section>
-        <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
-          <Users className="h-4 w-4 text-primary" aria-hidden="true" />
-          Access Control
-        </h2>
-
+      <SectionCard
+        icon={Users}
+        title="Access Control"
+        description="Invite team members and assign roles"
+      >
         {/* Add member */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <div className="flex-1 relative">
             <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -693,12 +605,12 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAddMember();
               }}
-              className="pl-9"
+              className="pl-10 h-10"
               aria-label="Search for a team member by name or email"
             />
           </div>
           <Select value={memberRole} onValueChange={setMemberRole}>
-            <SelectTrigger className="w-[130px] shrink-0">
+            <SelectTrigger className="w-[140px] shrink-0 h-10">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -708,7 +620,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
           </Select>
           <Button
             size="sm"
-            className="shrink-0"
+            className="shrink-0 h-10 px-5 gradient-accent text-white border-0"
             onClick={handleAddMember}
             disabled={!memberSearch.trim()}
           >
@@ -718,7 +630,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
 
         {/* Member list */}
         {members.length > 0 && (
-          <div className="mt-3 space-y-2">
+          <div className="mt-4 space-y-1.5">
             {members.map((entry) => {
               const user = mockUsers.find((u) => u.id === entry.userId);
               if (!user) return null;
@@ -730,7 +642,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
               return (
                 <div
                   key={entry.userId}
-                  className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-muted/30 transition-colors group"
+                  className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-muted/30 transition-colors group"
                 >
                   <Avatar className="h-8 w-8 shrink-0">
                     <AvatarFallback className="text-[11px] font-bold gradient-accent text-white">
@@ -738,7 +650,9 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{user.name}</p>
+                    <p className="text-sm font-medium truncate">
+                      {user.name}
+                    </p>
                     <p className="text-xs text-muted-foreground truncate">
                       {user.email}
                     </p>
@@ -763,19 +677,24 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
             })}
           </div>
         )}
-      </section>
 
-      <Separator />
+        {members.length === 0 && (
+          <p className="text-xs text-muted-foreground mt-3">
+            No members added yet. You can add team members or skip this step.
+          </p>
+        )}
+      </SectionCard>
 
       {/* ================================================================ */}
       {/*  Footer CTAs                                                      */}
       {/* ================================================================ */}
-      <div className="flex items-center justify-end gap-3 pt-2 pb-4">
-        <Button variant="outline" onClick={handleCancel}>
+      <div className="flex items-center justify-end gap-3 pt-2 pb-6">
+        <Button variant="outline" size="lg" onClick={handleCancel}>
           Cancel
         </Button>
         <Button
-          className="gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity font-semibold"
+          size="lg"
+          className="gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity font-semibold px-8"
           disabled={!canCreate}
           onClick={handleCreate}
         >

@@ -85,32 +85,26 @@ export function ProjectCard({
       {/* Top accent line */}
       <div className="absolute top-0 left-0 right-0 h-0.5 gradient-accent opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
 
-      <div className="px-4 pt-3.5 pb-3">
+      <div className="px-4 py-4">
         {/* Row 1: Name + Job ID + Status */}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold truncate transition-colors">
-                <button
-                  type="button"
-                  className="hover:underline hover:text-nav-accent cursor-pointer transition-colors text-left"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    onNameClick?.(project);
-                  }}
-                >
-                  {project.name}
-                </button>
-              </h3>
-              <span className="text-[11px] font-mono text-muted-foreground shrink-0">
-                {project.jobId}
-              </span>
-            </div>
-            <div className="flex items-center gap-1 mt-1 text-[11px] text-muted-foreground">
-              <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
-              <span className="truncate">{project.location}</span>
-            </div>
+            <h3 className="text-sm font-semibold truncate transition-colors">
+              <button
+                type="button"
+                className="hover:underline hover:text-nav-accent cursor-pointer transition-colors text-left"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onNameClick?.(project);
+                }}
+              >
+                {project.name}
+              </button>
+            </h3>
+            <p className="mt-1 text-xs font-mono text-muted-foreground">
+              {project.jobId}
+            </p>
           </div>
           <StatusIndicator status={project.status} />
         </div>

@@ -102,15 +102,13 @@ interface MockUploadFile {
 /* -------------------------------------------------------------------------- */
 
 function HeroBanner({
-  versionName,
   projectName,
-  specRef,
+  clientName,
   confidenceSummary,
   confidence,
 }: {
-  versionName: string;
   projectName: string;
-  specRef: string;
+  clientName: string;
   confidenceSummary: { total: number; preApproved: number; reviewRequired: number; actionMandatory: number };
   confidence: number;
   confidenceColor: string;
@@ -123,9 +121,9 @@ function HeroBanner({
       <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/4" aria-hidden="true" />
       <div className="relative">
         <div>
-          <h2 className="text-xl font-bold">{versionName}</h2>
+          <h2 className="text-xl font-bold">{projectName}</h2>
           <p className="text-white/80 text-sm mt-0.5">
-            {projectName} — {specRef}
+            {clientName}
           </p>
         </div>
 
@@ -603,9 +601,8 @@ export default function VersionOverviewPage() {
     <main className="p-6 space-y-6 max-w-[1400px] mx-auto">
       {/* Hero Banner */}
       <HeroBanner
-        versionName={version.name}
         projectName={project.name}
-        specRef={version.specificationRef}
+        clientName={project.client}
         confidenceSummary={confidenceSummary}
         confidence={confidence}
         confidenceColor={confidenceColor}
@@ -629,13 +626,13 @@ export default function VersionOverviewPage() {
           />
         </div>
 
-        {/* Right column — Version Details + Activity (sticky sidebar) */}
+        {/* Right column — Project Details + Activity (sticky sidebar) */}
         <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
           {/* Version Info Card */}
           <div className="rounded-xl border bg-card shadow-card p-5">
             <h3 className="font-semibold text-sm flex items-center gap-2 mb-4">
               <Shield className="h-4 w-4 text-primary" aria-hidden="true" />
-              Version Details
+              Project Details
             </h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
@@ -662,13 +659,6 @@ export default function VersionOverviewPage() {
                   Team Members
                 </span>
                 <span className="font-medium">{project.memberIds.length}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <FileText className="h-3.5 w-3.5" aria-hidden="true" />
-                  Spec Reference
-                </span>
-                <span className="font-medium text-xs truncate max-w-[140px]">{version.specificationRef}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground flex items-center gap-1.5">

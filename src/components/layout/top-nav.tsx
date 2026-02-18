@@ -19,6 +19,7 @@ import {
   CheckCircle,
   Info,
   X,
+  Plus,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -303,6 +304,16 @@ export function TopNav() {
 
             {/* Right side */}
             <div className="flex items-center gap-1.5">
+              {/* + New Job CTA */}
+              <Link
+                href="/projects/create"
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold gradient-gold text-white shadow-gold hover:opacity-90 transition-opacity"
+                aria-label="Create a new job"
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                New Job
+              </Link>
+
               {/* Notifications */}
               <Button
                 variant="ghost"

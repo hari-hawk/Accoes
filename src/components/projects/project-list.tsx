@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils";
 import { ProjectCard } from "./project-card";
 import { ProjectFilters } from "./project-filters";
 import { ProjectDetailSheet } from "./project-detail-sheet";
-import { CreateProjectDialog } from "./create-project-dialog";
+// CreateProjectDialog replaced by /projects/create page
 import { useProjects } from "@/hooks/use-projects";
 import { mockProjects } from "@/data/mock-projects";
 import { getDocumentsByVersion } from "@/data/mock-documents";
@@ -71,7 +71,7 @@ function formatFileSize(bytes: number): string {
 /*  Hero Section                                                               */
 /* -------------------------------------------------------------------------- */
 
-function HeroSection({ onNewProject }: { onNewProject: () => void }) {
+function HeroSection() {
   const activeCount = mockProjects.filter((p) => p.status === "active").length;
 
   return (
@@ -91,14 +91,14 @@ function HeroSection({ onNewProject }: { onNewProject: () => void }) {
             Here&apos;s an overview of your submittal validation projects
           </p>
         </div>
-        <Button
-          className="gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity font-semibold"
-          onClick={onNewProject}
+        <Link
+          href="/projects/create"
+          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md text-sm font-semibold gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity"
           aria-label="Create a new project"
         >
-          <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+          <Plus className="h-4 w-4" aria-hidden="true" />
           New Project
-        </Button>
+        </Link>
       </div>
 
       {/* Inline compact stats */}
@@ -543,9 +543,6 @@ export function ProjectList() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  // Create project dialog
-  const [createOpen, setCreateOpen] = useState(false);
-
   // Download Report sheet
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
   const [reportProject, setReportProject] = useState<Project | null>(null);
@@ -563,7 +560,7 @@ export function ProjectList() {
   return (
     <div className="px-6 py-6 space-y-6 max-w-[1400px] mx-auto">
       {/* Hero section */}
-      <HeroSection onNewProject={() => setCreateOpen(true)} />
+      <HeroSection />
 
       {/* Filters */}
       <ProjectFilters
@@ -588,10 +585,13 @@ export function ProjectList() {
           title="No projects found"
           description="Try adjusting your search or filters, or create a new project to get started."
         >
-          <Button className="gradient-gold text-white border-0" onClick={() => setCreateOpen(true)}>
-            <Plus className="mr-1.5 h-4 w-4" />
+          <Link
+            href="/projects/create"
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md text-sm font-semibold gradient-gold text-white border-0 hover:opacity-90 transition-opacity"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
             New Project
-          </Button>
+          </Link>
         </EmptyState>
       ) : viewMode === "grid" ? (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -631,12 +631,6 @@ export function ProjectList() {
         project={selectedProject}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-      />
-
-      {/* Create Project Dialog */}
-      <CreateProjectDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
       />
 
       {/* Download Report Sheet */}

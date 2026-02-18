@@ -10,7 +10,6 @@ import {
   BarChart3,
   Clock,
   FileType,
-  TrendingUp,
   Users,
   Calendar,
   Shield,
@@ -95,86 +94,6 @@ interface MockUploadFile {
   id: string;
   name: string;
   size: string;
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Hero Section                                                               */
-/* -------------------------------------------------------------------------- */
-
-function HeroBanner({
-  projectName,
-  clientName,
-  confidenceSummary,
-  confidence,
-}: {
-  projectName: string;
-  clientName: string;
-  confidenceSummary: { total: number; preApproved: number; reviewRequired: number; actionMandatory: number };
-  confidence: number;
-  confidenceColor: string;
-}) {
-  return (
-    <section
-      className="gradient-hero rounded-2xl p-6 text-white relative overflow-hidden"
-      aria-label="Version overview"
-    >
-      <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/4" aria-hidden="true" />
-      <div className="relative">
-        <div>
-          <h2 className="text-xl font-bold">{projectName}</h2>
-          <p className="text-white/80 text-sm mt-0.5">
-            {clientName}
-          </p>
-        </div>
-
-        {/* Compact stats — 3 items */}
-        <div className="grid grid-cols-3 gap-4 mt-5" role="group" aria-label="Version statistics">
-          <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4">
-            <div className="flex items-center gap-1.5 mb-1">
-              <FileText className="h-3.5 w-3.5 text-nav-gold" aria-hidden="true" />
-              <span className="text-[11px] text-white/60 font-medium uppercase tracking-wider">
-                Material Index Grid
-              </span>
-            </div>
-            <p className="text-xl font-bold">{confidenceSummary.total}</p>
-          </div>
-          <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4">
-            <div className="flex items-center gap-1.5 mb-1">
-              <TrendingUp className="h-3.5 w-3.5 text-nav-gold" aria-hidden="true" />
-              <span className="text-[11px] text-white/60 font-medium uppercase tracking-wider">
-                Confidence
-              </span>
-            </div>
-            <p className="text-xl font-bold">
-              {confidence > 0 ? `${confidence}%` : "—"}
-            </p>
-          </div>
-          <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Shield className="h-3.5 w-3.5 text-nav-gold" aria-hidden="true" />
-              <span className="text-[11px] text-white/60 font-medium uppercase tracking-wider">
-                Status
-              </span>
-            </div>
-            <div className="flex items-center gap-3 mt-1">
-              <span className="flex items-center gap-1 text-sm" aria-label={`${confidenceSummary.preApproved} pre-approved`}>
-                <CheckCircle2 className="h-3.5 w-3.5 text-green-400" aria-hidden="true" />
-                <span className="font-bold">{confidenceSummary.preApproved}</span>
-              </span>
-              <span className="flex items-center gap-1 text-sm" aria-label={`${confidenceSummary.reviewRequired} review required`}>
-                <AlertTriangle className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
-                <span className="font-bold">{confidenceSummary.reviewRequired}</span>
-              </span>
-              <span className="flex items-center gap-1 text-sm" aria-label={`${confidenceSummary.actionMandatory} action mandatory`}>
-                <XCircle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
-                <span className="font-bold">{confidenceSummary.actionMandatory}</span>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -509,13 +428,15 @@ function ProjectInsightsSection({
   project,
   confidence,
   confidenceColor,
-  totalDocs,
+  confidenceSummary,
 }: {
   project: { stage: string; memberIds: string[]; createdAt: string; updatedAt: string; totalDocuments: number };
   confidence: number;
   confidenceColor: string;
-  totalDocs: number;
+  confidenceSummary: { total: number; preApproved: number; reviewRequired: number; actionMandatory: number };
 }) {
+  const totalDocs = confidenceSummary.total;
+
   // Compute how many days the project has been active
   const daysSinceCreation = Math.max(
     1,
@@ -531,7 +452,7 @@ function ProjectInsightsSection({
   const stageProgress = stageIndex >= 0 ? stageIndex + 1 : 1;
   const stageLabels = ["Review Required", "Action Mandatory", "Pre-Approved", "Approved"];
 
-  // Mock verified count: based on confidence, e.g. if confidence is 78% and 22 docs, ~17 are verified
+  // Verified count derived from confidence
   const verifiedDocs =
     confidence > 0 && totalDocs > 0
       ? Math.round((confidence / 100) * totalDocs)
@@ -547,8 +468,86 @@ function ProjectInsightsSection({
         <h3 className="font-semibold text-sm">Project Insights</h3>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0">
-        {/* Stat 1: Workflow Stage */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 divide-x divide-y lg:divide-y-0">
+        {/* Stat 1: Material Index Grid — total items count */}
+        <div className="p-4">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
+            Material Index Grid
+          </p>
+          <p className="text-2xl font-bold">{totalDocs}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {totalDocs > 0 ? "Total items tracked" : "No items uploaded yet"}
+          </p>
+        </div>
+
+        {/* Stat 2: Confidence Score */}
+        <div className="p-4">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
+            Confidence Score
+          </p>
+          <p className={cn("text-2xl font-bold", confidenceColor)}>
+            {confidence > 0 ? `${confidence}%` : "Pending"}
+          </p>
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-2">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-500",
+                confidence >= 80
+                  ? "bg-status-pre-approved"
+                  : confidence >= 60
+                    ? "bg-status-review-required"
+                    : confidence > 0
+                      ? "bg-status-action-mandatory"
+                      : "bg-muted-foreground/30"
+              )}
+              style={{ width: confidence > 0 ? `${confidence}%` : "0%" }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {confidence >= 80
+              ? "Strong — ready for approval"
+              : confidence >= 60
+                ? "Moderate — review recommended"
+                : confidence > 0
+                  ? "Low — action needed"
+                  : "Awaiting AI processing"}
+          </p>
+        </div>
+
+        {/* Stat 3: Validation Status — breakdown badges */}
+        <div className="p-4">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
+            Validation Status
+          </p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-sm text-status-pre-approved">
+                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                Pre-Approved
+              </span>
+              <span className="text-sm font-bold">{confidenceSummary.preApproved}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-sm text-status-review-required">
+                <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+                Review Required
+              </span>
+              <span className="text-sm font-bold">{confidenceSummary.reviewRequired}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-sm text-status-action-mandatory">
+                <XCircle className="h-4 w-4" aria-hidden="true" />
+                Action Mandatory
+              </span>
+              <span className="text-sm font-bold">{confidenceSummary.actionMandatory}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Second row */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 divide-x border-t">
+        {/* Stat 4: Workflow Stage */}
         <div className="p-4">
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
             Workflow Stage
@@ -568,12 +567,12 @@ function ProjectInsightsSection({
               />
             ))}
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Stage {stageProgress} of {stageOrder.length}
           </p>
         </div>
 
-        {/* Stat 2: Document Verification */}
+        {/* Stat 5: Documents Verified */}
         <div className="p-4">
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
             Documents Verified
@@ -588,46 +587,12 @@ function ProjectInsightsSection({
               style={{ width: totalDocs > 0 ? `${(verifiedDocs / totalDocs) * 100}%` : "0%" }}
             />
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {totalDocs > 0 ? `${Math.round((verifiedDocs / totalDocs) * 100)}% verified` : "No documents yet"}
           </p>
         </div>
 
-        {/* Stat 3: Confidence Score */}
-        <div className="p-4">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
-            Confidence Score
-          </p>
-          <p className={cn("text-lg font-bold", confidenceColor)}>
-            {confidence > 0 ? `${confidence}%` : "Pending"}
-          </p>
-          <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-2">
-            <div
-              className={cn(
-                "h-full rounded-full transition-all duration-500",
-                confidence >= 80
-                  ? "bg-status-pre-approved"
-                  : confidence >= 60
-                    ? "bg-status-review-required"
-                    : confidence > 0
-                      ? "bg-status-action-mandatory"
-                      : "bg-muted-foreground/30"
-              )}
-              style={{ width: confidence > 0 ? `${confidence}%` : "0%" }}
-            />
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
-            {confidence >= 80
-              ? "Strong — ready for approval"
-              : confidence >= 60
-                ? "Moderate — review recommended"
-                : confidence > 0
-                  ? "Low — action needed"
-                  : "Awaiting AI processing"}
-          </p>
-        </div>
-
-        {/* Stat 4: Project Timeline */}
+        {/* Stat 6: Project Timeline */}
         <div className="p-4">
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
             Project Timeline
@@ -650,7 +615,7 @@ function ProjectInsightsSection({
               })}
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Since {new Date(project.createdAt).toLocaleDateString("en-GB", {
               day: "2-digit",
               month: "short",
@@ -761,21 +726,12 @@ export default function VersionOverviewPage() {
   return (
     <div className="absolute inset-0 overflow-auto">
     <main className="p-6 space-y-6 max-w-[1400px] mx-auto">
-      {/* Hero Banner */}
-      <HeroBanner
-        projectName={project.name}
-        clientName={project.client}
-        confidenceSummary={confidenceSummary}
-        confidence={confidence}
-        confidenceColor={confidenceColor}
-      />
-
-      {/* Project Insights — full-width stats bar */}
+      {/* Project Insights — full-width stats section */}
       <ProjectInsightsSection
         project={project}
         confidence={confidence}
         confidenceColor={confidenceColor}
-        totalDocs={confidenceSummary.total}
+        confidenceSummary={confidenceSummary}
       />
 
       <div className="grid gap-6 lg:grid-cols-3">

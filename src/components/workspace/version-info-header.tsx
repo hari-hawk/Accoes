@@ -11,9 +11,11 @@ import type { Version, Project } from "@/data/types";
 export function VersionInfoHeader({
   version,
   project,
+  onProjectNameClick,
 }: {
   version: Version;
   project: Project;
+  onProjectNameClick?: () => void;
 }) {
   return (
     <div className="flex items-center justify-between px-4 py-3 border-b bg-background shrink-0">
@@ -25,15 +27,17 @@ export function VersionInfoHeader({
         </Button>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="text-sm font-semibold truncate">{project.name}</h1>
-            <span className="text-muted-foreground shrink-0">/</span>
-            <span className="text-sm font-medium truncate">{version.name}</span>
+            <button
+              type="button"
+              className="text-sm font-semibold truncate hover:underline hover:text-nav-accent transition-colors cursor-pointer"
+              onClick={() => onProjectNameClick?.()}
+              aria-label={`View details for ${project.name}`}
+            >
+              {project.name}
+            </button>
             <StatusIndicator status={version.status} />
           </div>
           <div className="flex items-center gap-3 mt-1">
-            <span className="text-xs text-muted-foreground truncate">
-              {version.specificationRef}
-            </span>
             <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
               <FileText className="h-3 w-3" />
               {version.documentIds.length} docs

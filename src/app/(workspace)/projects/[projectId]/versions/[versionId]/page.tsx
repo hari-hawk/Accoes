@@ -599,7 +599,7 @@ export default function VersionOverviewPage() {
   };
 
   return (
-    <div className="h-full overflow-auto">
+    <div className="absolute inset-0 overflow-auto">
     <main className="p-6 space-y-6 max-w-[1400px] mx-auto">
       {/* Hero Banner */}
       <HeroBanner

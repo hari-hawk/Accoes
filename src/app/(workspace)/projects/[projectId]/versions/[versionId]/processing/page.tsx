@@ -22,7 +22,7 @@ export default function ProcessingPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="h-full overflow-auto">
+    <div className="absolute inset-0 overflow-auto">
     <div className="mx-auto max-w-2xl p-6 space-y-8">
       <div className="text-center">
         <h2 className="text-xl font-semibold">AI Processing</h2>

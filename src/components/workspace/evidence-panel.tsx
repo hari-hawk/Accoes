@@ -341,84 +341,86 @@ function CommentsActivityPanel({
         </Button>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
-          {/* Activity */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              Activity
-            </h4>
-            {activityLogs.map((log) => {
-              const user = mockUsers.find((u) => u.id === log.userId);
-              return (
-                <div key={log.id} className="flex gap-2.5">
-                  <Avatar className="h-6 w-6 shrink-0 mt-0.5">
-                    {user?.avatarUrl && (
-                      <AvatarImage src={user.avatarUrl} alt={user.name} />
-                    )}
-                    <AvatarFallback className="text-[8px] font-bold">
-                      {user ? getInitials(user.name) : "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1">
-                      <span className="text-[11px] font-medium">
-                        {user?.name ?? "Unknown"}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {formatRelativeTime(log.timestamp)}
-                      </span>
+      <div className="flex-1 min-h-0 relative">
+        <ScrollArea className="absolute inset-0">
+          <div className="p-4 space-y-4">
+            {/* Activity */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Activity
+              </h4>
+              {activityLogs.map((log) => {
+                const user = mockUsers.find((u) => u.id === log.userId);
+                return (
+                  <div key={log.id} className="flex gap-2.5">
+                    <Avatar className="h-6 w-6 shrink-0 mt-0.5">
+                      {user?.avatarUrl && (
+                        <AvatarImage src={user.avatarUrl} alt={user.name} />
+                      )}
+                      <AvatarFallback className="text-[8px] font-bold">
+                        {user ? getInitials(user.name) : "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] font-medium">
+                          {user?.name ?? "Unknown"}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatRelativeTime(log.timestamp)}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        {log.description}
+                      </p>
                     </div>
-                    <p className="text-[11px] text-muted-foreground">
-                      {log.description}
-                    </p>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          <Separator />
+            <Separator />
 
-          {/* Comments */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              Comments
-            </h4>
-            {projectComments.map((comment) => {
-              const user = mockUsers.find((u) => u.id === comment.authorId);
-              return (
-                <div key={comment.id} className="flex gap-2.5">
-                  <Avatar className="h-6 w-6 shrink-0 mt-0.5">
-                    {user?.avatarUrl && (
-                      <AvatarImage
-                        src={user.avatarUrl}
-                        alt={user?.name ?? ""}
-                      />
-                    )}
-                    <AvatarFallback className="text-[8px] font-bold">
-                      {user ? getInitials(user.name) : "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1">
-                      <span className="text-[11px] font-medium">
-                        {user?.name ?? "Unknown"}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {formatRelativeTime(comment.createdAt)}
-                      </span>
+            {/* Comments */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Comments
+              </h4>
+              {projectComments.map((comment) => {
+                const user = mockUsers.find((u) => u.id === comment.authorId);
+                return (
+                  <div key={comment.id} className="flex gap-2.5">
+                    <Avatar className="h-6 w-6 shrink-0 mt-0.5">
+                      {user?.avatarUrl && (
+                        <AvatarImage
+                          src={user.avatarUrl}
+                          alt={user?.name ?? ""}
+                        />
+                      )}
+                      <AvatarFallback className="text-[8px] font-bold">
+                        {user ? getInitials(user.name) : "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] font-medium">
+                          {user?.name ?? "Unknown"}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatRelativeTime(comment.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {comment.content}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {comment.content}
-                    </p>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </ScrollArea>
+        </ScrollArea>
+      </div>
 
       {/* Comment input */}
       <div className="border-t p-3 shrink-0" role="form" aria-label="Add a comment">

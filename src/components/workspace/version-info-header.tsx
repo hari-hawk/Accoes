@@ -16,7 +16,7 @@ export function VersionInfoHeader({
   project: Project;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
+    <div className="flex items-center justify-between px-4 py-3 border-b bg-background shrink-0">
       <div className="flex items-center gap-3 min-w-0">
         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" asChild>
           <Link href="/projects" aria-label="Back to projects">

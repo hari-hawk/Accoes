@@ -34,7 +34,7 @@ export function WorkflowStageBar({
 
   return (
     <nav
-      className="flex items-center gap-1 px-4 py-2 border-b bg-background"
+      className="flex items-center gap-1 px-4 py-2 border-b bg-background shrink-0"
       aria-label="Version tabs"
     >
       {TABS.map((tab) => {

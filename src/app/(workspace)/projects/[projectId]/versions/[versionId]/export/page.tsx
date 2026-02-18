@@ -76,7 +76,7 @@ export default function ExportPage() {
   };
 
   return (
-    <div className="h-full overflow-auto">
+    <div className="absolute inset-0 overflow-auto">
     <div className="mx-auto max-w-3xl p-6 space-y-6">
       <div>
         <h2 className="text-xl font-semibold">Export Report</h2>

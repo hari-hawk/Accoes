@@ -32,7 +32,7 @@ export default function VersionLayout({
         projectId={project.id}
         versionId={version.id}
       />
-      <main className="flex-1 min-h-0 overflow-hidden">{children}</main>
+      <main className="flex-1 min-h-0 overflow-hidden relative">{children}</main>
     </WorkspaceProvider>
   );
 }

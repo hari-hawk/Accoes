@@ -59,6 +59,7 @@ export default function UploadPage() {
   const allComplete = files.length > 0 && files.every((f) => f.status === "complete");
 
   return (
+    <div className="absolute inset-0 overflow-auto">
     <div className="mx-auto max-w-2xl p-6 space-y-6">
       <div>
         <h2 className="text-xl font-semibold">Upload Documents</h2>
@@ -100,6 +101,7 @@ export default function UploadPage() {
           </Button>
         </div>
       )}
+    </div>
     </div>
   );
 }

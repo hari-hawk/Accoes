@@ -74,11 +74,17 @@ const mockProjectSpecs = [
   { id: "ps-2", fileName: "UCD_Project9592330_Project_Specification_Volume_2_2026-02.pdf", fileType: "pdf" as const, fileSize: 13107200, uploadedAt: "2026-02-05T09:05:00Z", totalPages: 278 },
 ];
 
-// Mock Material Index Grid source files — 3 CSV files
+// Mock Material Index Grid source files — 9 CSV files
 const mockMaterialIndexGridFiles = [
-  { id: "mig-1", fileName: "UCD_Project9592330_Plumbing_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 524288, uploadedAt: "2026-02-05T10:00:00Z" },
-  { id: "mig-2", fileName: "UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 491520, uploadedAt: "2026-02-05T10:05:00Z" },
-  { id: "mig-3", fileName: "UCD_Project9592330_Mechanical_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 458752, uploadedAt: "2026-02-05T10:10:00Z" },
+  { id: "mig-1", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 524288, uploadedAt: "2026-02-05T10:00:00Z" },
+  { id: "mig-2", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 491520, uploadedAt: "2026-02-05T10:05:00Z" },
+  { id: "mig-3", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 458752, uploadedAt: "2026-02-05T10:10:00Z" },
+  { id: "mig-4", fileName: "UCD_Project9592330_Plumbing_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 537600, uploadedAt: "2026-02-05T10:15:00Z" },
+  { id: "mig-5", fileName: "UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 503808, uploadedAt: "2026-02-05T10:20:00Z" },
+  { id: "mig-6", fileName: "UCD_Project9592330_Mechanical_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 471040, uploadedAt: "2026-02-05T10:25:00Z" },
+  { id: "mig-7", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 548864, uploadedAt: "2026-02-05T10:30:00Z" },
+  { id: "mig-8", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 516096, uploadedAt: "2026-02-05T10:35:00Z" },
+  { id: "mig-9", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 483328, uploadedAt: "2026-02-05T10:40:00Z" },
 ];
 
 interface MockUploadFile {
@@ -427,45 +433,47 @@ function MaterialIndexGridCard({
         </div>
       )}
 
-      {/* File list */}
-      <div className="divide-y" role="list" aria-label="Material index grid source files">
-        {files.map((file) => {
-          const FileIcon = fileIconMap[file.fileType] ?? FileText;
-          const isChecked = selectedIds.has(file.id);
+      {/* File list — scrollable for long lists */}
+      <ScrollArea className="max-h-[360px]">
+        <div className="divide-y" role="list" aria-label="Material index grid source files">
+          {files.map((file) => {
+            const FileIcon = fileIconMap[file.fileType] ?? FileText;
+            const isChecked = selectedIds.has(file.id);
 
-          return (
-            <div
-              key={file.id}
-              className={cn(
-                "flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors",
-                isChecked && "bg-nav-accent/5"
-              )}
-              role="listitem"
-            >
-              <Checkbox
-                checked={isChecked}
-                onCheckedChange={() => toggleFile(file.id)}
-                aria-label={`Select ${file.fileName}`}
-                className="shrink-0"
-              />
-              <div className="h-9 w-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                <FileIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{file.fileName}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[11px] text-muted-foreground">
-                    {formatFileSize(file.fileSize)}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {new Date(file.uploadedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
-                  </span>
+            return (
+              <div
+                key={file.id}
+                className={cn(
+                  "flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors",
+                  isChecked && "bg-nav-accent/5"
+                )}
+                role="listitem"
+              >
+                <Checkbox
+                  checked={isChecked}
+                  onCheckedChange={() => toggleFile(file.id)}
+                  aria-label={`Select ${file.fileName}`}
+                  className="shrink-0"
+                />
+                <div className="h-9 w-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                  <FileIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{file.fileName}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[11px] text-muted-foreground">
+                      {formatFileSize(file.fileSize)}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {new Date(file.uploadedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </ScrollArea>
     </div>
   );
 }

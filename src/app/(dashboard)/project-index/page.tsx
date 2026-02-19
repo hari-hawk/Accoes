@@ -143,8 +143,6 @@ function FiltersBar({
   onMaterialChange,
   hasActiveFilters,
   onClearFilters,
-  filteredCount,
-  totalCount,
 }: {
   versions: HydroGridVersion[];
   selectedVersionId: string;
@@ -159,8 +157,6 @@ function FiltersBar({
   onMaterialChange: (v: HydroMaterialCategory | "all") => void;
   hasActiveFilters: boolean;
   onClearFilters: () => void;
-  filteredCount: number;
-  totalCount: number;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-3" role="search" aria-label="Filter material specifications">
@@ -250,13 +246,8 @@ function FiltersBar({
         </Button>
       )}
 
-      {/* 5. Right side — entry count chip + version dropdown */}
+      {/* 5. Right side — version dropdown */}
       <div className="flex items-center gap-2 ml-auto">
-        <Badge variant="secondary" className="text-xs shrink-0 tabular-nums" aria-live="polite">
-          {filteredCount === totalCount
-            ? `${totalCount} entries`
-            : `${filteredCount} of ${totalCount}`}
-        </Badge>
         <Select value={selectedVersionId} onValueChange={onVersionChange}>
           <SelectTrigger className="w-[200px]" aria-label="Select grid version">
             <SelectValue placeholder="Select version" />
@@ -1103,8 +1094,6 @@ export default function ProjectIndexPage() {
         onMaterialChange={setMaterialFilter}
         hasActiveFilters={hasActiveFilters}
         onClearFilters={clearFilters}
-        filteredCount={filteredCount}
-        totalCount={totalCount}
       />
 
       {/* Table or Empty state */}

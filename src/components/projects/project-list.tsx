@@ -126,7 +126,7 @@ function HeroSection() {
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-white/20 text-white hover:bg-white/10 hover:text-white">
+          <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white hover:border-white/60">
             <Download className="h-3.5 w-3.5" aria-hidden="true" />
             Export
           </Button>

@@ -22,6 +22,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
 import { FullScreenPdfViewer, type Citation } from "@/components/documents/full-screen-pdf-viewer";
 import { mockUsers } from "@/data/mock-users";
 import { getActivityLogsByProject } from "@/data/mock-activity-logs";
@@ -184,16 +190,24 @@ function PSTabContent({
 
 /* -------------------------------------------------------------------------- */
 /*  Project Index (PI) Tab Content                                             */
-/*  • proj-2 (UCD): table grid layout                                         */
-/*  • All other projects: card-style layout                                    */
+/*  — Accordion-based cards with white bg, readable fonts, text-only scores    */
 /* -------------------------------------------------------------------------- */
 
-/** Shared helpers */
+/** Match type badge colors */
 const MATCH_TYPE_COLORS: Record<string, string> = {
   EXACT: "bg-status-pre-approved/15 text-status-pre-approved border-status-pre-approved/30",
   PARTIAL: "bg-status-review-required/15 text-status-review-required border-status-review-required/30",
   ALTERNATE: "bg-status-action-mandatory/15 text-status-action-mandatory border-status-action-mandatory/30",
 };
+
+/** Score text colour helper */
+function scoreTextColor(score: number): string {
+  return score >= 80
+    ? "text-status-pre-approved"
+    : score >= 60
+      ? "text-status-review-required"
+      : "text-status-action-mandatory";
+}
 
 function buildFallbackMatch(validation: ValidationResult): IndexMatch {
   return {
@@ -215,63 +229,57 @@ function getDisplayMatches(validation: ValidationResult): IndexMatch[] {
 
 function PITabContent({
   validation,
-  projectId,
 }: {
   validation: ValidationResult;
   projectId?: string;
 }) {
   const displayMatches = getDisplayMatches(validation);
   const matchCount = displayMatches.length;
-  const exactCount = displayMatches.filter((m) => m.matchType === "EXACT").length;
-
-  // Default: card layout for all projects (including UCD / proj-2)
-  // Table layout only when explicitly opted-in via a different project
-  const useTableLayout = projectId === "proj-table-demo";
 
   return (
     <div className="space-y-4">
       {/* Match count header */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold">
-          Found {matchCount} {exactCount > 0 ? "exact" : ""} match{matchCount !== 1 ? "es" : ""}
-        </p>
-      </div>
+      <p className="text-sm font-bold">
+        Found {matchCount} match{matchCount !== 1 ? "es" : ""}
+      </p>
 
-      {useTableLayout ? (
-        /* ── Table layout (UCD) ─────────────────────────────────── */
-        <div className="rounded-lg border overflow-hidden">
-          <div className="grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.7fr_2fr] gap-px bg-muted/30 border-b">
-            {["Category", "Sub Category", "Item Description", "Size", "Match Type", "Match Score", "Reason"].map(
-              (col) => (
-                <div key={col} className="px-3 py-2.5">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                    {col}
-                  </p>
-                </div>
-              )
-            )}
-          </div>
-          {displayMatches.map((match) => (
-            <IndexMatchRow key={match.id} match={match} />
+      {/* Use accordion when 3+ matches to avoid scroll overflow */}
+      {matchCount >= 3 ? (
+        <Accordion type="multiple" defaultValue={["match-0"]} className="space-y-3">
+          {displayMatches.map((match, index) => (
+            <AccordionItem
+              key={match.id}
+              value={`match-${index}`}
+              className="rounded-xl border bg-card shadow-sm overflow-hidden"
+            >
+              <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                <MatchCardHeader match={match} index={index + 1} total={matchCount} />
+              </AccordionTrigger>
+              <AccordionContent className="px-0 pb-0">
+                <MatchCardBody match={match} />
+              </AccordionContent>
+            </AccordionItem>
           ))}
-        </div>
+        </Accordion>
       ) : (
-        /* ── Card layout (all other projects) ───────────────────── */
         <div className="space-y-3">
           {displayMatches.map((match, index) => (
-            <IndexMatchCard key={match.id} match={match} index={index + 1} total={matchCount} />
+            <div key={match.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
+              <div className="px-4 py-3">
+                <MatchCardHeader match={match} index={index + 1} total={matchCount} />
+              </div>
+              <MatchCardBody match={match} />
+            </div>
           ))}
         </div>
       )}
 
       {/* Discrepancy cards — still shown if evidence contradicts */}
       {validation.evidenceItems.some((ev) => ev.relevance === "contradicts") && (
-        <div className="rounded-lg border overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-status-action-mandatory" />
-              <span className="text-sm font-semibold">Discrepancy Found</span>
-            </div>
+        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b bg-status-action-mandatory/5">
+            <AlertTriangle className="h-4 w-4 text-status-action-mandatory" />
+            <span className="text-sm font-bold">Discrepancy Found</span>
           </div>
           <div className="p-4 space-y-2">
             {validation.evidenceItems
@@ -279,12 +287,12 @@ function PITabContent({
               .map((ev) => (
                 <div
                   key={ev.id}
-                  className="rounded-lg bg-status-action-mandatory-bg/20 p-3"
+                  className="rounded-lg bg-status-action-mandatory/5 border border-status-action-mandatory/20 p-3"
                 >
-                  <p className="text-xs italic text-foreground/70">
+                  <p className="text-sm italic text-foreground/80">
                     &ldquo;{ev.excerpt}&rdquo;
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1.5">
                     {ev.sourceFileName}
                     {ev.pageNumber && ` — p. ${ev.pageNumber}`}
                   </p>
@@ -297,44 +305,8 @@ function PITabContent({
   );
 }
 
-/** Single row in the table layout (UCD) */
-function IndexMatchRow({ match }: { match: IndexMatch }) {
-  return (
-    <div className="grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.7fr_2fr] gap-px border-b last:border-b-0 hover:bg-muted/20 transition-colors">
-      <div className="px-3 py-3">
-        <p className="text-xs font-medium">{match.category}</p>
-      </div>
-      <div className="px-3 py-3">
-        <p className="text-xs text-foreground/80">{match.subCategory}</p>
-      </div>
-      <div className="px-3 py-3">
-        <p className="text-xs text-foreground/80 line-clamp-2">{match.itemDescription}</p>
-      </div>
-      <div className="px-3 py-3">
-        <p className="text-xs text-foreground/80">{match.size}</p>
-      </div>
-      <div className="px-3 py-3">
-        <span
-          className={cn(
-            "inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase",
-            MATCH_TYPE_COLORS[match.matchType] ?? "bg-muted text-muted-foreground"
-          )}
-        >
-          {match.matchType}
-        </span>
-      </div>
-      <div className="px-3 py-3">
-        <p className="text-xs font-medium tabular-nums">{match.matchScore.toFixed(2)}</p>
-      </div>
-      <div className="px-3 py-3">
-        <p className="text-xs text-foreground/70 leading-relaxed">{match.reason}</p>
-      </div>
-    </div>
-  );
-}
-
-/** Card layout for a single match (all projects except UCD) */
-function IndexMatchCard({
+/** Header row shown in both accordion trigger and static card */
+function MatchCardHeader({
   match,
   index,
   total,
@@ -344,85 +316,67 @@ function IndexMatchCard({
   total: number;
 }) {
   const scorePercent = Math.round(match.matchScore * 100);
-  const scoreColor =
-    scorePercent >= 80
-      ? "text-status-pre-approved"
-      : scorePercent >= 60
-        ? "text-status-review-required"
-        : "text-status-action-mandatory";
-  const barColor =
-    scorePercent >= 80
-      ? "bg-status-pre-approved"
-      : scorePercent >= 60
-        ? "bg-status-review-required"
-        : "bg-status-action-mandatory";
 
   return (
-    <div className="rounded-lg border overflow-hidden">
-      {/* Card header — match number + type badge + score */}
-      <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b">
-        <div className="flex items-center gap-2.5">
-          <span className="text-xs font-semibold text-muted-foreground">
-            Match {index} of {total}
-          </span>
-          <span
-            className={cn(
-              "inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase",
-              MATCH_TYPE_COLORS[match.matchType] ?? "bg-muted text-muted-foreground"
-            )}
-          >
-            {match.matchType}
-          </span>
+    <div className="flex items-center justify-between w-full gap-3">
+      <div className="flex items-center gap-2.5">
+        <span className="text-sm font-bold text-foreground">
+          Match {index} of {total}
+        </span>
+        <span
+          className={cn(
+            "inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase",
+            MATCH_TYPE_COLORS[match.matchType] ?? "bg-muted text-muted-foreground"
+          )}
+        >
+          {match.matchType}
+        </span>
+      </div>
+      <span className={cn("text-sm font-bold tabular-nums", scoreTextColor(scorePercent))}>
+        Match Score — {scorePercent}
+      </span>
+    </div>
+  );
+}
+
+/** Card body: 2-column grid + reason — white bg, larger readable fonts */
+function MatchCardBody({ match }: { match: IndexMatch }) {
+  return (
+    <div className="border-t bg-card">
+      {/* 2×2 key-value grid */}
+      <div className="grid grid-cols-2 divide-x divide-y">
+        <div className="px-4 py-3">
+          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+            Category
+          </p>
+          <p className="text-sm font-medium text-foreground">{match.category}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={cn("text-sm font-bold tabular-nums", scoreColor)}>
-            {scorePercent}%
-          </span>
-          <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
-            <div
-              className={cn("h-full rounded-full transition-all", barColor)}
-              style={{ width: `${scorePercent}%` }}
-            />
-          </div>
+        <div className="px-4 py-3">
+          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+            Sub Category
+          </p>
+          <p className="text-sm font-medium text-foreground">{match.subCategory}</p>
+        </div>
+        <div className="px-4 py-3">
+          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+            Item Description
+          </p>
+          <p className="text-sm text-foreground/90">{match.itemDescription}</p>
+        </div>
+        <div className="px-4 py-3">
+          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+            Size
+          </p>
+          <p className="text-sm text-foreground/90">{match.size}</p>
         </div>
       </div>
 
-      {/* Card body — key-value pairs */}
-      <div className="p-4 space-y-3">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">
-              Category
-            </p>
-            <p className="text-xs font-medium">{match.category}</p>
-          </div>
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">
-              Sub Category
-            </p>
-            <p className="text-xs text-foreground/80">{match.subCategory}</p>
-          </div>
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">
-              Item Description
-            </p>
-            <p className="text-xs text-foreground/80">{match.itemDescription}</p>
-          </div>
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">
-              Size
-            </p>
-            <p className="text-xs text-foreground/80">{match.size}</p>
-          </div>
-        </div>
-
-        {/* Reason — full width below the grid */}
-        <div className="rounded-md bg-muted/20 p-3">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">
-            Reason
-          </p>
-          <p className="text-xs text-foreground/70 leading-relaxed">{match.reason}</p>
-        </div>
+      {/* Reason — highlighted section */}
+      <div className="border-t bg-primary/[0.03] px-4 py-3">
+        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+          Reason
+        </p>
+        <p className="text-sm text-foreground/80 leading-relaxed">{match.reason}</p>
       </div>
     </div>
   );
@@ -739,10 +693,10 @@ export function EvidencePanel({
           </div>
         </div>
 
-        {/* Content area */}
-        <div className="flex-1 min-h-0 relative">
-        <ScrollArea className="absolute inset-0">
-          <div className="p-5">
+        {/* Content area — flex-1 + min-h-0 ensures scrollable within flex column */}
+        <div className="flex-1 min-h-0 overflow-hidden relative">
+          <ScrollArea className="absolute inset-0">
+            <div className="p-5">
             {activeValidation ? (
               activeCategory === "performance_index" ? (
                 <PITabContent validation={activeValidation} projectId={projectId} />

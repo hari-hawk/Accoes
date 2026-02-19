@@ -234,7 +234,7 @@ function HeroSection() {
                   className="h-full"
                   style={{
                     width: `${(activeCount / pipelineBarTotal) * 100}%`,
-                    backgroundColor: "#3b82f6",
+                    backgroundColor: "var(--chart-1)",
                   }}
                 />
               )}
@@ -243,7 +243,7 @@ function HeroSection() {
                   className="h-full"
                   style={{
                     width: `${(inProgressCount / pipelineBarTotal) * 100}%`,
-                    backgroundColor: "#f59e0b",
+                    backgroundColor: "var(--nav-gold)",
                   }}
                 />
               )}
@@ -252,7 +252,7 @@ function HeroSection() {
                   className="h-full"
                   style={{
                     width: `${(completedCount / pipelineBarTotal) * 100}%`,
-                    backgroundColor: "#22c55e",
+                    backgroundColor: "var(--status-pre-approved)",
                   }}
                 />
               )}
@@ -261,26 +261,26 @@ function HeroSection() {
                   className="h-full"
                   style={{
                     width: `${(onHoldCount / pipelineBarTotal) * 100}%`,
-                    backgroundColor: "#6b7280",
+                    backgroundColor: "var(--ds-neutral-600, #787878)",
                   }}
                 />
               )}
             </div>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               <span className="flex items-center gap-1 text-[10px] text-white/50">
-                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#3b82f6" }} />
+                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "var(--chart-1)" }} />
                 Active
               </span>
               <span className="flex items-center gap-1 text-[10px] text-white/50">
-                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#f59e0b" }} />
+                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "var(--nav-gold)" }} />
                 In Progress
               </span>
               <span className="flex items-center gap-1 text-[10px] text-white/50">
-                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#22c55e" }} />
+                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "var(--status-pre-approved)" }} />
                 Completed
               </span>
               <span className="flex items-center gap-1 text-[10px] text-white/50">
-                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#6b7280" }} />
+                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "var(--ds-neutral-600, #787878)" }} />
                 On Hold
               </span>
             </div>

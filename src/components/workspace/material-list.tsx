@@ -224,35 +224,23 @@ export function MaterialList({
           value={search}
           onChange={onSearchChange}
         />
-        <div className="flex items-center gap-2">
-          <Select
-            value={statusFilter}
-            onValueChange={(v) =>
-              onStatusFilterChange(v as ValidationStatus | "all")
-            }
-          >
-            <SelectTrigger className="flex-1 h-8 text-xs">
-              <SelectValue placeholder="Project Specifications (PS)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pre_approved">Pre-Approved</SelectItem>
-              <SelectItem value="review_required">Review Required</SelectItem>
-              <SelectItem value="action_mandatory">Action Mandatory</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select defaultValue="all">
-            <SelectTrigger className="flex-1 h-8 text-xs">
-              <SelectValue placeholder="Project Index (PI)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All PI</SelectItem>
-              <SelectItem value="pre_approved">Pre-Approved</SelectItem>
-              <SelectItem value="review_required">Review Required</SelectItem>
-              <SelectItem value="action_mandatory">Action Mandatory</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select defaultValue="all">
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="All Documents" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Documents</SelectItem>
+            <SelectItem value="mig-1">UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v1.csv</SelectItem>
+            <SelectItem value="mig-2">UCD_HobbsVet_Heating_Matrix_Index_Grid_v1.csv</SelectItem>
+            <SelectItem value="mig-3">UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v1.csv</SelectItem>
+            <SelectItem value="mig-4">UCD_Project9592330_Plumbing_Matrix_Index_Grid_2026-02.csv</SelectItem>
+            <SelectItem value="mig-5">UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv</SelectItem>
+            <SelectItem value="mig-6">UCD_Project9592330_Mechanical_Matrix_Index_Grid_2026-02.csv</SelectItem>
+            <SelectItem value="mig-7">UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v3.csv</SelectItem>
+            <SelectItem value="mig-8">UCD_HobbsVet_Heating_Matrix_Index_Grid_v3.csv</SelectItem>
+            <SelectItem value="mig-9">UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v3.csv</SelectItem>
+          </SelectContent>
+        </Select>
 
         {/* Select all + status counts */}
         <div className="flex items-center gap-3 text-xs">

@@ -11,8 +11,6 @@ import {
   AlertTriangle,
   Check,
   ChevronDown,
-  Pencil,
-  Save,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -266,246 +264,64 @@ function FiltersBar({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Expanded Entry Content (view + edit modes)                                 */
+/*  Expanded Entry Content (compact read-only)                                 */
 /* -------------------------------------------------------------------------- */
 
 function ExpandedEntryContent({
   entry,
-  isEditing,
-  editValues,
-  onEdit,
-  onSave,
-  onCancel,
-  onFieldChange,
   onCollapse,
 }: {
   entry: HydroMatrixEntry;
-  isEditing: boolean;
-  editValues: Partial<HydroMatrixEntry>;
-  onEdit: () => void;
-  onSave: () => void;
-  onCancel: () => void;
-  onFieldChange: (field: keyof HydroMatrixEntry, value: string) => void;
   onCollapse: () => void;
 }) {
-  const currentValues = isEditing
-    ? { ...entry, ...editValues }
-    : entry;
-
   return (
     <div className="animate-accordion-down overflow-hidden">
-      <div className="bg-muted/20 border-t px-4 py-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Left column — Index Description */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Index Description
-            </h4>
-            {isEditing ? (
-              <textarea
-                className="w-full rounded-lg border bg-background p-3 text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-nav-accent focus:ring-offset-1 min-h-[120px]"
-                value={(editValues.indexDescription ?? entry.indexDescription)}
-                onChange={(e) => onFieldChange("indexDescription", e.target.value)}
-                aria-label="Edit index description"
-              />
-            ) : (
-              <div className="rounded-lg bg-background border p-3">
-                <p className="text-sm leading-relaxed text-ds-neutral-900">
-                  {entry.indexDescription}
-                </p>
-              </div>
-            )}
-          </div>
+      <div className="bg-muted/20 border-t px-4 py-3">
+        {/* Index Description */}
+        <p className="text-sm leading-relaxed text-ds-neutral-900 mb-3">
+          {entry.indexDescription}
+        </p>
 
-          {/* Right column — Specification Details */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Specification Details
-            </h4>
-            <div className="rounded-lg bg-background border p-3 space-y-3">
-              {/* Index ID */}
-              <DetailField
-                label="Index ID"
-                value={currentValues.indexIdFull}
-                isEditing={isEditing}
-                mono
-                onChange={(v) => onFieldChange("indexIdFull", v)}
-              />
-              {/* Description */}
-              <DetailField
-                label="Description"
-                value={currentValues.description}
-                isEditing={isEditing}
-                onChange={(v) => onFieldChange("description", v)}
-              />
-              {/* Trade */}
-              <DetailField
-                label="Trade"
-                value={currentValues.trade}
-                isEditing={isEditing}
-                onChange={(v) => onFieldChange("trade", v)}
-              />
-              {/* Index Category */}
-              <DetailSelectField
-                label="Index Category"
-                value={currentValues.indexCategory}
-                isEditing={isEditing}
-                options={HYDRO_CATEGORY_ORDER as unknown as string[]}
-                onChange={(v) => onFieldChange("indexCategory", v)}
-              />
-              {/* System Category */}
-              <DetailSelectField
-                label="System Category"
-                value={currentValues.systemCategory}
-                isEditing={isEditing}
-                options={["Chilled Water", "Condenser Water", "Generic"]}
-                onChange={(v) => onFieldChange("systemCategory", v)}
-              />
-              {/* Material Category */}
-              <DetailSelectField
-                label="Material Category"
-                value={currentValues.materialCategory}
-                isEditing={isEditing}
-                options={["Carbon Steel", "Copper", "n/a"]}
-                onChange={(v) => onFieldChange("materialCategory", v)}
-              />
-              {/* Fitting Manufacturer */}
-              <DetailField
-                label="Fitting Manufacturer"
-                value={currentValues.fittingMfr}
-                isEditing={isEditing}
-                onChange={(v) => onFieldChange("fittingMfr", v)}
-              />
-              {/* Sizes */}
-              <DetailField
-                label="Sizes"
-                value={currentValues.sizes}
-                isEditing={isEditing}
-                onChange={(v) => onFieldChange("sizes", v)}
-              />
-              {/* Subcategory */}
-              <DetailField
-                label="Subcategory"
-                value={currentValues.indexSubcategory}
-                isEditing={isEditing}
-                onChange={(v) => onFieldChange("indexSubcategory", v)}
-              />
-            </div>
+        {/* Specification Details — compact label:value grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2">
+          <div>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Index ID</span>
+            <p className="text-xs font-mono text-ds-neutral-900">{entry.indexIdFull}</p>
+          </div>
+          <div>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Trade</span>
+            <p className="text-xs text-ds-neutral-900">{entry.trade}</p>
+          </div>
+          <div>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Subcategory</span>
+            <p className="text-xs text-ds-neutral-900">{entry.indexSubcategory}</p>
+          </div>
+          <div>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Fitting Mfr</span>
+            <p className="text-xs text-ds-neutral-900">{entry.fittingMfr}</p>
+          </div>
+          <div>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Sizes</span>
+            <p className="text-xs text-ds-neutral-900">{entry.sizes}</p>
+          </div>
+          <div>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Material</span>
+            <p className="text-xs text-ds-neutral-900">{entry.materialCategory}</p>
           </div>
         </div>
 
-        {/* Action bar */}
-        <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-muted">
-          {isEditing ? (
-            <>
-              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={onCancel}>
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                className="h-8 text-xs gradient-action text-white border-0"
-                onClick={onSave}
-              >
-                <Save className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                Save Changes
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 text-xs text-muted-foreground"
-                onClick={onCollapse}
-              >
-                Collapse
-              </Button>
-              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={onEdit}>
-                <Pencil className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                Edit
-              </Button>
-            </>
-          )}
+        {/* Collapse action */}
+        <div className="flex justify-end mt-3 pt-2 border-t border-muted">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs text-muted-foreground"
+            onClick={onCollapse}
+          >
+            Collapse
+          </Button>
         </div>
       </div>
-    </div>
-  );
-}
-
-/* Detail field — text input in edit mode, read-only in view mode */
-function DetailField({
-  label,
-  value,
-  isEditing,
-  mono,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  isEditing: boolean;
-  mono?: boolean;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4">
-      <span className="text-xs text-muted-foreground shrink-0 pt-1">{label}</span>
-      {isEditing ? (
-        <Input
-          className={cn("h-8 text-xs max-w-[240px]", mono && "font-mono")}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          aria-label={`Edit ${label}`}
-        />
-      ) : (
-        <span
-          className={cn(
-            "text-sm font-medium text-right",
-            mono && "font-mono text-xs",
-            value === "n/a" && "text-muted-foreground/50"
-          )}
-        >
-          {value === "n/a" ? "N/A" : value}
-        </span>
-      )}
-    </div>
-  );
-}
-
-/* Detail select field — dropdown in edit mode, read-only in view mode */
-function DetailSelectField({
-  label,
-  value,
-  isEditing,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  isEditing: boolean;
-  options: string[];
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4">
-      <span className="text-xs text-muted-foreground shrink-0 pt-1">{label}</span>
-      {isEditing ? (
-        <Select value={value} onValueChange={onChange}>
-          <SelectTrigger className="h-8 text-xs max-w-[240px]" aria-label={`Edit ${label}`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {options.map((opt) => (
-              <SelectItem key={opt} value={opt}>
-                {opt}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ) : (
-        <span className="text-sm font-medium text-right">
-          {value === "n/a" ? "N/A" : value}
-        </span>
-      )}
     </div>
   );
 }
@@ -518,22 +334,10 @@ function HydroMatrixTable({
   groupedEntries,
   expandedId,
   onToggleExpand,
-  editingId,
-  editValues,
-  onEdit,
-  onSave,
-  onCancel,
-  onFieldChange,
 }: {
   groupedEntries: Map<HydroIndexCategory, HydroMatrixEntry[]>;
   expandedId: string | null;
   onToggleExpand: (id: string) => void;
-  editingId: string | null;
-  editValues: Partial<HydroMatrixEntry>;
-  onEdit: (entry: HydroMatrixEntry) => void;
-  onSave: () => void;
-  onCancel: () => void;
-  onFieldChange: (field: keyof HydroMatrixEntry, value: string) => void;
 }) {
   return (
     <div className="rounded-xl border bg-card shadow-card overflow-hidden">
@@ -570,12 +374,6 @@ function HydroMatrixTable({
                 entries={entries}
                 expandedId={expandedId}
                 onToggleExpand={onToggleExpand}
-                editingId={editingId}
-                editValues={editValues}
-                onEdit={onEdit}
-                onSave={onSave}
-                onCancel={onCancel}
-                onFieldChange={onFieldChange}
               />
             ))}
           </tbody>
@@ -590,23 +388,11 @@ function CategoryGroup({
   entries,
   expandedId,
   onToggleExpand,
-  editingId,
-  editValues,
-  onEdit,
-  onSave,
-  onCancel,
-  onFieldChange,
 }: {
   category: HydroIndexCategory;
   entries: HydroMatrixEntry[];
   expandedId: string | null;
   onToggleExpand: (id: string) => void;
-  editingId: string | null;
-  editValues: Partial<HydroMatrixEntry>;
-  onEdit: (entry: HydroMatrixEntry) => void;
-  onSave: () => void;
-  onCancel: () => void;
-  onFieldChange: (field: keyof HydroMatrixEntry, value: string) => void;
 }) {
   return (
     <>
@@ -627,7 +413,6 @@ function CategoryGroup({
       {/* Data rows + expansion rows */}
       {entries.map((entry) => {
         const isExpanded = expandedId === entry.id;
-        const isEditing = editingId === entry.id;
 
         return (
           <React.Fragment key={entry.id}>
@@ -708,12 +493,6 @@ function CategoryGroup({
                 <td colSpan={7} className="p-0">
                   <ExpandedEntryContent
                     entry={entry}
-                    isEditing={isEditing}
-                    editValues={editValues}
-                    onEdit={() => onEdit(entry)}
-                    onSave={onSave}
-                    onCancel={onCancel}
-                    onFieldChange={onFieldChange}
                     onCollapse={() => onToggleExpand(entry.id)}
                   />
                 </td>
@@ -949,11 +728,6 @@ export default function ProjectIndexPage() {
     groupedEntries,
     hasActiveFilters,
     clearFilters,
-    updateEntry,
-    totalCount,
-    filteredCount,
-    filteredCategoryCount,
-    filteredSystemCount,
   } = useHydroMatrix();
 
   // Import dialog
@@ -965,63 +739,17 @@ export default function ProjectIndexPage() {
   // Expandable rows
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Editing state
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValues, setEditValues] = useState<Partial<HydroMatrixEntry>>({});
-
   const handleVersionChange = useCallback(
     (versionId: string) => {
       switchVersion(versionId);
-      // Reset expand/edit state when switching versions
       setExpandedId(null);
-      setEditingId(null);
-      setEditValues({});
     },
     [switchVersion]
   );
 
   const handleToggleExpand = useCallback(
     (id: string) => {
-      setExpandedId((prev) => {
-        if (prev === id) {
-          // Collapsing — also cancel any active edit
-          setEditingId(null);
-          setEditValues({});
-          return null;
-        }
-        // Expanding a different row — cancel any edit on previous row
-        setEditingId(null);
-        setEditValues({});
-        return id;
-      });
-    },
-    []
-  );
-
-  const handleEdit = useCallback(
-    (entry: HydroMatrixEntry) => {
-      setEditingId(entry.id);
-      setEditValues({});
-    },
-    []
-  );
-
-  const handleSave = useCallback(() => {
-    if (editingId && Object.keys(editValues).length > 0) {
-      updateEntry(editingId, editValues);
-    }
-    setEditingId(null);
-    setEditValues({});
-  }, [editingId, editValues, updateEntry]);
-
-  const handleCancel = useCallback(() => {
-    setEditingId(null);
-    setEditValues({});
-  }, []);
-
-  const handleFieldChange = useCallback(
-    (field: keyof HydroMatrixEntry, value: string) => {
-      setEditValues((prev) => ({ ...prev, [field]: value }));
+      setExpandedId((prev) => (prev === id ? null : id));
     },
     []
   );
@@ -1113,12 +841,6 @@ export default function ProjectIndexPage() {
           groupedEntries={groupedEntries}
           expandedId={expandedId}
           onToggleExpand={handleToggleExpand}
-          editingId={editingId}
-          editValues={editValues}
-          onEdit={handleEdit}
-          onSave={handleSave}
-          onCancel={handleCancel}
-          onFieldChange={handleFieldChange}
         />
       )}
 

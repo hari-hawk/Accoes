@@ -132,7 +132,7 @@ function HeroSection() {
           </Button>
           <Link
             href="/projects/create"
-            className="inline-flex items-center gap-1.5 h-8 px-4 rounded-md text-xs font-semibold gradient-gold text-white border-0 hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-1.5 h-8 px-4 rounded-md text-xs font-semibold gradient-action text-white border-0 hover:opacity-90 transition-opacity"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />
             New Project
@@ -680,7 +680,7 @@ function DownloadReportSheet({
                 <Button
                   onClick={handleExport}
                   disabled={selectedDocIds.size === 0 || exporting}
-                  className="flex-1 gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity"
+                  className="flex-1 gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity"
                   aria-label={
                     selectedDocIds.size === 0
                       ? "Select documents to export"
@@ -769,7 +769,7 @@ export function ProjectList() {
         >
           <Link
             href="/projects/create"
-            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md text-sm font-semibold gradient-gold text-white border-0 hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md text-sm font-semibold gradient-action text-white border-0 hover:opacity-90 transition-opacity"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             New Project

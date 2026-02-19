@@ -99,7 +99,7 @@ function HeroSection({
       </div>
       <div className="flex items-center gap-2.5 shrink-0" role="group" aria-label="Template actions">
         <Button
-          className="gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity font-semibold text-sm h-9 px-4"
+          className="gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity font-semibold text-sm h-9 px-4"
           onClick={onImport}
           aria-label="Import an XLSX template to update the library"
         >
@@ -403,7 +403,7 @@ function ExpandedEntryContent({
               </Button>
               <Button
                 size="sm"
-                className="h-8 text-xs gradient-gold text-white border-0"
+                className="h-8 text-xs gradient-action text-white border-0"
                 onClick={onSave}
               >
                 <Save className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
@@ -890,7 +890,7 @@ function HydroImportDialog({
                 Cancel
               </Button>
               <Button
-                className="gradient-gold text-white border-0"
+                className="gradient-action text-white border-0"
                 onClick={handleConfirm}
               >
                 Confirm Import

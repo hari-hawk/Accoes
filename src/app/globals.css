@@ -313,6 +313,9 @@
   .gradient-gold {
     background: linear-gradient(135deg, #e1a41d, #c48a14);
   }
+  .gradient-action {
+    background: linear-gradient(135deg, #87a46a, #748f5a);
+  }
   .gradient-hero {
     background: linear-gradient(135deg, #003075 0%, #00529B 50%, #002060 100%);
   }
@@ -344,6 +347,9 @@
   }
   .dark .shadow-gold {
     box-shadow: 0 0 28px rgba(225, 164, 29, 0.22);
+  }
+  .shadow-action {
+    box-shadow: 0 2px 8px rgba(135, 164, 106, 0.35);
   }
   .shadow-card {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);

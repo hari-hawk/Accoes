@@ -554,7 +554,7 @@ export function CreateProjectDialog({
               <Button
                 size="sm"
                 onClick={handleCreate}
-                className="gradient-gold text-white border-0 gap-1"
+                className="gradient-action text-white border-0 gap-1"
               >
                 <Check className="h-4 w-4" />
                 Create Project

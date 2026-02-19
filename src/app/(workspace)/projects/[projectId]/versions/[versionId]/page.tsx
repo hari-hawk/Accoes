@@ -153,7 +153,7 @@ function ProjectSpecificationsCard({
             {selectedSpecIds.size > 0 && (
               <Button
                 size="sm"
-                className="h-7 text-xs gap-1 gradient-gold text-white border-0 hover:opacity-90 transition-opacity"
+                className="h-7 text-xs gap-1 gradient-action text-white border-0 hover:opacity-90 transition-opacity"
                 onClick={handleExport}
                 disabled={exporting}
                 aria-label={`Export ${selectedSpecIds.size} selected specification${selectedSpecIds.size !== 1 ? "s" : ""}`}
@@ -324,7 +324,7 @@ function MaterialIndexGridCard({
           {selectedIds.size > 0 && (
             <Button
               size="sm"
-              className="h-7 text-xs gap-1 gradient-gold text-white border-0 hover:opacity-90 transition-opacity"
+              className="h-7 text-xs gap-1 gradient-action text-white border-0 hover:opacity-90 transition-opacity"
               onClick={handleExport}
               disabled={exporting}
               aria-label={`Export ${selectedIds.size} selected file${selectedIds.size !== 1 ? "s" : ""}`}

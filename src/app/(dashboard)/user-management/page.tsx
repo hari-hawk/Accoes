@@ -167,7 +167,7 @@ export default function UserManagementPage() {
             Manage team members, roles, and project access
           </p>
         </div>
-        <Button className="gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity font-semibold">
+        <Button className="gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity font-semibold">
           <Plus className="mr-1.5 h-4 w-4" />
           Add User
         </Button>

@@ -694,7 +694,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
         </Button>
         <Button
           size="lg"
-          className="gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity font-semibold px-8"
+          className="gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity font-semibold px-8"
           disabled={!canCreate}
           onClick={handleCreate}
         >
@@ -725,7 +725,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
               Discard
             </AlertDialogAction>
             <AlertDialogAction
-              className="gradient-gold text-white border-0"
+              className="gradient-action text-white border-0"
               onClick={handleSaveAsDraft}
             >
               Save as Draft

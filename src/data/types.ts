@@ -147,6 +147,19 @@ export interface SpecReference {
 
 export type ValidationCategory = "overall" | "project_assets" | "performance_index";
 
+export type IndexMatchType = "EXACT" | "PARTIAL" | "ALTERNATE";
+
+export interface IndexMatch {
+  id: string;
+  category: string;
+  subCategory: string;
+  itemDescription: string;
+  size: string;
+  matchType: IndexMatchType;
+  matchScore: number;
+  reason: string;
+}
+
 export interface ValidationResult {
   id: string;
   documentId: string;
@@ -161,6 +174,8 @@ export interface ValidationResult {
   aiReasoning: AiReasoning;
   specReference: SpecReference;
   category?: ValidationCategory;
+  /** Multiple index matches for PI validations — when a material matches several categories */
+  indexMatches?: IndexMatch[];
 }
 
 export interface Comment {

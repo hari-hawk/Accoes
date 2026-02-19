@@ -32,6 +32,7 @@ import type {
   DecisionStatus,
   ValidationCategory,
   ValidationResult,
+  IndexMatch,
 } from "@/data/types";
 
 function getInitials(name: string): string {
@@ -190,95 +191,56 @@ function PITabContent({
 }: {
   validation: ValidationResult;
 }) {
-  const isMatch = validation.status === "pre_approved";
-  const isPartial = validation.status === "review_required";
-  const matchScore = (validation.confidenceScore / 100).toFixed(2);
+  const matches = validation.indexMatches;
+  const hasMultipleMatches = matches && matches.length > 0;
+
+  // Fallback: build a single match from the legacy validation fields
+  const fallbackMatch: IndexMatch = {
+    id: "fallback",
+    category: validation.specReference.sectionTitle.split(" — ")[0],
+    subCategory: validation.specReference.sectionNumber,
+    itemDescription: validation.aiReasoning.summary.slice(0, 80),
+    size: "Standard",
+    matchType: validation.status === "pre_approved" ? "EXACT" : validation.status === "review_required" ? "PARTIAL" : "PARTIAL",
+    matchScore: validation.confidenceScore / 100,
+    reason: validation.aiReasoning.complianceAssessment,
+  };
+
+  const displayMatches = hasMultipleMatches ? matches : [fallbackMatch];
+  const matchCount = displayMatches.length;
+  const exactCount = displayMatches.filter((m) => m.matchType === "EXACT").length;
 
   return (
     <div className="space-y-4">
-      {/* Match card(s) — stacked, not tabs */}
-      <div className="rounded-lg border overflow-hidden">
-        {/* Card header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b">
-          <div className="flex items-center gap-2">
-            {isMatch ? (
-              <CheckCircle2 className="h-4 w-4 text-status-pre-approved" />
-            ) : (
-              <AlertTriangle
-                className={cn(
-                  "h-4 w-4",
-                  isPartial
-                    ? "text-status-review-required"
-                    : "text-status-action-mandatory"
-                )}
-              />
-            )}
-            <span className="text-sm font-semibold">
-              {isMatch
-                ? "Matches Index"
-                : isPartial
-                  ? "Partial Match with Index"
-                  : "Does Not Match Index"}
-            </span>
-          </div>
-          <span className="text-xs text-muted-foreground">
-            Match Score: {matchScore}
-          </span>
-        </div>
-
-        {/* 2-column data grid */}
-        <div className="grid grid-cols-2 gap-px bg-border">
-          <div className="bg-card px-4 py-3">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-              Category
-            </p>
-            <p className="text-sm font-medium mt-1">
-              {validation.specReference.sectionTitle.split(" — ")[0]}
-            </p>
-          </div>
-          <div className="bg-card px-4 py-3">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-              Sub Category
-            </p>
-            <p className="text-sm font-medium mt-1">
-              {validation.specReference.sectionNumber}
-            </p>
-          </div>
-          <div className="bg-card px-4 py-3">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-              Size
-            </p>
-            <p className="text-sm font-medium mt-1">Standard</p>
-          </div>
-          <div className="bg-card px-4 py-3">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-              Item Description
-            </p>
-            <p className="text-sm font-medium mt-1 line-clamp-2">
-              {validation.aiReasoning.summary.slice(0, 60)}...
-            </p>
-          </div>
-        </div>
-
-        {/* Reason box */}
-        <div
-          className={cn(
-            "px-4 py-3 border-t",
-            isMatch
-              ? "bg-status-pre-approved-bg/30"
-              : isPartial
-                ? "bg-status-review-required-bg/30"
-                : "bg-status-action-mandatory-bg/30"
-          )}
-        >
-          <p className="text-xs font-medium mb-1">Reason</p>
-          <p className="text-xs text-foreground/70 leading-relaxed">
-            {validation.aiReasoning.complianceAssessment}
-          </p>
-        </div>
+      {/* Match count header */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold">
+          Found {matchCount} {exactCount > 0 ? "exact" : ""} match{matchCount !== 1 ? "es" : ""}
+        </p>
       </div>
 
-      {/* Additional match card if evidence contradicts */}
+      {/* Match table — mirrors the screenshot layout */}
+      <div className="rounded-lg border overflow-hidden">
+        {/* Table header */}
+        <div className="grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.7fr_2fr] gap-px bg-muted/30 border-b">
+          {["Category", "Sub Category", "Item Description", "Size", "Match Type", "Match Score", "Reason"].map(
+            (col) => (
+              <div key={col} className="px-3 py-2.5">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                  {col}
+                </p>
+              </div>
+            )
+          )}
+        </div>
+
+        {/* Match rows */}
+        {displayMatches.map((match) => (
+          <IndexMatchRow key={match.id} match={match} />
+        ))}
+      </div>
+
+      {/* Discrepancy cards — still shown if evidence contradicts */}
       {validation.evidenceItems.some((ev) => ev.relevance === "contradicts") && (
         <div className="rounded-lg border overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b">
@@ -307,6 +269,48 @@ function PITabContent({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Single row in the index match table */
+function IndexMatchRow({ match }: { match: IndexMatch }) {
+  const matchTypeColors: Record<string, string> = {
+    EXACT: "bg-status-pre-approved/15 text-status-pre-approved border-status-pre-approved/30",
+    PARTIAL: "bg-status-review-required/15 text-status-review-required border-status-review-required/30",
+    ALTERNATE: "bg-status-action-mandatory/15 text-status-action-mandatory border-status-action-mandatory/30",
+  };
+
+  return (
+    <div className="grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.7fr_2fr] gap-px border-b last:border-b-0 hover:bg-muted/20 transition-colors">
+      <div className="px-3 py-3">
+        <p className="text-xs font-medium">{match.category}</p>
+      </div>
+      <div className="px-3 py-3">
+        <p className="text-xs text-foreground/80">{match.subCategory}</p>
+      </div>
+      <div className="px-3 py-3">
+        <p className="text-xs text-foreground/80 line-clamp-2">{match.itemDescription}</p>
+      </div>
+      <div className="px-3 py-3">
+        <p className="text-xs text-foreground/80">{match.size}</p>
+      </div>
+      <div className="px-3 py-3">
+        <span
+          className={cn(
+            "inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase",
+            matchTypeColors[match.matchType] ?? "bg-muted text-muted-foreground"
+          )}
+        >
+          {match.matchType}
+        </span>
+      </div>
+      <div className="px-3 py-3">
+        <p className="text-xs font-medium tabular-nums">{match.matchScore.toFixed(2)}</p>
+      </div>
+      <div className="px-3 py-3">
+        <p className="text-xs text-foreground/70 leading-relaxed">{match.reason}</p>
+      </div>
     </div>
   );
 }

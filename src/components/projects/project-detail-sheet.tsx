@@ -174,15 +174,9 @@ const roleConfig: Record<string, { label: string; color: string }> = {
 /* -------------------------------------------------------------------------- */
 
 const mockMigFiles = [
-  { id: "mig-1", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v1.csv", fileType: "csv", fileSize: 524288 },
-  { id: "mig-2", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v1.csv", fileType: "csv", fileSize: 491520 },
-  { id: "mig-3", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v1.csv", fileType: "csv", fileSize: 458752 },
-  { id: "mig-4", fileName: "UCD_Project9592330_Plumbing_Matrix_Index_Grid_2026-02.csv", fileType: "csv", fileSize: 537600 },
-  { id: "mig-5", fileName: "UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv", fileType: "csv", fileSize: 503808 },
-  { id: "mig-6", fileName: "UCD_Project9592330_Mechanical_Matrix_Index_Grid_2026-02.csv", fileType: "csv", fileSize: 471040 },
-  { id: "mig-7", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v3.csv", fileType: "csv", fileSize: 548864 },
-  { id: "mig-8", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v3.csv", fileType: "csv", fileSize: 516096 },
-  { id: "mig-9", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v3.csv", fileType: "csv", fileSize: 483328 },
+  { id: "conf-1", fileName: "UCD_HobbsVet_Plumbing_Conformance_Report_v3.pdf", fileType: "pdf", fileSize: 2097152 },
+  { id: "conf-2", fileName: "UCD_HobbsVet_Heating_Conformance_Report_v3.pdf", fileType: "pdf", fileSize: 1835008 },
+  { id: "conf-3", fileName: "UCD_HobbsVet_Mechanical_Conformance_Report_v3.pdf", fileType: "pdf", fileSize: 1572864 },
 ];
 
 const mockSpecFiles = [
@@ -488,7 +482,7 @@ export function ProjectDetailSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="sm:max-w-xl w-full flex flex-col p-0"
+        className="sm:max-w-2xl w-full flex flex-col p-0"
       >
         {/* Header */}
         <SheetHeader className="px-6 pt-6 pb-4 border-b pr-12 shrink-0">
@@ -711,7 +705,7 @@ export function ProjectDetailSheet({
                 <TabsContent value="files" className="mt-4 space-y-3">
                   {/* Section 1: Conformance source files */}
                   <CollapsibleSection
-                    title="Conformance"
+                    title="Conformance Reports"
                     icon={Layers}
                     count={mockMigFiles.length}
                     defaultOpen

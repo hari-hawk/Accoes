@@ -201,13 +201,10 @@ const MATCH_TYPE_COLORS: Record<string, string> = {
 };
 
 /** Score text colour helper */
-function scoreTextColor(score: number): string {
-  return score >= 80
-    ? "text-status-pre-approved"
-    : score >= 60
-      ? "text-status-review-required"
-      : "text-status-action-mandatory";
+function scoreTextColor(_score: number): string {
+  return "text-ds-neutral-700";
 }
+
 
 function buildFallbackMatch(validation: ValidationResult): IndexMatch {
   return {
@@ -620,8 +617,6 @@ export function EvidencePanel({
                 onValueChange={(value) => {
                   if (value === "approved" || value === "revisit") {
                     onDecide(value as DecisionStatus);
-                  } else if (value === "pending") {
-                    onDecide("pending" as DecisionStatus);
                   }
                 }}
               >
@@ -629,7 +624,6 @@ export function EvidencePanel({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">Pending (Reset)</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="revisit">Revisit</SelectItem>
                   <SelectItem value="pre_approved">Pre-Approved</SelectItem>

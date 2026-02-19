@@ -224,8 +224,9 @@ function PITabContent({
   const matchCount = displayMatches.length;
   const exactCount = displayMatches.filter((m) => m.matchType === "EXACT").length;
 
-  // proj-2 (UCD) gets the table layout; everyone else gets cards
-  const useTableLayout = projectId === "proj-2";
+  // Default: card layout for all projects (including UCD / proj-2)
+  // Table layout only when explicitly opted-in via a different project
+  const useTableLayout = projectId === "proj-table-demo";
 
   return (
     <div className="space-y-4">

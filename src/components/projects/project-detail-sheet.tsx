@@ -149,7 +149,7 @@ const roleConfig: Record<string, { label: string; color: string }> = {
     color: "bg-status-pre-approved-bg text-status-pre-approved",
   },
   viewer: {
-    label: "Viewer",
+    label: "Reviewer",
     color:
       "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
   },
@@ -163,7 +163,7 @@ const roleConfig: Record<string, { label: string; color: string }> = {
     color: "bg-status-pre-approved-bg text-status-pre-approved",
   },
   global_viewer: {
-    label: "Viewer",
+    label: "Reviewer",
     color:
       "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
   },
@@ -297,7 +297,7 @@ function InlineSharePanel({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="collaborator">Collaborator</SelectItem>
-            <SelectItem value="viewer">Viewer</SelectItem>
+            <SelectItem value="viewer">Reviewer</SelectItem>
           </SelectContent>
         </Select>
         <Button

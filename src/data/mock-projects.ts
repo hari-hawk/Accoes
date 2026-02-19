@@ -8,7 +8,7 @@ export const mockProjects: Project[] = [
     jobId: "60080059",
     location: "Rochester, MN",
     status: "completed",
-    createdAt: "2025-08-15T09:00:00Z",
+    createdAt: "2026-02-17T09:00:00Z",
     updatedAt: "2025-12-20T16:30:00Z",
     ownerId: "user-1",
     memberIds: ["user-1", "user-2", "user-3"],

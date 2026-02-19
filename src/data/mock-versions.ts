@@ -8,7 +8,7 @@ export const mockVersions: Version[] = [
     name: "Initial Submittal",
     status: "complete",
     workflowStage: "export",
-    createdAt: "2025-08-20T09:00:00Z",
+    createdAt: "2026-02-17T09:00:00Z",
     updatedAt: "2025-09-15T16:00:00Z",
     createdBy: "user-1",
     specificationRef: "Project Specifications Rev A - Aug 2025",

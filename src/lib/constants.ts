@@ -128,9 +128,9 @@ export const ROLE_CONFIG: Record<
 > = {
   admin: { label: "Owner", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
   collaborator: { label: "Collaborator", color: "bg-status-pre-approved-bg text-status-pre-approved" },
-  viewer: { label: "Viewer", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+  viewer: { label: "Reviewer", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
   // Legacy roles — map to new names for backwards compatibility
-  global_viewer: { label: "Viewer", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+  global_viewer: { label: "Reviewer", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
   submitter: { label: "Collaborator", color: "bg-status-pre-approved-bg text-status-pre-approved" },
   reviewer: { label: "Collaborator", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
 };

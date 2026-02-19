@@ -467,7 +467,7 @@ export function CreateProjectDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="collaborator">Collaborator</SelectItem>
-                    <SelectItem value="viewer">Viewer</SelectItem>
+                    <SelectItem value="viewer">Reviewer</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button size="sm" onClick={handleAddMember}>
@@ -500,7 +500,7 @@ export function CreateProjectDialog({
                           </p>
                         </div>
                         <Badge variant="secondary" className="text-[10px] shrink-0 capitalize">
-                          {m.role === "global_viewer" ? "Viewer" : m.role === "submitter" ? "Collaborator" : m.role}
+                          {m.role === "global_viewer" ? "Reviewer" : m.role === "submitter" ? "Collaborator" : m.role}
                         </Badge>
                         <Button
                           variant="ghost"

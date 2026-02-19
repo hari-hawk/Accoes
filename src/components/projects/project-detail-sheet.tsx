@@ -227,7 +227,7 @@ function CollapsibleSection({
           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
         )}
         <Icon className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden="true" />
-        <span className="text-xs font-semibold flex-1">{title}</span>
+        <span className="text-xs font-medium flex-1">{title}</span>
         <Badge variant="secondary" className="text-[10px]">
           {count}
         </Badge>

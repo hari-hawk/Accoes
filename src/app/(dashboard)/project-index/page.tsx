@@ -56,7 +56,7 @@ const INDEX_CATEGORY_COLORS: Record<HydroIndexCategory, string> = {
   "Hangers/Supports": "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
   "Specialties": "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400",
   "Joining/Branch Methods": "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
-  "Identification": "bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-400",
+  "Identification": "bg-ds-neutral-100 text-ds-neutral-800 dark:bg-ds-neutral-100/10 dark:text-ds-neutral-400",
   "Pressure Testing": "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
   "Anchors": "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
@@ -64,7 +64,7 @@ const INDEX_CATEGORY_COLORS: Record<HydroIndexCategory, string> = {
 const SYSTEM_CATEGORY_COLORS: Record<HydroSystemCategory, string> = {
   "Chilled Water": "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
   "Condenser Water": "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400",
-  "Generic": "bg-gray-100 text-gray-600 dark:bg-gray-800/50 dark:text-gray-400",
+  "Generic": "bg-ds-neutral-100 text-ds-neutral-700 dark:bg-ds-neutral-100/10 dark:text-ds-neutral-400",
 };
 
 const MATERIAL_CATEGORY_COLORS: Record<HydroMaterialCategory, string> = {
@@ -310,7 +310,7 @@ function ExpandedEntryContent({
               />
             ) : (
               <div className="rounded-lg bg-background border p-3">
-                <p className="text-sm leading-relaxed text-foreground/90">
+                <p className="text-sm leading-relaxed text-ds-neutral-900">
                   {entry.indexDescription}
                 </p>
               </div>

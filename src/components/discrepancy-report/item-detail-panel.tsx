@@ -62,7 +62,7 @@ export function ItemDetailPanel({
   ];
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-background border-l shadow-xl z-50 flex flex-col">
+    <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-background border-l shadow-[0_-1px_12px_rgba(0,0,0,0.08)] z-50 flex flex-col">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 p-5 border-b">
         <div className="min-w-0 flex-1">

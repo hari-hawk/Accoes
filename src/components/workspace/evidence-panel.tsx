@@ -75,41 +75,41 @@ function PSTabContent({
   const isPartial = validation.status === "review_required";
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Match indicator */}
       <div className="flex items-center gap-2">
         {isMatch ? (
           <div className="flex items-center gap-2 text-status-pre-approved">
             <CheckCircle2 className="h-4 w-4" />
-            <span className="text-sm font-semibold">Matches Specification</span>
+            <span className="text-[13px] font-medium">Matches Specification</span>
           </div>
         ) : isPartial ? (
           <div className="flex items-center gap-2 text-status-review-required">
             <AlertTriangle className="h-4 w-4" />
-            <span className="text-sm font-semibold">Partial Match</span>
+            <span className="text-[13px] font-medium">Partial Match</span>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-status-action-mandatory">
             <AlertTriangle className="h-4 w-4" />
-            <span className="text-sm font-semibold">Does Not Match</span>
+            <span className="text-[13px] font-medium">Does Not Match</span>
           </div>
         )}
       </div>
 
       {/* AI Analysis card */}
-      <div className="rounded-lg border p-4 space-y-3">
-        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+      <div className="rounded-md border border-border/70 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3.5 space-y-2.5">
+        <h4 className="text-[10px] text-ds-neutral-500 font-medium uppercase tracking-wider">
           AI Analysis
         </h4>
-        <p className="text-sm text-foreground/80 leading-relaxed">
+        <p className="text-[13px] text-ds-neutral-900 leading-relaxed">
           {validation.aiReasoning.summary}
         </p>
         {validation.aiReasoning.keyFindings.length > 0 && (
-          <ul className="space-y-1.5 mt-2">
+          <ul className="space-y-1.5 mt-1.5">
             {validation.aiReasoning.keyFindings.map((finding, i) => (
               <li
                 key={i}
-                className="text-xs text-foreground/70 flex items-start gap-2"
+                className="text-xs text-ds-neutral-700 flex items-start gap-2"
               >
                 <span className="mt-1.5 shrink-0 h-1 w-1 rounded-full bg-primary" />
                 {finding}
@@ -120,9 +120,9 @@ function PSTabContent({
       </div>
 
       {/* Relevant References */}
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold">
+          <h4 className="text-[13px] font-medium text-ds-neutral-900">
             Relevant References ({validation.evidenceItems.length})
           </h4>
           <Select defaultValue="all">
@@ -139,13 +139,13 @@ function PSTabContent({
         </div>
 
         {validation.evidenceItems.map((ev) => (
-          <div key={ev.id} className="rounded-lg border p-3 space-y-2">
+          <div key={ev.id} className="rounded-md border border-border/70 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground">
+              <span className="text-xs font-medium text-ds-neutral-600">
                 {ev.sourceFileName}
               </span>
             </div>
-            <p className="text-xs text-foreground/70 italic leading-relaxed">
+            <p className="text-xs text-ds-neutral-700 italic leading-relaxed">
               &ldquo;{ev.excerpt}&rdquo;
             </p>
             {ev.pageNumber && (
@@ -163,10 +163,10 @@ function PSTabContent({
         ))}
 
         {/* Spec reference summary */}
-        <div className="rounded-lg border p-3 bg-muted/30">
+        <div className="rounded-md border border-border/70 bg-ds-bg-gray-light shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3">
           <div className="flex items-center gap-2 mb-2">
-            <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs font-semibold">
+            <BookOpen className="h-3.5 w-3.5 text-ds-neutral-500" />
+            <span className="text-xs font-medium text-ds-neutral-900">
               Section {validation.specReference.sectionNumber} —{" "}
               {validation.specReference.sectionTitle}
             </span>
@@ -175,9 +175,9 @@ function PSTabContent({
             {validation.specReference.requirements.map((req, i) => (
               <li
                 key={i}
-                className="text-xs text-foreground/60 flex items-start gap-2"
+                className="text-xs text-ds-neutral-700 flex items-start gap-2"
               >
-                <span className="mt-1.5 shrink-0 h-1 w-1 rounded-full bg-muted-foreground" />
+                <span className="mt-1.5 shrink-0 h-1 w-1 rounded-full bg-ds-neutral-400" />
                 {req}
               </li>
             ))}
@@ -237,22 +237,22 @@ function PITabContent({
   const matchCount = displayMatches.length;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Match count header */}
-      <p className="text-sm font-bold">
+      <p className="text-[13px] font-medium text-ds-neutral-800">
         Found {matchCount} match{matchCount !== 1 ? "es" : ""}
       </p>
 
       {/* Use accordion when 3+ matches to avoid scroll overflow */}
       {matchCount >= 3 ? (
-        <Accordion type="multiple" defaultValue={["match-0"]} className="space-y-3">
+        <Accordion type="multiple" defaultValue={["match-0"]} className="space-y-2">
           {displayMatches.map((match, index) => (
             <AccordionItem
               key={match.id}
               value={`match-${index}`}
-              className="rounded-xl border bg-card shadow-sm overflow-hidden"
+              className="rounded-md border border-border/70 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden"
             >
-              <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+              <AccordionTrigger className="px-3.5 py-2.5 hover:no-underline [&[data-state=open]>svg]:rotate-180">
                 <MatchCardHeader match={match} index={index + 1} total={matchCount} />
               </AccordionTrigger>
               <AccordionContent className="px-0 pb-0">
@@ -262,10 +262,10 @@ function PITabContent({
           ))}
         </Accordion>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {displayMatches.map((match, index) => (
-            <div key={match.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
-              <div className="px-4 py-3">
+            <div key={match.id} className="rounded-md border border-border/70 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+              <div className="px-3.5 py-2.5">
                 <MatchCardHeader match={match} index={index + 1} total={matchCount} />
               </div>
               <MatchCardBody match={match} />
@@ -276,23 +276,23 @@ function PITabContent({
 
       {/* Discrepancy cards — still shown if evidence contradicts */}
       {validation.evidenceItems.some((ev) => ev.relevance === "contradicts") && (
-        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 border-b bg-status-action-mandatory/5">
-            <AlertTriangle className="h-4 w-4 text-status-action-mandatory" />
-            <span className="text-sm font-bold">Discrepancy Found</span>
+        <div className="rounded-md border border-border/70 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b bg-status-action-mandatory/5">
+            <AlertTriangle className="h-3.5 w-3.5 text-status-action-mandatory" />
+            <span className="text-[13px] font-medium text-ds-neutral-900">Discrepancy Found</span>
           </div>
-          <div className="p-4 space-y-2">
+          <div className="p-3.5 space-y-2">
             {validation.evidenceItems
               .filter((ev) => ev.relevance === "contradicts")
               .map((ev) => (
                 <div
                   key={ev.id}
-                  className="rounded-lg bg-status-action-mandatory/5 border border-status-action-mandatory/20 p-3"
+                  className="rounded border border-status-action-mandatory/20 bg-status-action-mandatory/5 p-2.5"
                 >
-                  <p className="text-sm italic text-foreground/80">
+                  <p className="text-[13px] italic text-ds-neutral-800">
                     &ldquo;{ev.excerpt}&rdquo;
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1.5">
+                  <p className="text-xs text-ds-neutral-600 mt-1">
                     {ev.sourceFileName}
                     {ev.pageNumber && ` — p. ${ev.pageNumber}`}
                   </p>
@@ -319,64 +319,66 @@ function MatchCardHeader({
 
   return (
     <div className="flex items-center justify-between w-full gap-3">
-      <div className="flex items-center gap-2.5">
-        <span className="text-sm font-bold text-foreground">
+      <div className="flex items-center gap-2">
+        <span className="text-[13px] font-medium text-ds-neutral-900">
           Match {index} of {total}
         </span>
         <span
           className={cn(
-            "inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase",
+            "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide",
             MATCH_TYPE_COLORS[match.matchType] ?? "bg-muted text-muted-foreground"
           )}
         >
           {match.matchType}
         </span>
       </div>
-      <span className={cn("text-sm font-bold tabular-nums", scoreTextColor(scorePercent))}>
+      <span className={cn("text-xs font-normal tabular-nums", scoreTextColor(scorePercent))}>
         Match Score — {scorePercent}
       </span>
     </div>
   );
 }
 
-/** Card body: 2-column grid + reason — white bg, larger readable fonts */
+/** Card body: 2-column grid + reason — subtle white bg, readable text */
 function MatchCardBody({ match }: { match: IndexMatch }) {
   return (
-    <div className="border-t bg-card">
+    <div className="border-t">
       {/* 2×2 key-value grid */}
-      <div className="grid grid-cols-2 divide-x divide-y">
-        <div className="px-4 py-3">
-          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+      <div className="grid grid-cols-2 divide-x divide-border/60">
+        <div className="px-3.5 py-2.5">
+          <p className="text-[10px] text-ds-neutral-500 font-medium uppercase tracking-wider mb-0.5">
             Category
           </p>
-          <p className="text-sm font-medium text-foreground">{match.category}</p>
+          <p className="text-[13px] text-ds-neutral-900">{match.category}</p>
         </div>
-        <div className="px-4 py-3">
-          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+        <div className="px-3.5 py-2.5">
+          <p className="text-[10px] text-ds-neutral-500 font-medium uppercase tracking-wider mb-0.5">
             Sub Category
           </p>
-          <p className="text-sm font-medium text-foreground">{match.subCategory}</p>
+          <p className="text-[13px] text-ds-neutral-900">{match.subCategory}</p>
         </div>
-        <div className="px-4 py-3">
-          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+      </div>
+      <div className="grid grid-cols-2 divide-x divide-border/60 border-t border-border/60">
+        <div className="px-3.5 py-2.5">
+          <p className="text-[10px] text-ds-neutral-500 font-medium uppercase tracking-wider mb-0.5">
             Item Description
           </p>
-          <p className="text-sm text-foreground/90">{match.itemDescription}</p>
+          <p className="text-[13px] text-ds-neutral-900">{match.itemDescription}</p>
         </div>
-        <div className="px-4 py-3">
-          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+        <div className="px-3.5 py-2.5">
+          <p className="text-[10px] text-ds-neutral-500 font-medium uppercase tracking-wider mb-0.5">
             Size
           </p>
-          <p className="text-sm text-foreground/90">{match.size}</p>
+          <p className="text-[13px] text-ds-neutral-900">{match.size}</p>
         </div>
       </div>
 
-      {/* Reason — highlighted section */}
-      <div className="border-t bg-primary/[0.03] px-4 py-3">
-        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+      {/* Reason — softly tinted section */}
+      <div className="border-t border-border/60 bg-ds-bg-gray-light px-3.5 py-2.5">
+        <p className="text-[10px] text-ds-neutral-500 font-medium uppercase tracking-wider mb-0.5">
           Reason
         </p>
-        <p className="text-sm text-foreground/80 leading-relaxed">{match.reason}</p>
+        <p className="text-[13px] text-ds-neutral-800 leading-relaxed">{match.reason}</p>
       </div>
     </div>
   );
@@ -428,7 +430,7 @@ function CommentsActivityPanel({
                       {user?.avatarUrl && (
                         <AvatarImage src={user.avatarUrl} alt={user.name} />
                       )}
-                      <AvatarFallback className="text-[8px] font-bold">
+                      <AvatarFallback className="text-[10px] font-medium">
                         {user ? getInitials(user.name) : "?"}
                       </AvatarFallback>
                     </Avatar>
@@ -468,7 +470,7 @@ function CommentsActivityPanel({
                           alt={user?.name ?? ""}
                         />
                       )}
-                      <AvatarFallback className="text-[8px] font-bold">
+                      <AvatarFallback className="text-[10px] font-medium">
                         {user ? getInitials(user.name) : "?"}
                       </AvatarFallback>
                     </Avatar>

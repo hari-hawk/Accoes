@@ -313,7 +313,7 @@ export function TopNav() {
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
                   <span className="absolute top-0.5 right-0.5 h-4 w-4 rounded-full bg-nav-gold border border-nav flex items-center justify-center">
-                    <span className="text-[9px] font-bold text-white">{unreadCount}</span>
+                    <span className="text-[10px] font-bold text-white">{unreadCount}</span>
                   </span>
                 )}
               </Button>
@@ -422,7 +422,7 @@ export function TopNav() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <p className={cn("text-sm leading-tight", !notif.read && "font-semibold")}>
+                          <p className={cn("text-sm leading-tight", !notif.read && "font-medium")}>
                             {notif.title}
                           </p>
                           <button

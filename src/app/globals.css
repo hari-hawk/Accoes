@@ -188,15 +188,15 @@
   /* Validation Status — DS tag colors */
   --status-pre-approved: #009966;
   --status-pre-approved-bg: #ECFDF5;
-  --status-review-required: #F54900;
+  --status-review-required: #D63F00;
   --status-review-required-bg: #FFF7ED;
-  --status-action-mandatory: #E70008;
+  --status-action-mandatory: #C50007;
   --status-action-mandatory-bg: #FBF3F2;
 
   /* Confidence — same as status */
   --confidence-high: #009966;
-  --confidence-medium: #F54900;
-  --confidence-low: #E70008;
+  --confidence-medium: #D63F00;
+  --confidence-low: #C50007;
 }
 
 .dark {
@@ -439,4 +439,19 @@
 @keyframes pulseSubtle {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
+}
+
+/* ============================================
+   Accessibility — Reduced Motion
+   WCAG 2.1 SC 2.3.3: Motion Animation
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

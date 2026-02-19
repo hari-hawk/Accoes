@@ -293,7 +293,7 @@ export default function UserManagementPage() {
                     {user.isCurrentUser && (
                       <Badge
                         variant="secondary"
-                        className="text-[9px] px-1 py-0 font-medium shrink-0"
+                        className="text-[10px] px-1 py-0 font-medium shrink-0"
                       >
                         You
                       </Badge>

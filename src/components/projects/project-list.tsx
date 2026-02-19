@@ -382,7 +382,7 @@ function ProjectListRow({
     >
       {/* Name + Job ID */}
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold truncate">
+        <p className="text-sm font-medium truncate">
           <button
             type="button"
             className="hover:underline hover:text-nav-accent cursor-pointer transition-colors text-left"
@@ -404,7 +404,7 @@ function ProjectListRow({
 
       {/* Confidence */}
       <div className="shrink-0 w-16 text-right">
-        <span className={`text-sm font-bold ${confidenceColor}`} aria-label={confidence > 0 ? `${confidence}% confidence` : "Pending"}>
+        <span className={`text-sm font-medium ${confidenceColor}`} aria-label={confidence > 0 ? `${confidence}% confidence` : "Pending"}>
           {confidence > 0 ? `${confidence}%` : "—"}
         </span>
       </div>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
-  getAllHydroEntries,
   HYDRO_CATEGORY_ORDER,
+  HYDRO_GRID_VERSIONS,
+  getEntriesForVersion,
 } from "@/data/mock-project-index";
 import type {
   HydroIndexCategory,
@@ -12,6 +13,9 @@ import type {
   HydroMatrixEntry,
 } from "@/data/mock-project-index";
 
+/** Default to the latest (first) version */
+const DEFAULT_VERSION_ID = HYDRO_GRID_VERSIONS[0].id;
+
 export function useHydroMatrix() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<HydroIndexCategory | "all">("all");
@@ -19,7 +23,32 @@ export function useHydroMatrix() {
   const [materialFilter, setMaterialFilter] = useState<HydroMaterialCategory | "all">("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const allEntries = useMemo(() => getAllHydroEntries(), []);
+  // Version state — switching versions reloads entries
+  const [selectedVersionId, setSelectedVersionId] = useState(DEFAULT_VERSION_ID);
+
+  // Mutable state so entries can be edited in-place
+  const [allEntries, setAllEntries] = useState<HydroMatrixEntry[]>(
+    () => getEntriesForVersion(DEFAULT_VERSION_ID)
+  );
+
+  /** Switch to a different grid version — reloads entries, resets edits */
+  const switchVersion = useCallback((versionId: string) => {
+    setSelectedVersionId(versionId);
+    setAllEntries(getEntriesForVersion(versionId));
+    setSelectedId(null);
+  }, []);
+
+  /** Update a single entry by ID — merges partial updates */
+  const updateEntry = useCallback(
+    (id: string, updates: Partial<HydroMatrixEntry>) => {
+      setAllEntries((prev) =>
+        prev.map((entry) =>
+          entry.id === id ? { ...entry, ...updates } : entry
+        )
+      );
+    },
+    []
+  );
 
   const filteredEntries = useMemo(() => {
     let result = allEntries;
@@ -87,6 +116,11 @@ export function useHydroMatrix() {
   );
 
   return {
+    // Version
+    versions: HYDRO_GRID_VERSIONS,
+    selectedVersionId,
+    switchVersion,
+    // Filters
     search,
     setSearch,
     categoryFilter,
@@ -99,9 +133,12 @@ export function useHydroMatrix() {
     groupedEntries,
     hasActiveFilters,
     clearFilters,
+    // Selection & editing
     selectedId,
     setSelectedId,
     selectedEntry,
+    updateEntry,
+    // Counts
     totalCount: allEntries.length,
     filteredCount: filteredEntries.length,
     filteredCategoryCount,

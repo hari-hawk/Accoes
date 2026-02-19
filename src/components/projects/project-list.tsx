@@ -36,7 +36,7 @@ import { ProjectFilters } from "./project-filters";
 import { ProjectDetailSheet } from "./project-detail-sheet";
 // CreateProjectDialog replaced by /projects/create page
 import { useProjects } from "@/hooks/use-projects";
-import { mockProjects } from "@/data/mock-projects";
+
 import { getDocumentsByVersion } from "@/data/mock-documents";
 import { getValidationsByVersion } from "@/data/mock-validations";
 import { getVersionsByProject } from "@/data/mock-versions";
@@ -68,233 +68,29 @@ function formatFileSize(bytes: number): string {
 /* -------------------------------------------------------------------------- */
 
 function HeroSection() {
-  /* ---- Computed metrics ---- */
-  const activeCount = mockProjects.filter((p) => p.status === "active").length;
-  const inProgressCount = mockProjects.filter((p) => p.status === "in_progress").length;
-  const completedCount = mockProjects.filter((p) => p.status === "completed").length;
-  const onHoldCount = mockProjects.filter((p) => p.status === "on_hold").length;
-  const totalProjects = mockProjects.length;
-
-  // Overall Confidence — average across scored projects
-  const projectsWithConfidence = mockProjects.filter(
-    (p) => p.confidenceSummary.total > 0 && p.confidenceSummary.overallConfidence > 0
-  );
-  const avgConfidence =
-    projectsWithConfidence.length > 0
-      ? Math.round(
-          projectsWithConfidence.reduce(
-            (sum, p) => sum + p.confidenceSummary.overallConfidence,
-            0
-          ) / projectsWithConfidence.length
-        )
-      : 0;
-
-  // Compliance Rate — pre-approved vs total items across ALL projects
-  const totalPreApproved = mockProjects.reduce(
-    (sum, p) => sum + p.confidenceSummary.preApproved,
-    0
-  );
-  const totalItems = mockProjects.reduce(
-    (sum, p) => sum + p.confidenceSummary.total,
-    0
-  );
-  const compliancePct = totalItems > 0 ? Math.round((totalPreApproved / totalItems) * 100) : 0;
-
-  // SVG ring dimensions
-  const ringRadius = 52;
-  const circumference = 2 * Math.PI * ringRadius;
-  const dashOffset = circumference * (1 - avgConfidence / 100);
-
-  // Pipeline bar segment widths
-  const pipelineBarTotal = totalProjects || 1; // avoid /0
-
   return (
     <section
-      className="gradient-hero rounded-2xl p-6 text-white relative overflow-hidden animate-fade-up"
+      className="flex items-center justify-between gap-4 animate-fade-up"
       aria-label="Projects overview"
     >
-      {/* Decorative circles */}
-      <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/4" aria-hidden="true" />
-      <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-white/3 translate-y-1/2 -translate-x-1/4" aria-hidden="true" />
-      {/* Dot pattern overlay */}
-      <div className="absolute inset-0 dot-pattern opacity-40" aria-hidden="true" />
-
-      <div className="relative">
-        <h1 className="text-xl font-bold tracking-tight">Welcome back, Sarah</h1>
-        <p className="text-white/70 mt-0.5 text-sm">
-          Here&apos;s an overview of your submittal validation projects
+      <div>
+        <h1 className="text-xl font-bold tracking-tight">Projects</h1>
+        <p className="text-muted-foreground mt-0.5 text-sm">
+          Manage and review your submittal validation projects
         </p>
       </div>
-
-      {/* 3 Business-Impact Metric Cards */}
-      <div
-        className="relative grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 pt-5 border-t border-white/10"
-        role="group"
-        aria-label="Business impact metrics"
-      >
-        {/* Card 1 — Overall Confidence */}
-        <div
-          className="rounded-xl bg-white/[0.06] backdrop-blur-sm p-5 flex items-center gap-4"
-          aria-label={`Overall confidence: ${avgConfidence}%`}
+      <div className="flex items-center gap-3 shrink-0">
+        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+          <Download className="h-3.5 w-3.5" aria-hidden="true" />
+          Export
+        </Button>
+        <Link
+          href="/projects/create"
+          className="inline-flex items-center gap-1.5 h-8 px-4 rounded-md text-xs font-semibold gradient-gold text-white border-0 hover:opacity-90 transition-opacity"
         >
-          <svg
-            width="120"
-            height="120"
-            viewBox="0 0 120 120"
-            className="shrink-0"
-            aria-hidden="true"
-          >
-            <circle
-              cx="60"
-              cy="60"
-              r={ringRadius}
-              fill="none"
-              stroke="rgba(255,255,255,0.1)"
-              strokeWidth="8"
-            />
-            <circle
-              cx="60"
-              cy="60"
-              r={ringRadius}
-              fill="none"
-              stroke="var(--nav-gold)"
-              strokeWidth="8"
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={dashOffset}
-              transform="rotate(-90 60 60)"
-              className="transition-all duration-700"
-            />
-            <text
-              x="60"
-              y="55"
-              textAnchor="middle"
-              className="fill-white font-bold"
-              fontSize="28"
-            >
-              {avgConfidence}%
-            </text>
-            <text
-              x="60"
-              y="75"
-              textAnchor="middle"
-              className="fill-white/50"
-              fontSize="10"
-            >
-              CONFIDENCE
-            </text>
-          </svg>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-white/70 uppercase tracking-wider">
-              Overall Confidence
-            </p>
-            <p className="text-3xl font-bold mt-1">{avgConfidence}%</p>
-            <p className="text-xs text-white/50 mt-1">
-              Across {projectsWithConfidence.length} scored project{projectsWithConfidence.length !== 1 ? "s" : ""}
-            </p>
-          </div>
-        </div>
-
-        {/* Card 2 — Review Pipeline */}
-        <div
-          className="rounded-xl bg-white/[0.06] backdrop-blur-sm p-5 flex flex-col justify-between"
-          aria-label={`Review pipeline: ${activeCount + inProgressCount} projects`}
-        >
-          <div>
-            <p className="text-sm font-semibold text-white/70 uppercase tracking-wider">
-              Review Pipeline
-            </p>
-            <p className="text-3xl font-bold mt-1">
-              {activeCount + inProgressCount}
-            </p>
-            <p className="text-xs text-white/50 mt-1">
-              {activeCount} Active + {inProgressCount} In Progress
-            </p>
-          </div>
-
-          {/* Mini stacked bar */}
-          <div className="mt-4">
-            <div className="flex h-2 rounded-full overflow-hidden bg-white/10" aria-hidden="true">
-              {activeCount > 0 && (
-                <div
-                  className="h-full bg-chart-1"
-                  style={{ width: `${(activeCount / pipelineBarTotal) * 100}%` }}
-                />
-              )}
-              {inProgressCount > 0 && (
-                <div
-                  className="h-full bg-chart-5"
-                  style={{ width: `${(inProgressCount / pipelineBarTotal) * 100}%` }}
-                />
-              )}
-              {completedCount > 0 && (
-                <div
-                  className="h-full bg-chart-3"
-                  style={{ width: `${(completedCount / pipelineBarTotal) * 100}%` }}
-                />
-              )}
-              {onHoldCount > 0 && (
-                <div
-                  className="h-full bg-muted-foreground"
-                  style={{ width: `${(onHoldCount / pipelineBarTotal) * 100}%` }}
-                />
-              )}
-            </div>
-            <div className="flex items-center gap-3 mt-2 flex-wrap">
-              <span className="flex items-center gap-1 text-[10px] text-white/50">
-                <span className="inline-block w-2 h-2 rounded-full bg-chart-1" />
-                Active
-              </span>
-              <span className="flex items-center gap-1 text-[10px] text-white/50">
-                <span className="inline-block w-2 h-2 rounded-full bg-chart-5" />
-                In Progress
-              </span>
-              <span className="flex items-center gap-1 text-[10px] text-white/50">
-                <span className="inline-block w-2 h-2 rounded-full bg-chart-3" />
-                Completed
-              </span>
-              <span className="flex items-center gap-1 text-[10px] text-white/50">
-                <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground" />
-                On Hold
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3 — Compliance Rate */}
-        <div
-          className="rounded-xl bg-white/[0.06] backdrop-blur-sm p-5 flex flex-col justify-between"
-          aria-label={`Compliance rate: ${totalPreApproved} of ${totalItems} items pre-approved (${compliancePct}%)`}
-        >
-          <div>
-            <p className="text-sm font-semibold text-white/70 uppercase tracking-wider">
-              Compliance Rate
-            </p>
-            <p className="text-3xl font-bold mt-1">
-              {totalPreApproved}{" "}
-              <span className="text-lg font-normal text-white/50">/ {totalItems}</span>
-            </p>
-            <p className="text-xs text-white/50 mt-1">
-              Pre-approved items — {compliancePct}%
-            </p>
-          </div>
-
-          {/* Progress bar */}
-          <div className="mt-4">
-            <div className="flex h-2 rounded-full overflow-hidden bg-white/10" aria-hidden="true">
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{
-                  width: `${compliancePct}%`,
-                  backgroundColor: "var(--nav-gold)",
-                }}
-              />
-            </div>
-            <p className="text-[10px] text-white/50 mt-1.5 text-right">
-              {compliancePct}% compliant
-            </p>
-          </div>
-        </div>
+          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+          New Project
+        </Link>
       </div>
     </section>
   );

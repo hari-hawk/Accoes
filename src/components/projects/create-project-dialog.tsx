@@ -75,7 +75,7 @@ const fileTypeConfig: Record<string, { icon: typeof FileText; color: string }> =
   docx: { icon: FileType, color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" },
 };
 
-/** Determine category from file extension: CSV → Material Index Grid, everything else → Project Specification */
+/** Determine category from file extension: CSV → Conformance, everything else → Project Specification */
 function categorizeFile(fileName: string): "material_index" | "specification" {
   return fileName.toLowerCase().endsWith(".csv") ? "material_index" : "specification";
 }
@@ -121,7 +121,7 @@ export function CreateProjectDialog({
   const [fileCounter, setFileCounter] = useState(0);
 
   const handleUploadFiles = () => {
-    // Simulate uploading a batch of files — mix of CSV (Material Index Grid) and non-CSV (Project Specification)
+    // Simulate uploading a batch of files — mix of CSV (Conformance) and non-CSV (Project Specification)
     const mockNames = [
       "Material_Index_Grid_2026.csv",
       "Hangers_Supports_Hardware.csv",
@@ -244,7 +244,7 @@ export function CreateProjectDialog({
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
                 Upload documents for this project. CSV files are categorized as
-                Material Index Grid; other files as Project Specification.
+                Conformance; other files as Project Specification.
                 Project details will be auto-extracted.
               </p>
 
@@ -276,12 +276,12 @@ export function CreateProjectDialog({
                   {/* File list — grouped by category */}
                   <ScrollArea className={uploadedFiles.length > 4 ? "h-[200px]" : ""}>
                     <div className="space-y-2 pr-2">
-                      {/* Material Index Grid files (CSV) */}
+                      {/* Conformance files (CSV) */}
                       {uploadedFiles.filter((f) => f.category === "material_index").length > 0 && (
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2">
                             <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                              Material Index Grid
+                              Conformance
                             </Badge>
                             <span className="text-[10px] text-muted-foreground">
                               {uploadedFiles.filter((f) => f.category === "material_index").length} file{uploadedFiles.filter((f) => f.category === "material_index").length !== 1 ? "s" : ""}

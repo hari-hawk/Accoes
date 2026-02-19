@@ -689,13 +689,13 @@ export function ProjectDetailSheet({
               <Separator />
 
               {/* ======================================================== */}
-              {/*  Tabs: Material Index Grid | Recent Activity | Comments  */}
+              {/*  Tabs: Conformance | Recent Activity | Comments  */}
               {/* ======================================================== */}
               <Tabs defaultValue="files" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="files" className="text-xs gap-1.5">
                     <FileText className="h-3.5 w-3.5" />
-                    Material Index Grid
+                    Conformance
                   </TabsTrigger>
                   <TabsTrigger value="activity" className="text-xs gap-1.5">
                     <Activity className="h-3.5 w-3.5" />
@@ -707,17 +707,17 @@ export function ProjectDetailSheet({
                   </TabsTrigger>
                 </TabsList>
 
-                {/* --- Material Index Grid Tab --- */}
+                {/* --- Conformance Tab --- */}
                 <TabsContent value="files" className="mt-4 space-y-3">
-                  {/* Section 1: Material Index Grid source files */}
+                  {/* Section 1: Conformance source files */}
                   <CollapsibleSection
-                    title="Material Index Grid"
+                    title="Conformance"
                     icon={Layers}
                     count={mockMigFiles.length}
                     defaultOpen
                     id="section-mig"
                   >
-                    <div className="divide-y" role="list" aria-label="Material Index Grid files">
+                    <div className="divide-y" role="list" aria-label="Conformance files">
                       {mockMigFiles.map((file) => {
                         const ftConfig = fileTypeConfig[file.fileType] ?? fileTypeConfig.csv;
                         const FileIcon = ftConfig.icon;
@@ -807,7 +807,7 @@ export function ProjectDetailSheet({
                       Drop files here to upload
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      CSV for Material Index Grid, PDF for Specifications — up
+                      CSV for Conformance, PDF for Specifications — up
                       to 50MB each
                     </p>
                   </div>

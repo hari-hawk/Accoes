@@ -6,10 +6,10 @@ import { FolderKanban, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WorkflowStage } from "@/data/types";
 
-/** Inline tab bar for version workspace: Overview / Material Index Grid */
+/** Inline tab bar for version workspace: Overview / Conformance */
 const TABS = [
   { key: "overview", label: "Overview", icon: FolderKanban, path: "" },
-  { key: "review", label: "Material Index Grid", icon: CheckCircle2, path: "/review" },
+  { key: "review", label: "Conformance", icon: CheckCircle2, path: "/review" },
 ] as const;
 
 export function WorkflowStageBar({

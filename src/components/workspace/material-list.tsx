@@ -220,7 +220,7 @@ export function MaterialList({
       {/* Filter header */}
       <div className="border-b p-3 space-y-2 shrink-0" role="search" aria-label="Filter materials">
         <SearchInput
-          placeholder="Search from Material Index Grid"
+          placeholder="Search from Conformance"
           value={search}
           onChange={onSearchChange}
         />

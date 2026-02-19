@@ -77,7 +77,7 @@ const mockProjectSpecs = [
   { id: "ps-2", fileName: "UCD_Project9592330_Project_Specification_Volume_2_2026-02.pdf", fileType: "pdf" as const, fileSize: 13107200, uploadedAt: "2026-02-05T09:05:00Z", totalPages: 278 },
 ];
 
-// Mock Material Index Grid source files — 9 CSV files
+// Mock Conformance source files — 9 CSV files
 const mockMaterialIndexGridFiles = [
   { id: "mig-1", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 524288, uploadedAt: "2026-02-05T10:00:00Z" },
   { id: "mig-2", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 491520, uploadedAt: "2026-02-05T10:05:00Z" },
@@ -269,7 +269,7 @@ function ProjectSpecificationsCard({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Material Index Grid Section                                                */
+/*  Conformance Section                                                */
 /* -------------------------------------------------------------------------- */
 
 function MaterialIndexGridCard({
@@ -318,7 +318,7 @@ function MaterialIndexGridCard({
       <div className="px-5 py-4 border-b flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Layers className="h-4 w-4 text-primary" aria-hidden="true" />
-          <h3 className="font-semibold text-sm">Material Index Grid</h3>
+          <h3 className="font-semibold text-sm">Conformance</h3>
         </div>
         <div className="flex items-center gap-2">
           {selectedIds.size > 0 && (
@@ -375,7 +375,7 @@ function MaterialIndexGridCard({
       )}
 
       {/* File list */}
-      <div className="divide-y" role="list" aria-label="Material index grid source files">
+      <div className="divide-y" role="list" aria-label="Conformance source files">
         {files.map((file) => {
           const FileIcon = fileIconMap[file.fileType] ?? FileText;
           const isChecked = selectedIds.has(file.id);
@@ -469,10 +469,10 @@ function ProjectInsightsSection({
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 divide-x divide-y lg:divide-y-0">
-        {/* Stat 1: Material Index Grid — total items count */}
+        {/* Stat 1: Conformance — total items count */}
         <div className="p-4">
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
-            Material Index Grid
+            Conformance
           </p>
           <p className="text-2xl font-bold">{totalDocs}</p>
           <p className="text-xs text-muted-foreground mt-1">
@@ -637,7 +637,7 @@ export default function VersionOverviewPage() {
   const router = useRouter();
   const { confidenceSummary } = version;
 
-  // Upload dialog state (for Material Index Grid)
+  // Upload dialog state (for Conformance)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadFiles, setUploadFiles] = useState<MockUploadFile[]>([]);
   const [uploadCounter, setUploadCounter] = useState(0);
@@ -662,7 +662,7 @@ export default function VersionOverviewPage() {
           ? "text-status-action-mandatory"
           : "text-muted-foreground";
 
-  // Material Index Grid upload handlers
+  // Conformance upload handlers
   const handleSimulateUpload = () => {
     const batch: MockUploadFile[] = [
       { id: `up-${uploadCounter}`, name: "UCD_HobbsVet_Electrical_Matrix_Index_Grid_v1.csv", size: "480 KB" },
@@ -735,9 +735,9 @@ export default function VersionOverviewPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left column: Material Index Grid (top) + Project Specifications (bottom) */}
+        {/* Left column: Conformance (top) + Project Specifications (bottom) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Material Index Grid — at the top */}
+          {/* Conformance — at the top */}
           <MaterialIndexGridCard
             onUpload={() => setUploadDialogOpen(true)}
             onFileClick={() => {
@@ -877,7 +877,7 @@ export default function VersionOverviewPage() {
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/*  Upload Files Dialog (Material Index Grid)                            */}
+      {/*  Upload Files Dialog (Conformance)                            */}
       {/* ------------------------------------------------------------------ */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent className="sm:max-w-md">

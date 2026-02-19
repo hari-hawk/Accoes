@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Search,
   Upload,
   Download,
   FileSpreadsheet,
-  Layers,
-  Filter,
   X,
   Loader2,
   AlertTriangle,
   Check,
-  ExternalLink,
+  ChevronDown,
+  Pencil,
+  Save,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,13 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -39,7 +32,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useHydroMatrix } from "@/hooks/use-hydro-matrix";
 import { HYDRO_CATEGORY_ORDER } from "@/data/mock-project-index";
@@ -48,6 +40,7 @@ import type {
   HydroSystemCategory,
   HydroMaterialCategory,
   HydroMatrixEntry,
+  HydroGridVersion,
 } from "@/data/mock-project-index";
 import { cn } from "@/lib/utils";
 
@@ -81,88 +74,52 @@ const MATERIAL_CATEGORY_COLORS: Record<HydroMaterialCategory, string> = {
 };
 
 /* -------------------------------------------------------------------------- */
-/*  Hero Section                                                               */
+/*  Hero Section (simplified — light header, no dark gradient/metrics)         */
 /* -------------------------------------------------------------------------- */
 
 function HeroSection({
-  totalCount,
-  categoryCount,
-  systemCount,
   onImport,
   onExport,
   exporting,
 }: {
-  totalCount: number;
-  categoryCount: number;
-  systemCount: number;
   onImport: () => void;
   onExport: () => void;
   exporting: boolean;
 }) {
   return (
     <section
-      className="gradient-hero rounded-2xl p-6 text-white relative overflow-hidden animate-fade-up"
-      aria-label="Hydro Matrix Index Grid overview"
+      className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-up"
+      aria-label="Project Index header"
     >
-      <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/4" aria-hidden="true" />
-      <div className="absolute inset-0 dot-pattern opacity-40" aria-hidden="true" />
-
-      <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">Hydro Matrix Index Grid</h1>
-          <p className="text-white/80 mt-0.5 text-sm">
-            Material specification library for mechanical systems reference data
-          </p>
-        </div>
-        <div className="flex items-center gap-2.5 shrink-0" role="group" aria-label="Template actions">
-          <Button
-            className="gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity font-semibold text-sm h-9 px-4"
-            onClick={onImport}
-            aria-label="Import an XLSX template to update the library"
-          >
-            <Upload className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Import Template
-          </Button>
-          <Button
-            className="bg-white/15 text-white border border-white/30 hover:bg-white/25 hover:border-white/50 transition-all font-medium text-sm h-9 px-4 backdrop-blur-sm"
-            onClick={onExport}
-            disabled={exporting}
-            aria-label={exporting ? "Exporting template as CSV" : "Export library data as CSV template"}
-          >
-            {exporting ? (
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            )}
-            Export Template
-          </Button>
-        </div>
+      <div>
+        <h1 className="text-xl font-bold tracking-tight">Project Index</h1>
+        <p className="text-muted-foreground mt-0.5 text-sm">
+          Material specification library for mechanical systems reference data
+        </p>
       </div>
-
-      {/* Stat strip */}
-      <div
-        className="relative flex items-center gap-6 mt-4 pt-4 border-t border-white/15"
-        role="group"
-        aria-label="Library statistics"
-      >
-        {[
-          { label: "Total Entries", value: totalCount, icon: Layers },
-          { label: "Categories", value: categoryCount, icon: Filter },
-          { label: "Systems", value: systemCount, icon: ExternalLink },
-        ].map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.label} className="flex items-center gap-2.5" aria-label={`${stat.label}: ${stat.value}`}>
-              <Icon className="h-4 w-4 text-nav-gold" aria-hidden="true" />
-              <div>
-                <p className="text-lg font-bold leading-none">{stat.value}</p>
-                <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider mt-0.5">
-                  {stat.label}
-                </p>
-              </div>
-            </div>
-          );
-        })}
+      <div className="flex items-center gap-2.5 shrink-0" role="group" aria-label="Template actions">
+        <Button
+          className="gradient-gold text-white border-0 shadow-gold hover:opacity-90 transition-opacity font-semibold text-sm h-9 px-4"
+          onClick={onImport}
+          aria-label="Import an XLSX template to update the library"
+        >
+          <Upload className="mr-1.5 h-4 w-4" aria-hidden="true" />
+          Import Template
+        </Button>
+        <Button
+          variant="outline"
+          className="font-medium text-sm h-9 px-4"
+          onClick={onExport}
+          disabled={exporting}
+          aria-label={exporting ? "Exporting template as CSV" : "Export library data as CSV template"}
+        >
+          {exporting ? (
+            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
+          )}
+          Export Template
+        </Button>
       </div>
     </section>
   );
@@ -173,6 +130,9 @@ function HeroSection({
 /* -------------------------------------------------------------------------- */
 
 function FiltersBar({
+  versions,
+  selectedVersionId,
+  onVersionChange,
   search,
   onSearchChange,
   categoryFilter,
@@ -186,6 +146,9 @@ function FiltersBar({
   filteredCount,
   totalCount,
 }: {
+  versions: HydroGridVersion[];
+  selectedVersionId: string;
+  onVersionChange: (versionId: string) => void;
   search: string;
   onSearchChange: (v: string) => void;
   categoryFilter: HydroIndexCategory | "all";
@@ -201,6 +164,20 @@ function FiltersBar({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-3" role="search" aria-label="Filter material specifications">
+      {/* Version */}
+      <Select value={selectedVersionId} onValueChange={onVersionChange}>
+        <SelectTrigger className="w-[200px]" aria-label="Select grid version">
+          <SelectValue placeholder="Select version" />
+        </SelectTrigger>
+        <SelectContent>
+          {versions.map((v) => (
+            <SelectItem key={v.id} value={v.id}>
+              {v.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
       {/* Search */}
       <div className="relative flex-1 min-w-[200px] max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -298,17 +275,274 @@ function FiltersBar({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Grouped Data Table                                                         */
+/*  Expanded Entry Content (view + edit modes)                                 */
+/* -------------------------------------------------------------------------- */
+
+function ExpandedEntryContent({
+  entry,
+  isEditing,
+  editValues,
+  onEdit,
+  onSave,
+  onCancel,
+  onFieldChange,
+  onCollapse,
+}: {
+  entry: HydroMatrixEntry;
+  isEditing: boolean;
+  editValues: Partial<HydroMatrixEntry>;
+  onEdit: () => void;
+  onSave: () => void;
+  onCancel: () => void;
+  onFieldChange: (field: keyof HydroMatrixEntry, value: string) => void;
+  onCollapse: () => void;
+}) {
+  const currentValues = isEditing
+    ? { ...entry, ...editValues }
+    : entry;
+
+  return (
+    <div className="animate-accordion-down overflow-hidden">
+      <div className="bg-muted/20 border-t px-4 py-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Left column — Index Description */}
+          <div className="space-y-2">
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Index Description
+            </h4>
+            {isEditing ? (
+              <textarea
+                className="w-full rounded-lg border bg-background p-3 text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-nav-accent focus:ring-offset-1 min-h-[120px]"
+                value={(editValues.indexDescription ?? entry.indexDescription)}
+                onChange={(e) => onFieldChange("indexDescription", e.target.value)}
+                aria-label="Edit index description"
+              />
+            ) : (
+              <div className="rounded-lg bg-background border p-3">
+                <p className="text-sm leading-relaxed text-foreground/90">
+                  {entry.indexDescription}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Right column — Specification Details */}
+          <div className="space-y-2">
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Specification Details
+            </h4>
+            <div className="rounded-lg bg-background border p-3 space-y-3">
+              {/* Index ID */}
+              <DetailField
+                label="Index ID"
+                value={currentValues.indexIdFull}
+                isEditing={isEditing}
+                mono
+                onChange={(v) => onFieldChange("indexIdFull", v)}
+              />
+              {/* Description */}
+              <DetailField
+                label="Description"
+                value={currentValues.description}
+                isEditing={isEditing}
+                onChange={(v) => onFieldChange("description", v)}
+              />
+              {/* Trade */}
+              <DetailField
+                label="Trade"
+                value={currentValues.trade}
+                isEditing={isEditing}
+                onChange={(v) => onFieldChange("trade", v)}
+              />
+              {/* Index Category */}
+              <DetailSelectField
+                label="Index Category"
+                value={currentValues.indexCategory}
+                isEditing={isEditing}
+                options={HYDRO_CATEGORY_ORDER as unknown as string[]}
+                onChange={(v) => onFieldChange("indexCategory", v)}
+              />
+              {/* System Category */}
+              <DetailSelectField
+                label="System Category"
+                value={currentValues.systemCategory}
+                isEditing={isEditing}
+                options={["Chilled Water", "Condenser Water", "Generic"]}
+                onChange={(v) => onFieldChange("systemCategory", v)}
+              />
+              {/* Material Category */}
+              <DetailSelectField
+                label="Material Category"
+                value={currentValues.materialCategory}
+                isEditing={isEditing}
+                options={["Carbon Steel", "Copper", "n/a"]}
+                onChange={(v) => onFieldChange("materialCategory", v)}
+              />
+              {/* Fitting Manufacturer */}
+              <DetailField
+                label="Fitting Manufacturer"
+                value={currentValues.fittingMfr}
+                isEditing={isEditing}
+                onChange={(v) => onFieldChange("fittingMfr", v)}
+              />
+              {/* Sizes */}
+              <DetailField
+                label="Sizes"
+                value={currentValues.sizes}
+                isEditing={isEditing}
+                onChange={(v) => onFieldChange("sizes", v)}
+              />
+              {/* Subcategory */}
+              <DetailField
+                label="Subcategory"
+                value={currentValues.indexSubcategory}
+                isEditing={isEditing}
+                onChange={(v) => onFieldChange("indexSubcategory", v)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Action bar */}
+        <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-muted">
+          {isEditing ? (
+            <>
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={onCancel}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                className="h-8 text-xs gradient-gold text-white border-0"
+                onClick={onSave}
+              >
+                <Save className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                Save Changes
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-muted-foreground"
+                onClick={onCollapse}
+              >
+                Collapse
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={onEdit}>
+                <Pencil className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                Edit
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Detail field — text input in edit mode, read-only in view mode */
+function DetailField({
+  label,
+  value,
+  isEditing,
+  mono,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  isEditing: boolean;
+  mono?: boolean;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <span className="text-xs text-muted-foreground shrink-0 pt-1">{label}</span>
+      {isEditing ? (
+        <Input
+          className={cn("h-8 text-xs max-w-[240px]", mono && "font-mono")}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          aria-label={`Edit ${label}`}
+        />
+      ) : (
+        <span
+          className={cn(
+            "text-sm font-medium text-right",
+            mono && "font-mono text-xs",
+            value === "n/a" && "text-muted-foreground/50"
+          )}
+        >
+          {value === "n/a" ? "N/A" : value}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* Detail select field — dropdown in edit mode, read-only in view mode */
+function DetailSelectField({
+  label,
+  value,
+  isEditing,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  isEditing: boolean;
+  options: string[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <span className="text-xs text-muted-foreground shrink-0 pt-1">{label}</span>
+      {isEditing ? (
+        <Select value={value} onValueChange={onChange}>
+          <SelectTrigger className="h-8 text-xs max-w-[240px]" aria-label={`Edit ${label}`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((opt) => (
+              <SelectItem key={opt} value={opt}>
+                {opt}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <span className="text-sm font-medium text-right">
+          {value === "n/a" ? "N/A" : value}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Grouped Data Table (with expandable rows)                                  */
 /* -------------------------------------------------------------------------- */
 
 function HydroMatrixTable({
   groupedEntries,
-  onRowClick,
-  selectedId,
+  expandedId,
+  onToggleExpand,
+  editingId,
+  editValues,
+  onEdit,
+  onSave,
+  onCancel,
+  onFieldChange,
 }: {
   groupedEntries: Map<HydroIndexCategory, HydroMatrixEntry[]>;
-  onRowClick: (entry: HydroMatrixEntry) => void;
-  selectedId: string | null;
+  expandedId: string | null;
+  onToggleExpand: (id: string) => void;
+  editingId: string | null;
+  editValues: Partial<HydroMatrixEntry>;
+  onEdit: (entry: HydroMatrixEntry) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  onFieldChange: (field: keyof HydroMatrixEntry, value: string) => void;
 }) {
   return (
     <div className="rounded-xl border bg-card shadow-card overflow-hidden">
@@ -316,6 +550,7 @@ function HydroMatrixTable({
         <table className="w-full" aria-label="Hydro Matrix material specifications">
           <thead>
             <tr className="border-b bg-muted/30">
+              <th scope="col" className="p-3 w-10" aria-label="Expand" />
               <th scope="col" className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
                 Index ID
               </th>
@@ -342,8 +577,14 @@ function HydroMatrixTable({
                 key={category}
                 category={category}
                 entries={entries}
-                onRowClick={onRowClick}
-                selectedId={selectedId}
+                expandedId={expandedId}
+                onToggleExpand={onToggleExpand}
+                editingId={editingId}
+                editValues={editValues}
+                onEdit={onEdit}
+                onSave={onSave}
+                onCancel={onCancel}
+                onFieldChange={onFieldChange}
               />
             ))}
           </tbody>
@@ -356,19 +597,31 @@ function HydroMatrixTable({
 function CategoryGroup({
   category,
   entries,
-  onRowClick,
-  selectedId,
+  expandedId,
+  onToggleExpand,
+  editingId,
+  editValues,
+  onEdit,
+  onSave,
+  onCancel,
+  onFieldChange,
 }: {
   category: HydroIndexCategory;
   entries: HydroMatrixEntry[];
-  onRowClick: (entry: HydroMatrixEntry) => void;
-  selectedId: string | null;
+  expandedId: string | null;
+  onToggleExpand: (id: string) => void;
+  editingId: string | null;
+  editValues: Partial<HydroMatrixEntry>;
+  onEdit: (entry: HydroMatrixEntry) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  onFieldChange: (field: keyof HydroMatrixEntry, value: string) => void;
 }) {
   return (
     <>
       {/* Section header row */}
       <tr className="bg-muted/40 border-y border-muted">
-        <td colSpan={6} className="px-4 py-2.5">
+        <td colSpan={7} className="px-4 py-2.5">
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className={cn("text-[10px]", INDEX_CATEGORY_COLORS[category])}>
               {category}
@@ -380,167 +633,105 @@ function CategoryGroup({
         </td>
       </tr>
 
-      {/* Data rows */}
-      {entries.map((entry) => (
-        <tr
-          key={entry.id}
-          className={cn(
-            "border-b last:border-b-0 hover:bg-muted/30 transition-colors cursor-pointer group",
-            selectedId === entry.id && "bg-nav-accent/5"
-          )}
-          onClick={() => onRowClick(entry)}
-          tabIndex={0}
-          role="row"
-          aria-label={`${entry.description} — ${entry.indexIdFull}`}
-          aria-selected={selectedId === entry.id}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onRowClick(entry);
-            }
-          }}
-        >
-          <td className="p-3">
-            <span className="font-mono text-[11px] text-muted-foreground group-hover:text-nav-accent transition-colors">
-              {entry.indexIdFull}
-            </span>
-          </td>
-          <td className="p-3">
-            <Badge variant="secondary" className={cn("text-[10px]", SYSTEM_CATEGORY_COLORS[entry.systemCategory])}>
-              {entry.systemCategory}
-            </Badge>
-          </td>
-          <td className="p-3 hidden md:table-cell">
-            {entry.materialCategory !== "n/a" ? (
-              <Badge variant="secondary" className={cn("text-[10px]", MATERIAL_CATEGORY_COLORS[entry.materialCategory])}>
-                {entry.materialCategory}
-              </Badge>
-            ) : (
-              <span className="text-xs text-muted-foreground/50" aria-label="Not applicable">—</span>
-            )}
-          </td>
-          <td className="p-3">
-            <p className="text-sm font-medium truncate max-w-[350px]" title={entry.description}>
-              {entry.description}
-            </p>
-            {entry.fittingMfr !== "n/a" && (
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Mfr: {entry.fittingMfr}
-              </p>
-            )}
-          </td>
-          <td className="p-3 hidden lg:table-cell">
-            <span className="text-xs text-muted-foreground">
-              {entry.sizes.includes("|")
-                ? entry.sizes.split("|").slice(0, 4).join(", ") +
-                  (entry.sizes.split("|").length > 4 ? "…" : "")
-                : entry.sizes}
-            </span>
-          </td>
-          <td className="p-3 hidden xl:table-cell">
-            <span className="text-xs text-muted-foreground truncate block max-w-[160px]" title={entry.indexSubcategory}>
-              {entry.indexSubcategory}
-            </span>
-          </td>
-        </tr>
-      ))}
-    </>
-  );
-}
+      {/* Data rows + expansion rows */}
+      {entries.map((entry) => {
+        const isExpanded = expandedId === entry.id;
+        const isEditing = editingId === entry.id;
 
-/* -------------------------------------------------------------------------- */
-/*  Entry Detail Sheet                                                         */
-/* -------------------------------------------------------------------------- */
-
-function HydroEntryDetailSheet({
-  entry,
-  open,
-  onOpenChange,
-}: {
-  entry: HydroMatrixEntry | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  if (!entry) return null;
-
-  const details = [
-    { label: "Index ID", value: entry.indexIdFull, mono: true },
-    { label: "Trade", value: entry.trade },
-    { label: "Index Category", value: entry.indexCategory },
-    { label: "System Category", value: entry.systemCategory },
-    { label: "Material Category", value: entry.materialCategory },
-    { label: "Fitting Manufacturer", value: entry.fittingMfr },
-    { label: "Sizes", value: entry.sizes.includes("|") ? entry.sizes.split("|").join(", ") : entry.sizes },
-    { label: "Subcategory", value: entry.indexSubcategory },
-  ];
-
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="sm:max-w-lg w-full flex flex-col p-0"
-        aria-label={`Details for ${entry.description}`}
-      >
-        <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0 pr-12">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="secondary" className={cn("text-[10px]", INDEX_CATEGORY_COLORS[entry.indexCategory])}>
-              {entry.indexCategory}
-            </Badge>
-            <Badge variant="secondary" className={cn("text-[10px]", SYSTEM_CATEGORY_COLORS[entry.systemCategory])}>
-              {entry.systemCategory}
-            </Badge>
-          </div>
-          <SheetTitle className="text-base leading-snug">
-            {entry.description}
-          </SheetTitle>
-          <SheetDescription className="font-mono text-xs">
-            {entry.indexIdFull}
-          </SheetDescription>
-        </SheetHeader>
-
-        <ScrollArea className="flex-1">
-          <div className="p-6 space-y-6">
-            {/* Full description */}
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                Index Description
-              </h3>
-              <div className="rounded-lg bg-muted/30 p-4">
-                <p className="text-sm leading-relaxed text-foreground/90">
-                  {entry.indexDescription}
+        return (
+          <React.Fragment key={entry.id}>
+            <tr
+              className={cn(
+                "border-b hover:bg-muted/30 transition-colors cursor-pointer group",
+                isExpanded && "bg-nav-accent/5 border-b-0"
+              )}
+              onClick={() => onToggleExpand(entry.id)}
+              tabIndex={0}
+              role="row"
+              aria-label={`${entry.description} — ${entry.indexIdFull}`}
+              aria-expanded={isExpanded}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onToggleExpand(entry.id);
+                }
+              }}
+            >
+              {/* Chevron */}
+              <td className="p-3 w-10">
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                    isExpanded && "rotate-180"
+                  )}
+                  aria-hidden="true"
+                />
+              </td>
+              <td className="p-3">
+                <span className="font-mono text-[11px] text-muted-foreground group-hover:text-nav-accent transition-colors">
+                  {entry.indexIdFull}
+                </span>
+              </td>
+              <td className="p-3">
+                <Badge variant="secondary" className={cn("text-[10px]", SYSTEM_CATEGORY_COLORS[entry.systemCategory])}>
+                  {entry.systemCategory}
+                </Badge>
+              </td>
+              <td className="p-3 hidden md:table-cell">
+                {entry.materialCategory !== "n/a" ? (
+                  <Badge variant="secondary" className={cn("text-[10px]", MATERIAL_CATEGORY_COLORS[entry.materialCategory])}>
+                    {entry.materialCategory}
+                  </Badge>
+                ) : (
+                  <span className="text-xs text-muted-foreground/50" aria-label="Not applicable">—</span>
+                )}
+              </td>
+              <td className="p-3">
+                <p className="text-sm font-medium truncate max-w-[350px]" title={entry.description}>
+                  {entry.description}
                 </p>
-              </div>
-            </div>
+                {entry.fittingMfr !== "n/a" && (
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Mfr: {entry.fittingMfr}
+                  </p>
+                )}
+              </td>
+              <td className="p-3 hidden lg:table-cell">
+                <span className="text-xs text-muted-foreground">
+                  {entry.sizes.includes("|")
+                    ? entry.sizes.split("|").slice(0, 4).join(", ") +
+                      (entry.sizes.split("|").length > 4 ? "…" : "")
+                    : entry.sizes}
+                </span>
+              </td>
+              <td className="p-3 hidden xl:table-cell">
+                <span className="text-xs text-muted-foreground truncate block max-w-[160px]" title={entry.indexSubcategory}>
+                  {entry.indexSubcategory}
+                </span>
+              </td>
+            </tr>
 
-            {/* Key-value details */}
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                Specification Details
-              </h3>
-              <dl className="space-y-3">
-                {details.map((d) => (
-                  <div key={d.label} className="flex items-start justify-between gap-4">
-                    <dt className="text-sm text-muted-foreground shrink-0">{d.label}</dt>
-                    <dd
-                      className={cn(
-                        "text-sm font-medium text-right",
-                        d.mono && "font-mono text-xs"
-                      )}
-                    >
-                      {d.value === "n/a" ? (
-                        <span className="text-muted-foreground/50">N/A</span>
-                      ) : (
-                        d.value
-                      )}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+            {/* Expansion row */}
+            {isExpanded && (
+              <tr className="border-b">
+                <td colSpan={7} className="p-0">
+                  <ExpandedEntryContent
+                    entry={entry}
+                    isEditing={isEditing}
+                    editValues={editValues}
+                    onEdit={() => onEdit(entry)}
+                    onSave={onSave}
+                    onCancel={onCancel}
+                    onFieldChange={onFieldChange}
+                    onCollapse={() => onToggleExpand(entry.id)}
+                  />
+                </td>
+              </tr>
+            )}
+          </React.Fragment>
+        );
+      })}
+    </>
   );
 }
 
@@ -752,6 +943,9 @@ function HydroImportDialog({
 
 export default function ProjectIndexPage() {
   const {
+    versions,
+    selectedVersionId,
+    switchVersion,
     search,
     setSearch,
     categoryFilter,
@@ -764,9 +958,7 @@ export default function ProjectIndexPage() {
     groupedEntries,
     hasActiveFilters,
     clearFilters,
-    selectedId,
-    setSelectedId,
-    selectedEntry,
+    updateEntry,
     totalCount,
     filteredCount,
     filteredCategoryCount,
@@ -779,21 +971,68 @@ export default function ProjectIndexPage() {
   // Export state
   const [exporting, setExporting] = useState(false);
 
-  // Detail sheet
-  const sheetOpen = selectedId !== null;
+  // Expandable rows
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const handleRowClick = useCallback(
-    (entry: HydroMatrixEntry) => {
-      setSelectedId(entry.id);
+  // Editing state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState<Partial<HydroMatrixEntry>>({});
+
+  const handleVersionChange = useCallback(
+    (versionId: string) => {
+      switchVersion(versionId);
+      // Reset expand/edit state when switching versions
+      setExpandedId(null);
+      setEditingId(null);
+      setEditValues({});
     },
-    [setSelectedId]
+    [switchVersion]
   );
 
-  const handleSheetClose = useCallback(
-    (open: boolean) => {
-      if (!open) setSelectedId(null);
+  const handleToggleExpand = useCallback(
+    (id: string) => {
+      setExpandedId((prev) => {
+        if (prev === id) {
+          // Collapsing — also cancel any active edit
+          setEditingId(null);
+          setEditValues({});
+          return null;
+        }
+        // Expanding a different row — cancel any edit on previous row
+        setEditingId(null);
+        setEditValues({});
+        return id;
+      });
     },
-    [setSelectedId]
+    []
+  );
+
+  const handleEdit = useCallback(
+    (entry: HydroMatrixEntry) => {
+      setEditingId(entry.id);
+      setEditValues({});
+    },
+    []
+  );
+
+  const handleSave = useCallback(() => {
+    if (editingId && Object.keys(editValues).length > 0) {
+      updateEntry(editingId, editValues);
+    }
+    setEditingId(null);
+    setEditValues({});
+  }, [editingId, editValues, updateEntry]);
+
+  const handleCancel = useCallback(() => {
+    setEditingId(null);
+    setEditValues({});
+  }, []);
+
+  const handleFieldChange = useCallback(
+    (field: keyof HydroMatrixEntry, value: string) => {
+      setEditValues((prev) => ({ ...prev, [field]: value }));
+    },
+    []
   );
 
   const handleExport = useCallback(() => {
@@ -844,9 +1083,6 @@ export default function ProjectIndexPage() {
     <main className="px-6 py-6 space-y-6 max-w-[1400px] mx-auto">
       {/* Hero */}
       <HeroSection
-        totalCount={totalCount}
-        categoryCount={filteredCategoryCount}
-        systemCount={filteredSystemCount}
         onImport={() => setImportOpen(true)}
         onExport={handleExport}
         exporting={exporting}
@@ -854,6 +1090,9 @@ export default function ProjectIndexPage() {
 
       {/* Filters */}
       <FiltersBar
+        versions={versions}
+        selectedVersionId={selectedVersionId}
+        onVersionChange={handleVersionChange}
         search={search}
         onSearchChange={setSearch}
         categoryFilter={categoryFilter}
@@ -883,17 +1122,16 @@ export default function ProjectIndexPage() {
       ) : (
         <HydroMatrixTable
           groupedEntries={groupedEntries}
-          onRowClick={handleRowClick}
-          selectedId={selectedId}
+          expandedId={expandedId}
+          onToggleExpand={handleToggleExpand}
+          editingId={editingId}
+          editValues={editValues}
+          onEdit={handleEdit}
+          onSave={handleSave}
+          onCancel={handleCancel}
+          onFieldChange={handleFieldChange}
         />
       )}
-
-      {/* Detail Sheet */}
-      <HydroEntryDetailSheet
-        entry={selectedEntry}
-        open={sheetOpen}
-        onOpenChange={handleSheetClose}
-      />
 
       {/* Import Dialog */}
       <HydroImportDialog

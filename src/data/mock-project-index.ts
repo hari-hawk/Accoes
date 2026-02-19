@@ -539,9 +539,59 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
+/*  Grid Versions — versioned snapshots of the specification library           */
+/* -------------------------------------------------------------------------- */
+
+export interface HydroGridVersion {
+  id: string;
+  label: string;
+  date: string;
+  entryIds: string[];
+}
+
+/** v1.0 — initial 20 core specs (Pressure Testing, Pipe, Fittings, Valves, Insulation) */
+const V1_ENTRY_IDS = [
+  "hm-001", "hm-002", "hm-003",           // Pressure Testing (3)
+  "hm-004", "hm-005", "hm-006", "hm-007", // Pipe (4)
+  "hm-008", "hm-009",                      // Pipe — Condenser (2)
+  "hm-010", "hm-011", "hm-012", "hm-013", // Fittings (4)
+  "hm-018", "hm-019", "hm-020", "hm-021", // Valves (4)
+  "hm-025", "hm-026", "hm-027",           // Insulation (3)
+];
+
+/** v2.0 — added Joining, Specialties, Identification (28 entries) */
+const V2_ENTRY_IDS = [
+  ...V1_ENTRY_IDS,
+  "hm-014",                                // Fittings — Grooved (1)
+  "hm-015", "hm-016", "hm-017",           // Joining/Branch Methods (3)
+  "hm-022", "hm-023", "hm-024",           // Specialties (3)
+  "hm-028", "hm-029",                      // Identification (2)
+];
+
+/** v2.1 — full library: added Hangers/Supports + Anchors (35 entries) */
+const V2_1_ENTRY_IDS = mockHydroMatrixEntries.map((e) => e.id);
+
+export const HYDRO_GRID_VERSIONS: HydroGridVersion[] = [
+  { id: "grid-v2.1", label: "v2.1 — Jan 2026", date: "2026-01-15", entryIds: V2_1_ENTRY_IDS },
+  { id: "grid-v2.0", label: "v2.0 — Nov 2025", date: "2025-11-01", entryIds: V2_ENTRY_IDS },
+  { id: "grid-v1.0", label: "v1.0 — Aug 2025", date: "2025-08-01", entryIds: V1_ENTRY_IDS },
+];
+
+/* -------------------------------------------------------------------------- */
 /*  Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
 export function getAllHydroEntries(): HydroMatrixEntry[] {
   return mockHydroMatrixEntries;
+}
+
+export function getHydroGridVersions(): HydroGridVersion[] {
+  return HYDRO_GRID_VERSIONS;
+}
+
+export function getEntriesForVersion(versionId: string): HydroMatrixEntry[] {
+  const version = HYDRO_GRID_VERSIONS.find((v) => v.id === versionId);
+  if (!version) return mockHydroMatrixEntries;
+  const idSet = new Set(version.entryIds);
+  return mockHydroMatrixEntries.filter((e) => idSet.has(e.id));
 }

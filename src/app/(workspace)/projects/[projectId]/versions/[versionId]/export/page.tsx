@@ -174,7 +174,7 @@ export default function ExportPage() {
             <div className="p-5 space-y-4 text-sm">
               <div>
                 <h4 className="font-semibold text-base">
-                  Material Index Grid Validation Report
+                  Conformance Validation Report
                 </h4>
                 <p className="text-muted-foreground">
                   {project.name} - {version.name}

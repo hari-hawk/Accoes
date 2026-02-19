@@ -88,7 +88,7 @@ export function DiscrepancyTable({
                   Item
                 </th>
                 <th className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                  Material Index Grid
+                  Conformance
                 </th>
                 <th className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
                   Project Specifications

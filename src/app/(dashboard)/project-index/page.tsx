@@ -164,21 +164,7 @@ function FiltersBar({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-3" role="search" aria-label="Filter material specifications">
-      {/* Version */}
-      <Select value={selectedVersionId} onValueChange={onVersionChange}>
-        <SelectTrigger className="w-[200px]" aria-label="Select grid version">
-          <SelectValue placeholder="Select version" />
-        </SelectTrigger>
-        <SelectContent>
-          {versions.map((v) => (
-            <SelectItem key={v.id} value={v.id}>
-              {v.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Search */}
+      {/* 1. Search — primary action, comes first */}
       <div className="relative flex-1 min-w-[200px] max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
         <Input
@@ -200,7 +186,7 @@ function FiltersBar({
         )}
       </div>
 
-      {/* Index Category */}
+      {/* 2. Index Category */}
       <Select
         value={categoryFilter}
         onValueChange={(v) => onCategoryChange(v as HydroIndexCategory | "all")}
@@ -218,7 +204,7 @@ function FiltersBar({
         </SelectContent>
       </Select>
 
-      {/* System Category */}
+      {/* 3. System Category */}
       <Select
         value={systemFilter}
         onValueChange={(v) => onSystemChange(v as HydroSystemCategory | "all")}
@@ -234,7 +220,7 @@ function FiltersBar({
         </SelectContent>
       </Select>
 
-      {/* Material Category */}
+      {/* 4. Material Category */}
       <Select
         value={materialFilter}
         onValueChange={(v) => onMaterialChange(v as HydroMaterialCategory | "all")}
@@ -250,25 +236,39 @@ function FiltersBar({
         </SelectContent>
       </Select>
 
-      {/* Clear + Count */}
+      {/* Clear filters */}
+      {hasActiveFilters && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-xs h-8 gap-1"
+          onClick={onClearFilters}
+          aria-label="Clear all filters"
+        >
+          <X className="h-3 w-3" aria-hidden="true" />
+          Clear Filters
+        </Button>
+      )}
+
+      {/* 5. Right side — entry count chip + version dropdown */}
       <div className="flex items-center gap-2 ml-auto">
-        {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs h-8 gap-1"
-            onClick={onClearFilters}
-            aria-label="Clear all filters"
-          >
-            <X className="h-3 w-3" aria-hidden="true" />
-            Clear Filters
-          </Button>
-        )}
         <Badge variant="secondary" className="text-xs shrink-0 tabular-nums" aria-live="polite">
           {filteredCount === totalCount
             ? `${totalCount} entries`
             : `${filteredCount} of ${totalCount}`}
         </Badge>
+        <Select value={selectedVersionId} onValueChange={onVersionChange}>
+          <SelectTrigger className="w-[200px]" aria-label="Select grid version">
+            <SelectValue placeholder="Select version" />
+          </SelectTrigger>
+          <SelectContent>
+            {versions.map((v) => (
+              <SelectItem key={v.id} value={v.id}>
+                {v.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

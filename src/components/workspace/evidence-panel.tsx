@@ -183,32 +183,49 @@ function PSTabContent({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Project Index (PI) Tab Content — Stacked Match Cards                      */
+/*  Project Index (PI) Tab Content                                             */
+/*  • proj-2 (UCD): table grid layout                                         */
+/*  • All other projects: card-style layout                                    */
 /* -------------------------------------------------------------------------- */
 
-function PITabContent({
-  validation,
-}: {
-  validation: ValidationResult;
-}) {
-  const matches = validation.indexMatches;
-  const hasMultipleMatches = matches && matches.length > 0;
+/** Shared helpers */
+const MATCH_TYPE_COLORS: Record<string, string> = {
+  EXACT: "bg-status-pre-approved/15 text-status-pre-approved border-status-pre-approved/30",
+  PARTIAL: "bg-status-review-required/15 text-status-review-required border-status-review-required/30",
+  ALTERNATE: "bg-status-action-mandatory/15 text-status-action-mandatory border-status-action-mandatory/30",
+};
 
-  // Fallback: build a single match from the legacy validation fields
-  const fallbackMatch: IndexMatch = {
+function buildFallbackMatch(validation: ValidationResult): IndexMatch {
+  return {
     id: "fallback",
     category: validation.specReference.sectionTitle.split(" — ")[0],
     subCategory: validation.specReference.sectionNumber,
     itemDescription: validation.aiReasoning.summary.slice(0, 80),
     size: "Standard",
-    matchType: validation.status === "pre_approved" ? "EXACT" : validation.status === "review_required" ? "PARTIAL" : "PARTIAL",
+    matchType: validation.status === "pre_approved" ? "EXACT" : "PARTIAL",
     matchScore: validation.confidenceScore / 100,
     reason: validation.aiReasoning.complianceAssessment,
   };
+}
 
-  const displayMatches = hasMultipleMatches ? matches : [fallbackMatch];
+function getDisplayMatches(validation: ValidationResult): IndexMatch[] {
+  const matches = validation.indexMatches;
+  return matches && matches.length > 0 ? matches : [buildFallbackMatch(validation)];
+}
+
+function PITabContent({
+  validation,
+  projectId,
+}: {
+  validation: ValidationResult;
+  projectId?: string;
+}) {
+  const displayMatches = getDisplayMatches(validation);
   const matchCount = displayMatches.length;
   const exactCount = displayMatches.filter((m) => m.matchType === "EXACT").length;
+
+  // proj-2 (UCD) gets the table layout; everyone else gets cards
+  const useTableLayout = projectId === "proj-2";
 
   return (
     <div className="space-y-4">
@@ -219,26 +236,32 @@ function PITabContent({
         </p>
       </div>
 
-      {/* Match table — mirrors the screenshot layout */}
-      <div className="rounded-lg border overflow-hidden">
-        {/* Table header */}
-        <div className="grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.7fr_2fr] gap-px bg-muted/30 border-b">
-          {["Category", "Sub Category", "Item Description", "Size", "Match Type", "Match Score", "Reason"].map(
-            (col) => (
-              <div key={col} className="px-3 py-2.5">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                  {col}
-                </p>
-              </div>
-            )
-          )}
+      {useTableLayout ? (
+        /* ── Table layout (UCD) ─────────────────────────────────── */
+        <div className="rounded-lg border overflow-hidden">
+          <div className="grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.7fr_2fr] gap-px bg-muted/30 border-b">
+            {["Category", "Sub Category", "Item Description", "Size", "Match Type", "Match Score", "Reason"].map(
+              (col) => (
+                <div key={col} className="px-3 py-2.5">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                    {col}
+                  </p>
+                </div>
+              )
+            )}
+          </div>
+          {displayMatches.map((match) => (
+            <IndexMatchRow key={match.id} match={match} />
+          ))}
         </div>
-
-        {/* Match rows */}
-        {displayMatches.map((match) => (
-          <IndexMatchRow key={match.id} match={match} />
-        ))}
-      </div>
+      ) : (
+        /* ── Card layout (all other projects) ───────────────────── */
+        <div className="space-y-3">
+          {displayMatches.map((match, index) => (
+            <IndexMatchCard key={match.id} match={match} index={index + 1} total={matchCount} />
+          ))}
+        </div>
+      )}
 
       {/* Discrepancy cards — still shown if evidence contradicts */}
       {validation.evidenceItems.some((ev) => ev.relevance === "contradicts") && (
@@ -273,14 +296,8 @@ function PITabContent({
   );
 }
 
-/** Single row in the index match table */
+/** Single row in the table layout (UCD) */
 function IndexMatchRow({ match }: { match: IndexMatch }) {
-  const matchTypeColors: Record<string, string> = {
-    EXACT: "bg-status-pre-approved/15 text-status-pre-approved border-status-pre-approved/30",
-    PARTIAL: "bg-status-review-required/15 text-status-review-required border-status-review-required/30",
-    ALTERNATE: "bg-status-action-mandatory/15 text-status-action-mandatory border-status-action-mandatory/30",
-  };
-
   return (
     <div className="grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.7fr_2fr] gap-px border-b last:border-b-0 hover:bg-muted/20 transition-colors">
       <div className="px-3 py-3">
@@ -299,7 +316,7 @@ function IndexMatchRow({ match }: { match: IndexMatch }) {
         <span
           className={cn(
             "inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase",
-            matchTypeColors[match.matchType] ?? "bg-muted text-muted-foreground"
+            MATCH_TYPE_COLORS[match.matchType] ?? "bg-muted text-muted-foreground"
           )}
         >
           {match.matchType}
@@ -310,6 +327,101 @@ function IndexMatchRow({ match }: { match: IndexMatch }) {
       </div>
       <div className="px-3 py-3">
         <p className="text-xs text-foreground/70 leading-relaxed">{match.reason}</p>
+      </div>
+    </div>
+  );
+}
+
+/** Card layout for a single match (all projects except UCD) */
+function IndexMatchCard({
+  match,
+  index,
+  total,
+}: {
+  match: IndexMatch;
+  index: number;
+  total: number;
+}) {
+  const scorePercent = Math.round(match.matchScore * 100);
+  const scoreColor =
+    scorePercent >= 80
+      ? "text-status-pre-approved"
+      : scorePercent >= 60
+        ? "text-status-review-required"
+        : "text-status-action-mandatory";
+  const barColor =
+    scorePercent >= 80
+      ? "bg-status-pre-approved"
+      : scorePercent >= 60
+        ? "bg-status-review-required"
+        : "bg-status-action-mandatory";
+
+  return (
+    <div className="rounded-lg border overflow-hidden">
+      {/* Card header — match number + type badge + score */}
+      <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b">
+        <div className="flex items-center gap-2.5">
+          <span className="text-xs font-semibold text-muted-foreground">
+            Match {index} of {total}
+          </span>
+          <span
+            className={cn(
+              "inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase",
+              MATCH_TYPE_COLORS[match.matchType] ?? "bg-muted text-muted-foreground"
+            )}
+          >
+            {match.matchType}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={cn("text-sm font-bold tabular-nums", scoreColor)}>
+            {scorePercent}%
+          </span>
+          <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
+            <div
+              className={cn("h-full rounded-full transition-all", barColor)}
+              style={{ width: `${scorePercent}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Card body — key-value pairs */}
+      <div className="p-4 space-y-3">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">
+              Category
+            </p>
+            <p className="text-xs font-medium">{match.category}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">
+              Sub Category
+            </p>
+            <p className="text-xs text-foreground/80">{match.subCategory}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">
+              Item Description
+            </p>
+            <p className="text-xs text-foreground/80">{match.itemDescription}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">
+              Size
+            </p>
+            <p className="text-xs text-foreground/80">{match.size}</p>
+          </div>
+        </div>
+
+        {/* Reason — full width below the grid */}
+        <div className="rounded-md bg-muted/20 p-3">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">
+            Reason
+          </p>
+          <p className="text-xs text-foreground/70 leading-relaxed">{match.reason}</p>
+        </div>
       </div>
     </div>
   );
@@ -632,7 +744,7 @@ export function EvidencePanel({
           <div className="p-5">
             {activeValidation ? (
               activeCategory === "performance_index" ? (
-                <PITabContent validation={activeValidation} />
+                <PITabContent validation={activeValidation} projectId={projectId} />
               ) : (
                 <PSTabContent
                   validation={activeValidation}

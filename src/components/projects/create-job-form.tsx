@@ -401,7 +401,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
             </span>
           </p>
           <p className="text-xs text-muted-foreground mt-1.5">
-            PDF, DWG, RVT, CSV, XLS — Max 10MB each
+            PDF, CSV, XLS — Max 200MB each
           </p>
         </div>
 

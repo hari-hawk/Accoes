@@ -464,7 +464,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
       {/* ================================================================ */}
       <SectionCard
         icon={Briefcase}
-        title="Job Details"
+        title="Project Information"
         description="Core project information — auto-populated from uploaded files"
       >
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-5 gap-y-5">

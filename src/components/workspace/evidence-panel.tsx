@@ -350,7 +350,7 @@ function MatchCardBody({ match }: { match: IndexMatch }) {
         </div>
         <div className="px-3.5 py-2.5">
           <p className="text-[10px] text-ds-neutral-500 font-medium uppercase tracking-wider mb-0.5">
-            Sub Category
+            Subcategory
           </p>
           <p className="text-[13px] text-ds-neutral-900">{match.subCategory}</p>
         </div>

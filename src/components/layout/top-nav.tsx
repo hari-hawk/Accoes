@@ -263,16 +263,13 @@ export function TopNav() {
       <header className="sticky top-0 z-50 w-full">
         <div className="bg-nav">
           <div className="flex h-14 items-center px-5 gap-6">
-            {/* Logo — "acco" brand mark */}
-            <Link href="/projects" className="flex items-center gap-2 shrink-0 mr-2">
-              <div className="flex items-center gap-0.5">
-                <span className="text-base font-extrabold text-nav-gold tracking-tight">
-                  acco
-                </span>
-              </div>
-              <span className="text-sm font-bold tracking-tight text-white">
-                Submittals AI
-              </span>
+            {/* Logo — ACCO ES brand mark from design system */}
+            <Link href="/projects" className="flex items-center gap-2.5 shrink-0 mr-2" aria-label="ACCO Submittals — Home">
+              <svg width="120" height="36" viewBox="0 0 120 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="18" cy="18" r="16" fill="#00529B"/>
+                <text x="18" y="22" textAnchor="middle" fill="white" fontSize="9" fontWeight="700" fontFamily="Inter, sans-serif">ACCO</text>
+                <text x="74" y="24" textAnchor="middle" fill="white" fontSize="16" fontWeight="600" fontFamily="Inter, sans-serif">Submittals</text>
+              </svg>
             </Link>
 
             {/* Nav items */}

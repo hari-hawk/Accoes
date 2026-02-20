@@ -26,10 +26,10 @@ export default function CreateJobPage() {
       <div className="flex items-start justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            Create New Job
+            Create new project
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Upload project documents to begin automated takeoff and pricing
+            Upload required project documents to generate automated conformance results
           </p>
         </div>
 

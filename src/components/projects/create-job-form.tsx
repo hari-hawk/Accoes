@@ -179,15 +179,15 @@ function SectionCard({
 /*  Mock upload data                                                           */
 /* -------------------------------------------------------------------------- */
 
-const mockBatchFiles = [
-  { name: "03.14.25 project file.pdf", bytes: 204800 },
-  { name: "10.14.25 specs.xls", bytes: 204800 },
-  { name: "08.14.25 mechanicaldrawings.pdf", bytes: 204800 },
+const mockMaterialMatrixFiles = [
   { name: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v1.csv", bytes: 524288 },
-  {
-    name: "UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv",
-    bytes: 491520,
-  },
+  { name: "UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv", bytes: 491520 },
+  { name: "10.14.25 specs.xls", bytes: 204800 },
+];
+
+const mockProjectSpecFiles = [
+  { name: "03.14.25 project file.pdf", bytes: 204800 },
+  { name: "08.14.25 mechanicaldrawings.pdf", bytes: 204800 },
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -267,27 +267,40 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
   /*  Handlers                                                               */
   /* ---------------------------------------------------------------------- */
 
-  const handleUploadFiles = () => {
-    const isFirstUpload = files.length === 0;
-    const batch: UploadedFile[] = mockBatchFiles.map((f, i) => ({
-      id: `file-${uploadCounter + i}-${Date.now()}`,
-      name: f.name,
-      size: formatFileSize(f.bytes),
-      type: getFileType(f.name),
-      category: categorizeFile(f.name),
-    }));
-
-    setUploadCounter((c) => c + batch.length);
-    setFiles((prev) => [...prev, ...batch]);
-
-    // Auto-populate on first upload
-    if (isFirstUpload) {
+  const autoPopulateOnFirstUpload = () => {
+    if (files.length === 0) {
       setProjectName("Riverside Commercial Tower");
       setJobId(generateJobId("Riverside Commercial Tower"));
       setCompanyClient("Henry Thomas Construction LLC");
       setCreatedDate(new Date().toISOString().split("T")[0]);
       setLocation("Sacramento, CA");
     }
+  };
+
+  const handleUploadMaterialMatrix = () => {
+    autoPopulateOnFirstUpload();
+    const batch: UploadedFile[] = mockMaterialMatrixFiles.map((f, i) => ({
+      id: `file-${uploadCounter + i}-${Date.now()}`,
+      name: f.name,
+      size: formatFileSize(f.bytes),
+      type: getFileType(f.name),
+      category: "material_metrics" as const,
+    }));
+    setUploadCounter((c) => c + batch.length);
+    setFiles((prev) => [...prev, ...batch]);
+  };
+
+  const handleUploadProjectSpec = () => {
+    autoPopulateOnFirstUpload();
+    const batch: UploadedFile[] = mockProjectSpecFiles.map((f, i) => ({
+      id: `file-${uploadCounter + i + 100}-${Date.now()}`,
+      name: f.name,
+      size: formatFileSize(f.bytes),
+      type: getFileType(f.name),
+      category: "project_specification" as const,
+    }));
+    setUploadCounter((c) => c + batch.length);
+    setFiles((prev) => [...prev, ...batch]);
   };
 
   const handleRemoveFile = (fileId: string) => {
@@ -372,91 +385,137 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
       <SectionCard
         icon={Upload}
         title="Upload Documents"
-        description="Drag & drop your project files to begin automated processing"
+        description="Upload your material matrix and project specification files separately"
       >
-        {/* Drop zone */}
-        <div
-          className="rounded-xl border-2 border-dashed border-nav-accent/30 p-10 text-center hover:border-nav-accent/60 hover:bg-nav-accent/[0.03] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 outline-none"
-          role="button"
-          tabIndex={0}
-          aria-label="Click to select files for upload"
-          onClick={handleUploadFiles}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              handleUploadFiles();
-            }
-          }}
-        >
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-nav-accent/10 flex items-center justify-center mb-4">
-            <Upload
-              className="h-7 w-7 text-nav-accent"
-              aria-hidden="true"
-            />
-          </div>
-          <p className="text-sm font-medium">
-            Drag &amp; drop files or{" "}
-            <span className="text-nav-accent font-semibold underline underline-offset-2">
-              click to browse
-            </span>
-          </p>
-          <p className="text-xs text-muted-foreground mt-1.5">
-            PDF, CSV, XLS — Max 200MB each
-          </p>
-        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {/* ── Material Matrix Upload ─────────────────────── */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "text-[10px] font-bold px-2 py-0.5",
+                  categoryConfig.material_metrics.color
+                )}
+              >
+                Material Matrix
+              </Badge>
+              <span className="text-[11px] text-muted-foreground">CSV, XLS</span>
+            </div>
+            <div
+              className="rounded-xl border-2 border-dashed border-emerald-400/30 p-8 text-center hover:border-emerald-400/60 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 outline-none"
+              role="button"
+              tabIndex={0}
+              aria-label="Click to upload material matrix files (CSV, XLS)"
+              onClick={handleUploadMaterialMatrix}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleUploadMaterialMatrix();
+                }
+              }}
+            >
+              <div className="mx-auto w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3">
+                <Upload className="h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-medium">
+                Drag &amp; drop or{" "}
+                <span className="text-emerald-600 dark:text-emerald-400 font-semibold underline underline-offset-2">
+                  browse
+                </span>
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Max 200MB each
+              </p>
+            </div>
 
-        {/* Uploaded file cards — grouped by category */}
-        {files.length > 0 && (
-          <div className="mt-6 space-y-5">
-            {(
-              [
-                "material_metrics",
-                "project_specification",
-                "project_documents",
-              ] as const
-            ).map((cat) => {
-              const catFiles = filesByCategory[cat];
-              if (!catFiles || catFiles.length === 0) return null;
-              const config = categoryConfig[cat];
-
-              return (
-                <div key={cat}>
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        "text-[10px] font-bold px-2 py-0.5",
-                        config.color
-                      )}
-                    >
-                      {config.label}
-                    </Badge>
-                    <span className="text-[11px] text-muted-foreground font-medium">
-                      {catFiles.length} file
-                      {catFiles.length !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                  <div
-                    className="flex flex-wrap gap-3"
-                    role="list"
-                    aria-label={`${config.label} files`}
-                  >
-                    {catFiles.map((file) => (
-                      <div key={file.id} role="listitem">
-                        <FileUploadCard
-                          name={file.name}
-                          size={file.size}
-                          type={file.type}
-                          onRemove={() => handleRemoveFile(file.id)}
-                        />
-                      </div>
-                    ))}
-                  </div>
+            {/* Material Matrix file list */}
+            {(filesByCategory["material_metrics"]?.length ?? 0) > 0 && (
+              <div className="mt-3 space-y-2">
+                <span className="text-[11px] text-muted-foreground font-medium">
+                  {filesByCategory["material_metrics"].length} file
+                  {filesByCategory["material_metrics"].length !== 1 ? "s" : ""} uploaded
+                </span>
+                <div className="flex flex-wrap gap-2.5" role="list" aria-label="Material matrix files">
+                  {filesByCategory["material_metrics"].map((file) => (
+                    <div key={file.id} role="listitem">
+                      <FileUploadCard
+                        name={file.name}
+                        size={file.size}
+                        type={file.type}
+                        onRemove={() => handleRemoveFile(file.id)}
+                      />
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
-        )}
+
+          {/* ── Project Specification Upload ───────────────── */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "text-[10px] font-bold px-2 py-0.5",
+                  categoryConfig.project_specification.color
+                )}
+              >
+                Project Specification
+              </Badge>
+              <span className="text-[11px] text-muted-foreground">PDF</span>
+            </div>
+            <div
+              className="rounded-xl border-2 border-dashed border-blue-400/30 p-8 text-center hover:border-blue-400/60 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 outline-none"
+              role="button"
+              tabIndex={0}
+              aria-label="Click to upload project specification files (PDF)"
+              onClick={handleUploadProjectSpec}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleUploadProjectSpec();
+                }
+              }}
+            >
+              <div className="mx-auto w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3">
+                <Upload className="h-6 w-6 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-medium">
+                Drag &amp; drop or{" "}
+                <span className="text-blue-600 dark:text-blue-400 font-semibold underline underline-offset-2">
+                  browse
+                </span>
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Max 200MB each
+              </p>
+            </div>
+
+            {/* Project Specification file list */}
+            {(filesByCategory["project_specification"]?.length ?? 0) > 0 && (
+              <div className="mt-3 space-y-2">
+                <span className="text-[11px] text-muted-foreground font-medium">
+                  {filesByCategory["project_specification"].length} file
+                  {filesByCategory["project_specification"].length !== 1 ? "s" : ""} uploaded
+                </span>
+                <div className="flex flex-wrap gap-2.5" role="list" aria-label="Project specification files">
+                  {filesByCategory["project_specification"].map((file) => (
+                    <div key={file.id} role="listitem">
+                      <FileUploadCard
+                        name={file.name}
+                        size={file.size}
+                        type={file.type}
+                        onRemove={() => handleRemoveFile(file.id)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </SectionCard>
 
       {/* ================================================================ */}

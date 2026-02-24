@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Check, FolderKanban, Grid3X3, BookOpen } from "lucide-react";
+import { Check, FolderKanban, Grid3X3, BookOpen, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WorkflowStage } from "@/data/types";
 
@@ -41,6 +41,13 @@ const MILESTONES: Milestone[] = [
     path: "/submittal-binder",
     unlockedAt: ["export"],
   },
+  {
+    key: "download-report",
+    label: "Download Report",
+    icon: Download,
+    path: "/export",
+    unlockedAt: ["export"],
+  },
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -49,18 +56,19 @@ const MILESTONES: Milestone[] = [
 
 /** Determine which milestone is active based on the current pathname */
 function getActiveMilestone(pathname: string): string {
+  if (pathname.includes("/export")) return "download-report";
   if (pathname.includes("/submittal-binder")) return "submittal-binder";
-  if (pathname.includes("/review") || pathname.includes("/processing") || pathname.includes("/export")) return "material-matrix";
+  if (pathname.includes("/review") || pathname.includes("/processing")) return "material-matrix";
   return "overview";
 }
 
 /** Determine the completion index — milestones up to this index are "completed" */
 function getCompletedIndex(currentStage: WorkflowStage): number {
   // Overview is always accessible (complete as soon as you enter the project)
-  // Conformance is accessible at "review" or "export" stage
-  // Submittal Binder is accessible at "export" stage
-  if (currentStage === "export") return 2; // all three unlocked, first two "completed"
-  if (currentStage === "review") return 1; // overview + conformance unlocked
+  // Material Matrix is accessible at "review" or "export" stage
+  // Submittal Binder + Download Report are accessible at "export" stage
+  if (currentStage === "export") return 3; // first three completed, download report is the final step
+  if (currentStage === "review") return 1; // overview completed, material matrix active
   return 0; // only overview
 }
 
@@ -87,7 +95,7 @@ export function MilestoneProgressBar({
       className="flex items-center justify-center px-4 py-1.5 border-b bg-background shrink-0"
       aria-label="Project milestones"
     >
-      <div className="flex items-center w-full max-w-xl">
+      <div className="flex items-center w-full max-w-2xl">
         {MILESTONES.map((milestone, index) => {
           const isActive = milestone.key === activeMilestone;
           const isUnlocked = milestone.unlockedAt.includes(currentStage);

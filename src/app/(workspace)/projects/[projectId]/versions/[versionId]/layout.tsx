@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, usePathname } from "next/navigation";
-import { Download, Share2, Link2, Mail, Check } from "lucide-react";
+import { useParams } from "next/navigation";
+import { Share2, Link2, Mail, Check } from "lucide-react";
 import { MilestoneProgressBar } from "@/components/layout/milestone-progress-bar";
 import { VersionInfoHeader } from "@/components/workspace/version-info-header";
 import { WorkspaceProvider } from "@/providers/workspace-provider";
@@ -15,17 +15,14 @@ import {
 } from "@/components/ui/popover";
 import { mockProjects } from "@/data/mock-projects";
 import { getVersion } from "@/data/mock-versions";
-import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
 /*  Header Actions — Share + Export                                            */
 /* -------------------------------------------------------------------------- */
 
 function HeaderActions({
-  exportEnabled,
   projectName,
 }: {
-  exportEnabled: boolean;
   projectName: string;
 }) {
   const [shareOpen, setShareOpen] = useState(false);
@@ -48,25 +45,6 @@ function HeaderActions({
 
   return (
     <>
-      {/* Export */}
-      <Button
-        variant="outline"
-        size="sm"
-        className={cn(
-          "h-7 text-xs gap-1.5 transition-opacity",
-          !exportEnabled && "opacity-40 pointer-events-none"
-        )}
-        disabled={!exportEnabled}
-        aria-label={
-          exportEnabled
-            ? "Export project data"
-            : "Export unavailable on this page"
-        }
-      >
-        <Download className="h-3 w-3" aria-hidden="true" />
-        Export
-      </Button>
-
       {/* Share */}
       <Popover open={shareOpen} onOpenChange={setShareOpen}>
         <PopoverTrigger asChild>
@@ -123,7 +101,6 @@ export default function VersionLayout({
   children: React.ReactNode;
 }) {
   const params = useParams<{ projectId: string; versionId: string }>();
-  const pathname = usePathname();
   const project = mockProjects.find((p) => p.id === params.projectId);
   const version = getVersion(params.versionId);
 
@@ -138,10 +115,6 @@ export default function VersionLayout({
     );
   }
 
-  // Export is enabled on pages that have exportable content
-  const exportableSegments = ["/review", "/export", "/submittal-binder"];
-  const canExport = exportableSegments.some((seg) => pathname.endsWith(seg));
-
   return (
     <WorkspaceProvider project={project} version={version}>
       <VersionInfoHeader
@@ -150,7 +123,6 @@ export default function VersionLayout({
         onProjectNameClick={handleProjectNameClick}
         actions={
           <HeaderActions
-            exportEnabled={canExport}
             projectName={project.name}
           />
         }

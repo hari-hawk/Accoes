@@ -15,6 +15,7 @@ import {
   Loader2,
   ChevronDown,
   X,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -53,7 +54,7 @@ import { useMaterials } from "@/hooks/use-materials";
 import { mockProjects } from "@/data/mock-projects";
 import { getDocumentsByVersion } from "@/data/mock-documents";
 import { getVersionsByProject } from "@/data/mock-versions";
-import type { Project, ValidationStatus } from "@/data/types";
+import type { Project } from "@/data/types";
 
 /* -------------------------------------------------------------------------- */
 /*  Hero Section — with business-impact metric cards                           */
@@ -475,17 +476,21 @@ function ReportScoreChip({ label, score }: { label: string; score: number | unde
   );
 }
 
-/** Status filter options with icons and colors */
+/** Status filter options — validation statuses + decision statuses */
 const REPORT_STATUS_OPTIONS: {
-  key: ValidationStatus;
+  key: string;
   label: string;
   icon: typeof CheckCircle2;
   color: string;
+  bgColor: string;
   dotColor: string;
+  kind: "validation" | "decision";
 }[] = [
-  { key: "pre_approved", label: "Pre-Approved", icon: CheckCircle2, color: "text-status-pre-approved", dotColor: "bg-status-pre-approved" },
-  { key: "review_required", label: "Review Required", icon: AlertTriangle, color: "text-status-review-required", dotColor: "bg-status-review-required" },
-  { key: "action_mandatory", label: "Action Mandatory", icon: XCircle, color: "text-status-action-mandatory", dotColor: "bg-status-action-mandatory" },
+  { key: "pre_approved", label: "Pre-Approved", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "validation" },
+  { key: "review_required", label: "Review Required", icon: AlertTriangle, color: "text-status-review-required", bgColor: "bg-status-review-required-bg", dotColor: "bg-status-review-required", kind: "validation" },
+  { key: "action_mandatory", label: "Action Mandatory", icon: XCircle, color: "text-status-action-mandatory", bgColor: "bg-status-action-mandatory-bg", dotColor: "bg-status-action-mandatory", kind: "validation" },
+  { key: "approved", label: "Approved", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "decision" },
+  { key: "revisit", label: "Revisit", icon: RotateCcw, color: "text-status-review-required", bgColor: "bg-status-review-required-bg", dotColor: "bg-status-review-required", kind: "decision" },
 ];
 
 function DownloadReportSheet({
@@ -500,11 +505,11 @@ function DownloadReportSheet({
   /* ---- All useState hooks MUST be before any early returns (React 19 strict) ---- */
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<Set<ValidationStatus>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set());
   const [statusPopoverOpen, setStatusPopoverOpen] = useState(false);
-  const [exportFormat, setExportFormat] = useState<"csv" | "xlsx">("csv");
   const [exporting, setExporting] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
+  const [exportFormat, setExportFormat] = useState<"csv" | "xlsx">("csv");
 
   /* ---- Data from hook ---- */
   // TODO: Phase 2 — extract a lighter read-only hook to avoid unused internal state
@@ -522,18 +527,23 @@ function DownloadReportSheet({
         m.document.specSectionTitle.toLowerCase().includes(lower);
       if (!matchesSearch) return false;
     }
-    // Status filter
+    // Status filter — check both validation status and decision status
     if (statusFilter.size > 0) {
-      if (!m.validation?.status || !statusFilter.has(m.validation.status)) return false;
+      if (m.validation?.status && statusFilter.has(m.validation.status)) return true;
+      const decision = m.validation?.decision;
+      if (decision && statusFilter.has(decision)) return true;
+      return false;
     }
     return true;
   });
 
   /* ---- Status counts (from ALL materials, not filtered) ---- */
-  const statusCountMap: Record<ValidationStatus, number> = {
+  const statusCountMap: Record<string, number> = {
     pre_approved: allMaterials.filter((m) => m.validation?.status === "pre_approved").length,
     review_required: allMaterials.filter((m) => m.validation?.status === "review_required").length,
     action_mandatory: allMaterials.filter((m) => m.validation?.status === "action_mandatory").length,
+    approved: allMaterials.filter((m) => m.validation?.decision === "approved").length,
+    revisit: allMaterials.filter((m) => m.validation?.decision === "revisit").length,
   };
 
   /* ---- Selection helpers ---- */
@@ -568,7 +578,7 @@ function DownloadReportSheet({
     }
   };
 
-  const toggleStatusFilter = (status: ValidationStatus) => {
+  const toggleStatusFilter = (status: string) => {
     setStatusFilter((prev) => {
       const next = new Set(prev);
       if (next.has(status)) next.delete(status);
@@ -577,7 +587,8 @@ function DownloadReportSheet({
     });
   };
 
-  const handleExport = () => {
+  const handleExport = (format: "csv" | "xlsx") => {
+    setExportFormat(format);
     setExporting(true);
     setTimeout(() => {
       setExporting(false);
@@ -592,9 +603,9 @@ function DownloadReportSheet({
       setSearch("");
       setStatusFilter(new Set());
       setStatusPopoverOpen(false);
-      setExportFormat("csv");
       setExporting(false);
       setExportComplete(false);
+      setExportFormat("csv");
     }
     onOpenChange(isOpen);
   };
@@ -751,8 +762,8 @@ function DownloadReportSheet({
                       key={opt.key}
                       className={cn(
                         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                        VALIDATION_STATUS_CONFIG[opt.key].bgColor,
-                        VALIDATION_STATUS_CONFIG[opt.key].color
+                        opt.bgColor,
+                        opt.color
                       )}
                     >
                       {opt.label}
@@ -928,38 +939,21 @@ function DownloadReportSheet({
               </div>
             </ScrollArea>
 
-            {/* Footer */}
+            {/* Footer — dual export CTAs */}
             <SheetFooter className="px-6 py-4 border-t shrink-0">
               <div className="flex items-center gap-3 w-full">
                 <Button
                   variant="outline"
-                  onClick={() => handleClose(false)}
-                >
-                  Cancel
-                </Button>
-                <Select
-                  value={exportFormat}
-                  onValueChange={(v) => setExportFormat(v as "csv" | "xlsx")}
-                >
-                  <SelectTrigger className="h-9 w-24 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="csv">CSV</SelectItem>
-                    <SelectItem value="xlsx">Excel</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  onClick={handleExport}
+                  onClick={() => handleExport("csv")}
                   disabled={selectedIds.size === 0 || exporting}
-                  className="flex-1 gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity"
+                  className="flex-1"
                   aria-label={
                     selectedIds.size === 0
-                      ? "Select materials to export"
-                      : `Export ${selectedIds.size} material${selectedIds.size !== 1 ? "s" : ""}`
+                      ? "Select materials to export as CSV"
+                      : `Export ${selectedIds.size} material${selectedIds.size !== 1 ? "s" : ""} as CSV`
                   }
                 >
-                  {exporting ? (
+                  {exporting && exportFormat === "csv" ? (
                     <>
                       <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                       Exporting…
@@ -967,7 +961,29 @@ function DownloadReportSheet({
                   ) : (
                     <>
                       <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                      Export{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+                      Export CSV{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={() => handleExport("xlsx")}
+                  disabled={selectedIds.size === 0 || exporting}
+                  className="flex-1 gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity"
+                  aria-label={
+                    selectedIds.size === 0
+                      ? "Select materials to export as Excel"
+                      : `Export ${selectedIds.size} material${selectedIds.size !== 1 ? "s" : ""} as Excel`
+                  }
+                >
+                  {exporting && exportFormat === "xlsx" ? (
+                    <>
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      Exporting…
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                      Export Excel{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
                     </>
                   )}
                 </Button>

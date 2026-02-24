@@ -7,6 +7,7 @@ import {
   XCircle,
   ChevronDown,
   X,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -187,17 +188,21 @@ function MaterialListItem({
   );
 }
 
-/** Status filter options with icons and colors */
+/** Status filter options — validation statuses + decision statuses */
 const STATUS_OPTIONS: {
-  key: ValidationStatus;
+  key: string;
   label: string;
   icon: typeof CheckCircle2;
   color: string;
+  bgColor: string;
   dotColor: string;
+  kind: "validation" | "decision";
 }[] = [
-  { key: "pre_approved", label: "Pre-Approved", icon: CheckCircle2, color: "text-status-pre-approved", dotColor: "bg-status-pre-approved" },
-  { key: "review_required", label: "Review Required", icon: AlertTriangle, color: "text-status-review-required", dotColor: "bg-status-review-required" },
-  { key: "action_mandatory", label: "Action Mandatory", icon: XCircle, color: "text-status-action-mandatory", dotColor: "bg-status-action-mandatory" },
+  { key: "pre_approved", label: "Pre-Approved", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "validation" },
+  { key: "review_required", label: "Review Required", icon: AlertTriangle, color: "text-status-review-required", bgColor: "bg-status-review-required-bg", dotColor: "bg-status-review-required", kind: "validation" },
+  { key: "action_mandatory", label: "Action Mandatory", icon: XCircle, color: "text-status-action-mandatory", bgColor: "bg-status-action-mandatory-bg", dotColor: "bg-status-action-mandatory", kind: "validation" },
+  { key: "approved", label: "Approved", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "decision" },
+  { key: "revisit", label: "Revisit", icon: RotateCcw, color: "text-status-review-required", bgColor: "bg-status-review-required-bg", dotColor: "bg-status-review-required", kind: "decision" },
 ];
 
 export function MaterialList({
@@ -218,15 +223,16 @@ export function MaterialList({
   checkedIds: Set<string>;
   decisions: Record<string, DecisionStatus>;
   search: string;
-  statusFilter: Set<ValidationStatus>;
+  statusFilter: Set<string>;
   onSelect: (id: string) => void;
   onToggleCheck: (id: string) => void;
   onSearchChange: (value: string) => void;
-  onToggleStatusFilter: (status: ValidationStatus) => void;
+  onToggleStatusFilter: (status: string) => void;
   onClearStatusFilter: () => void;
 }) {
   const [statusPopoverOpen, setStatusPopoverOpen] = useState(false);
 
+  // Count by validation status
   const preApprovedCount = materials.filter(
     (m) => m.validation?.status === "pre_approved"
   ).length;
@@ -236,11 +242,20 @@ export function MaterialList({
   const actionCount = materials.filter(
     (m) => m.validation?.status === "action_mandatory"
   ).length;
+  // Count by decision status
+  const approvedCount = materials.filter(
+    (m) => decisions[m.document.id] === "approved"
+  ).length;
+  const revisitCount = materials.filter(
+    (m) => decisions[m.document.id] === "revisit"
+  ).length;
 
-  const statusCountMap: Record<ValidationStatus, number> = {
+  const statusCountMap: Record<string, number> = {
     pre_approved: preApprovedCount,
     review_required: reviewCount,
     action_mandatory: actionCount,
+    approved: approvedCount,
+    revisit: revisitCount,
   };
 
   const allChecked =
@@ -348,8 +363,8 @@ export function MaterialList({
                 key={opt.key}
                 className={cn(
                   "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                  VALIDATION_STATUS_CONFIG[opt.key].bgColor,
-                  VALIDATION_STATUS_CONFIG[opt.key].color
+                  opt.bgColor,
+                  opt.color
                 )}
               >
                 {opt.label}

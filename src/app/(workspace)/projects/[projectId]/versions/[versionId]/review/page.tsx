@@ -142,7 +142,7 @@ export default function ReviewPage() {
               <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
               Approve
             </Button>
-            <Button size="sm" variant="secondary" onClick={batchRevisit}>
+            <Button size="sm" variant="outline" onClick={batchRevisit}>
               <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
               Revisit
             </Button>

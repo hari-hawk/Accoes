@@ -18,7 +18,7 @@ export interface MaterialItem {
 
 export function useMaterials(versionId: string) {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<Set<ValidationStatus>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [decisions, setDecisions] = useState<Record<string, DecisionStatus>>({});
@@ -48,13 +48,18 @@ export function useMaterials(versionId: string) {
     }
 
     if (statusFilter.size > 0) {
-      result = result.filter(
-        (m) => m.validation?.status !== undefined && statusFilter.has(m.validation.status)
-      );
+      result = result.filter((m) => {
+        // Check validation status (pre_approved, review_required, action_mandatory)
+        if (m.validation?.status && statusFilter.has(m.validation.status)) return true;
+        // Check decision status (approved, revisit)
+        const decision = decisions[m.document.id];
+        if (decision && statusFilter.has(decision)) return true;
+        return false;
+      });
     }
 
     return result;
-  }, [materials, search, statusFilter]);
+  }, [materials, search, statusFilter, decisions]);
 
   const selectedMaterial = useMemo(
     () => materials.find((m) => m.document.id === selectedId) ?? null,
@@ -112,7 +117,7 @@ export function useMaterials(versionId: string) {
     []
   );
 
-  const toggleStatusFilter = useCallback((status: ValidationStatus) => {
+  const toggleStatusFilter = useCallback((status: string) => {
     setStatusFilter((prev) => {
       const next = new Set(prev);
       if (next.has(status)) next.delete(status);

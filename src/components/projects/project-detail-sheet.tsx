@@ -10,7 +10,6 @@ import {
   FileType,
   Users,
   UserPlus,
-  Trash2,
   Calendar,
   Building2,
   Share2,
@@ -28,6 +27,8 @@ import {
   Eye,
   Download,
   Lock,
+  Loader2,
+  Check,
 } from "lucide-react";
 import {
   Sheet,
@@ -36,17 +37,6 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import {
   Tabs,
   TabsContent,
@@ -57,6 +47,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -68,12 +59,10 @@ import {
 } from "@/components/ui/select";
 import { FullScreenPdfViewer } from "@/components/documents/full-screen-pdf-viewer";
 import { StatusIndicator } from "@/components/shared/status-indicator";
-import { mockUsers, currentUser } from "@/data/mock-users";
-import { getVersionsByProject } from "@/data/mock-versions";
-import { getDocumentsByVersion } from "@/data/mock-documents";
+import { mockUsers } from "@/data/mock-users";
 import { getActivityLogsByProject } from "@/data/mock-activity-logs";
 import { cn } from "@/lib/utils";
-import type { Project, Document as DocType, ProjectStatus } from "@/data/types";
+import type { Project, ProjectStatus } from "@/data/types";
 
 /* -------------------------------------------------------------------------- */
 /*  Helpers                                                                    */
@@ -425,19 +414,13 @@ export function ProjectDetailSheet({
   const [editJobId, setEditJobId] = useState("");
   const [editLocation, setEditLocation] = useState("");
   const [editStatus, setEditStatus] = useState<ProjectStatus>("in_progress");
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [activityFilter, setActivityFilter] = useState("3d");
   const [previewSpec, setPreviewSpec] = useState<typeof mockSpecFiles[number] | null>(null);
-
-  const isAdmin = currentUser.role === "admin";
+  const [selectedMatrixIds, setSelectedMatrixIds] = useState<Set<string>>(new Set());
+  const [exporting, setExporting] = useState(false);
+  const [exportComplete, setExportComplete] = useState(false);
 
   if (!project) return null;
-
-  // Gather all documents across all versions for this project
-  const versions = getVersionsByProject(project.id);
-  const allDocs: DocType[] = versions.flatMap((v) =>
-    getDocumentsByVersion(v.id)
-  );
 
   // Resolve team members
   const members = project.memberIds
@@ -476,6 +459,36 @@ export function ProjectDetailSheet({
   };
 
   const [matrixHistoryOpen, setMatrixHistoryOpen] = useState(false);
+
+  const allMatrixSelected =
+    currentMatrixFiles.length > 0 &&
+    selectedMatrixIds.size === currentMatrixFiles.length;
+
+  const toggleMatrixFile = (id: string) => {
+    setSelectedMatrixIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllMatrix = () => {
+    if (allMatrixSelected) {
+      setSelectedMatrixIds(new Set());
+    } else {
+      setSelectedMatrixIds(new Set(currentMatrixFiles.map((f) => f.id)));
+    }
+  };
+
+  const handleMatrixExport = () => {
+    setExporting(true);
+    setTimeout(() => {
+      setExporting(false);
+      setExportComplete(true);
+      setTimeout(() => setExportComplete(false), 2500);
+    }, 1500);
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -698,24 +711,78 @@ export function ProjectDetailSheet({
 
                 {/* --- Documents Tab --- */}
                 <TabsContent value="files" className="mt-4 space-y-3">
-                  {/* Section 1: Material Matrix — active files */}
-                  <CollapsibleSection
-                    title="Material Matrix"
-                    icon={Layers}
-                    count={currentMatrixFiles.length}
-                    defaultOpen
-                    id="section-matrix"
-                  >
+                  {/* Material Matrix — unified container */}
+                  <div className="border rounded-lg overflow-hidden" role="region" aria-label="Material Matrix">
+                    {/* Header */}
+                    <div className="px-3 py-2.5 border-b flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Layers className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                        <span className="text-xs font-medium">Material Matrix</span>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {currentMatrixFiles.length}
+                        </Badge>
+                      </div>
+                      {selectedMatrixIds.size > 0 && (
+                        <Button
+                          size="sm"
+                          className="h-6 text-[11px] gap-1 gradient-action text-white border-0 hover:opacity-90 transition-opacity"
+                          onClick={handleMatrixExport}
+                          disabled={exporting}
+                          aria-label={`Export ${selectedMatrixIds.size} selected file${selectedMatrixIds.size !== 1 ? "s" : ""}`}
+                        >
+                          {exporting ? (
+                            <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                          ) : exportComplete ? (
+                            <Check className="h-3 w-3" aria-hidden="true" />
+                          ) : (
+                            <Download className="h-3 w-3" aria-hidden="true" />
+                          )}
+                          {exportComplete ? "Exported!" : `Export (${selectedMatrixIds.size})`}
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Select all bar */}
+                    {currentMatrixFiles.length > 0 && (
+                      <div className="px-3 py-1.5 border-b bg-muted/20 flex items-center justify-between">
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <Checkbox
+                            checked={allMatrixSelected}
+                            onCheckedChange={toggleAllMatrix}
+                            className="h-3.5 w-3.5"
+                            aria-label={allMatrixSelected ? "Deselect all files" : "Select all files"}
+                          />
+                          <span className="text-[11px] text-muted-foreground">Select all</span>
+                        </label>
+                        {selectedMatrixIds.size > 0 && (
+                          <span className="text-[11px] text-muted-foreground tabular-nums">
+                            {selectedMatrixIds.size} of {currentMatrixFiles.length} selected
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Active file list */}
                     <div className="divide-y" role="list" aria-label="Active material matrix files">
                       {currentMatrixFiles.map((file) => {
                         const ftConfig = fileTypeConfig[file.fileType] ?? fileTypeConfig.csv;
                         const FileIcon = ftConfig.icon;
+                        const isChecked = selectedMatrixIds.has(file.id);
                         return (
                           <div
                             key={file.id}
-                            className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors group/mfile"
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors group/mfile",
+                              isChecked && "bg-nav-accent/5"
+                            )}
                             role="listitem"
                           >
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={() => toggleMatrixFile(file.id)}
+                              aria-label={`Select ${file.fileName}`}
+                              className="shrink-0"
+                            />
                             <div className="h-7 w-7 rounded-md bg-status-pre-approved-bg flex items-center justify-center shrink-0">
                               <FileIcon className="h-3.5 w-3.5 text-status-pre-approved" aria-hidden="true" />
                             </div>
@@ -735,107 +802,81 @@ export function ProjectDetailSheet({
                             <Badge variant="secondary" className="text-[11px] px-1.5 py-0 h-4 bg-status-pre-approved-bg text-status-pre-approved shrink-0">
                               Active
                             </Badge>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 shrink-0 text-muted-foreground/0 group-hover/mfile:text-muted-foreground hover:!text-primary transition-colors"
-                              aria-label={`Preview ${file.fileName}`}
-                            >
-                              <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 shrink-0 text-muted-foreground/0 group-hover/mfile:text-muted-foreground hover:!text-primary transition-colors"
-                              aria-label={`Download ${file.fileName}`}
-                            >
-                              <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                            </Button>
+                            <Eye className="h-3.5 w-3.5 text-muted-foreground/0 group-hover/mfile:text-muted-foreground transition-colors shrink-0" aria-hidden="true" />
                           </div>
                         );
                       })}
                     </div>
-                  </CollapsibleSection>
 
-                  {/* Material Matrix History — collapsible */}
-                  {historicalMatrixFiles.length > 0 && (
-                    <div className="border rounded-lg overflow-hidden" role="region" aria-labelledby="section-matrix-history">
-                      <button
-                        type="button"
-                        id="section-matrix-history"
-                        className="flex items-center gap-2 w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-inset outline-none"
-                        onClick={() => setMatrixHistoryOpen(!matrixHistoryOpen)}
-                        aria-expanded={matrixHistoryOpen}
-                        aria-controls="matrix-history-list"
-                      >
-                        {matrixHistoryOpen ? (
-                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
-                        ) : (
-                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
-                        )}
-                        <History className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
-                        <span className="text-xs font-medium flex-1">History</span>
-                        <Badge variant="secondary" className="text-[10px]">
-                          {historicalMatrixFiles.length}
-                        </Badge>
-                      </button>
-                      {matrixHistoryOpen && (
-                        <div id="matrix-history-list" className="border-t divide-y bg-muted/10" role="list" aria-label="Historical material matrix files">
-                          {historicalMatrixFiles.map((file) => {
-                            const ftConfig = fileTypeConfig[file.fileType] ?? fileTypeConfig.csv;
-                            const FileIcon = ftConfig.icon;
-                            return (
-                              <div
-                                key={file.id}
-                                className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors group/hfile"
-                                role="listitem"
-                              >
-                                <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0 relative">
-                                  <FileIcon className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-                                  <Lock className="h-2 w-2 text-muted-foreground/60 absolute -bottom-0.5 -right-0.5" aria-hidden="true" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-medium truncate text-muted-foreground">
-                                    {file.fileName}
-                                  </p>
-                                  <div className="flex items-center gap-2 mt-0.5">
-                                    <Badge variant="secondary" className="text-[9px] px-1 py-0 h-3.5">
-                                      {file.version}
-                                    </Badge>
-                                    <span className="text-[11px] text-muted-foreground">
-                                      {formatFileSize(file.fileSize)}
-                                    </span>
-                                    <span className="text-[11px] text-muted-foreground font-medium">
-                                      {file.confidence}%
-                                    </span>
+                    {/* History — inline, same container */}
+                    {historicalMatrixFiles.length > 0 && (
+                      <>
+                        <button
+                          type="button"
+                          className="w-full flex items-center justify-between gap-2 px-3 py-2.5 border-t bg-muted/20 hover:bg-muted/40 transition-colors text-left focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-inset outline-none"
+                          onClick={() => setMatrixHistoryOpen(!matrixHistoryOpen)}
+                          aria-expanded={matrixHistoryOpen}
+                          aria-controls="matrix-history-list"
+                        >
+                          <span className="flex items-center gap-2">
+                            <History className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                            <span className="text-xs font-semibold text-muted-foreground">History</span>
+                            <Badge variant="secondary" className="text-[10px]">
+                              {historicalMatrixFiles.length}
+                            </Badge>
+                          </span>
+                          <ChevronDown
+                            className={cn(
+                              "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200",
+                              matrixHistoryOpen && "rotate-180"
+                            )}
+                            aria-hidden="true"
+                          />
+                        </button>
+
+                        {matrixHistoryOpen && (
+                          <div id="matrix-history-list" className="divide-y bg-muted/10" role="list" aria-label="Historical material matrix files">
+                            {historicalMatrixFiles.map((file) => {
+                              const ftConfig = fileTypeConfig[file.fileType] ?? fileTypeConfig.csv;
+                              const FileIcon = ftConfig.icon;
+                              return (
+                                <div
+                                  key={file.id}
+                                  className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors group/hfile"
+                                  role="listitem"
+                                >
+                                  <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0 relative">
+                                    <FileIcon className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                                    <Lock className="h-2 w-2 text-muted-foreground/60 absolute -bottom-0.5 -right-0.5" aria-hidden="true" />
                                   </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium truncate text-muted-foreground">
+                                      {file.fileName}
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <Badge variant="secondary" className="text-[9px] px-1 py-0 h-3.5">
+                                        {file.version}
+                                      </Badge>
+                                      <span className="text-[11px] text-muted-foreground">
+                                        {formatFileSize(file.fileSize)}
+                                      </span>
+                                      <span className="text-[11px] text-muted-foreground font-medium">
+                                        {file.confidence}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <Badge variant="secondary" className="text-[11px] bg-muted text-muted-foreground shrink-0">
+                                    View Only
+                                  </Badge>
+                                  <Eye className="h-3.5 w-3.5 text-muted-foreground/0 group-hover/hfile:text-muted-foreground transition-colors shrink-0" aria-hidden="true" />
                                 </div>
-                                <Badge variant="secondary" className="text-[11px] bg-muted text-muted-foreground shrink-0">
-                                  View Only
-                                </Badge>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 shrink-0 text-muted-foreground/0 group-hover/hfile:text-muted-foreground hover:!text-primary transition-colors"
-                                  aria-label={`Preview ${file.fileName}`}
-                                >
-                                  <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 shrink-0 text-muted-foreground/0 group-hover/hfile:text-muted-foreground hover:!text-primary transition-colors"
-                                  aria-label={`Download ${file.fileName}`}
-                                >
-                                  <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                                </Button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
 
                   {/* Section 2: Project Specifications — with preview */}
                   <CollapsibleSection
@@ -874,14 +915,6 @@ export function ProjectDetailSheet({
                               aria-label={`Preview ${file.fileName}`}
                             >
                               <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 shrink-0 text-muted-foreground/0 group-hover/spec:text-muted-foreground hover:!text-primary transition-colors"
-                              aria-label={`Download ${file.fileName}`}
-                            >
-                              <Download className="h-3.5 w-3.5" aria-hidden="true" />
                             </Button>
                           </div>
                         );
@@ -958,61 +991,6 @@ export function ProjectDetailSheet({
 
               </Tabs>
 
-              {/* ======================================================== */}
-              {/*  Delete Project (Owner only)                             */}
-              {/* ======================================================== */}
-              {isAdmin && (
-                <>
-                  <Separator />
-                  <div className="flex items-center justify-between" role="region" aria-label="Delete project">
-                    <p className="text-xs text-muted-foreground">
-                      Permanently delete this project and all data.
-                    </p>
-                    <AlertDialog
-                      open={deleteConfirmOpen}
-                      onOpenChange={setDeleteConfirmOpen}
-                    >
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="gap-1.5 shrink-0"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          Delete Project
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Delete &quot;{project.name}&quot;?
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently delete the project, all{" "}
-                            {versions.length} version
-                            {versions.length !== 1 ? "s" : ""}, and{" "}
-                            {allDocs.length} document
-                            {allDocs.length !== 1 ? "s" : ""}. This action
-                            cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            onClick={() => {
-                              setDeleteConfirmOpen(false);
-                              onOpenChange(false);
-                            }}
-                          >
-                            Delete Project
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </>
-              )}
             </div>
           )}
         </ScrollArea>

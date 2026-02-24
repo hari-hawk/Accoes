@@ -64,11 +64,11 @@ export function FileUploadCard({
 
   return (
     <div className="relative group rounded-xl border bg-card shadow-card p-3 pr-8 flex items-center gap-3 w-full">
-      {/* Remove button — top-right corner */}
+      {/* Remove button — vertically centered */}
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 text-muted-foreground hover:text-destructive transition-opacity focus-visible:opacity-100"
+        className="absolute top-1/2 -translate-y-1/2 right-1.5 h-5 w-5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 text-muted-foreground hover:text-destructive transition-opacity focus-visible:opacity-100"
         onClick={onRemove}
         aria-label={`Remove ${name}`}
       >

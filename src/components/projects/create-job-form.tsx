@@ -646,44 +646,25 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
 
           {/* Row 3 */}
           <div className="space-y-2">
-            <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <label
+              htmlFor="project-type"
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+            >
               <Layers className="h-3 w-3" aria-hidden="true" />
               Project Type
-            </span>
-            <div
-              className="flex items-center h-10 rounded-md border bg-background"
-              role="radiogroup"
-              aria-label="Project type"
+            </label>
+            <Select
+              value={projectType}
+              onValueChange={(v) => setProjectType(v as ProjectType)}
             >
-              <button
-                type="button"
-                role="radio"
-                aria-checked={projectType === "dr"}
-                className={cn(
-                  "flex-1 h-full text-xs font-semibold rounded-l-md transition-all",
-                  projectType === "dr"
-                    ? "gradient-accent text-white shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                )}
-                onClick={() => setProjectType("dr")}
-              >
-                DR
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={projectType === "design_job"}
-                className={cn(
-                  "flex-1 h-full text-xs font-semibold rounded-r-md transition-all",
-                  projectType === "design_job"
-                    ? "gradient-accent text-white shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                )}
-                onClick={() => setProjectType("design_job")}
-              >
-                Design Job
-              </button>
-            </div>
+              <SelectTrigger id="project-type" className="h-10 w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="dr">Discrepancy Report</SelectItem>
+                <SelectItem value="design_job">Design Job</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </SectionCard>

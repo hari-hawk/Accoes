@@ -118,7 +118,7 @@ export function ProjectCard({
                     : "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400"
                 )}
               >
-                {project.projectType === "dr" ? "DR" : "Design Job"}
+                {project.projectType === "dr" ? "Discrepancy Report" : "Design Job"}
               </Badge>
             )}
             <StatusIndicator status={project.status} />

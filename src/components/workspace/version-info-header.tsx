@@ -4,9 +4,52 @@ import Link from "next/link";
 import { ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusIndicator } from "@/components/shared/status-indicator";
-import { ConfidenceSummary } from "@/components/shared/confidence-summary";
 import { DateDisplay } from "@/components/shared/date-display";
-import type { Version, Project } from "@/data/types";
+import { cn } from "@/lib/utils";
+import type { Version, Project, ConfidenceSummary as ConfidenceSummaryType } from "@/data/types";
+
+/** Compact inline confidence bar for headers — stacked colored segments */
+function InlineConfidenceBar({ data }: { data: ConfidenceSummaryType }) {
+  if (data.total === 0) return null;
+  const paPct = Math.round((data.preApproved / data.total) * 100);
+  const rrPct = Math.round((data.reviewRequired / data.total) * 100);
+  const amPct = Math.round((data.actionMandatory / data.total) * 100);
+
+  const scoreColor =
+    data.overallConfidence >= 80
+      ? "text-status-pre-approved"
+      : data.overallConfidence >= 60
+        ? "text-status-review-required"
+        : "text-status-action-mandatory";
+
+  return (
+    <div className="flex items-center gap-2 shrink-0" aria-label={`Confidence ${data.overallConfidence}%`}>
+      <span className={cn("text-xs font-bold tabular-nums", scoreColor)}>
+        {data.overallConfidence}%
+      </span>
+      <div className="flex h-1.5 w-16 rounded-full overflow-hidden bg-muted">
+        {paPct > 0 && (
+          <div
+            className="bg-status-pre-approved transition-all"
+            style={{ width: `${paPct}%` }}
+          />
+        )}
+        {rrPct > 0 && (
+          <div
+            className="bg-status-review-required transition-all"
+            style={{ width: `${rrPct}%` }}
+          />
+        )}
+        {amPct > 0 && (
+          <div
+            className="bg-status-action-mandatory transition-all"
+            style={{ width: `${amPct}%` }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function VersionInfoHeader({
   version,
@@ -53,7 +96,7 @@ export function VersionInfoHeader({
           {version.confidenceSummary.total > 0 && (
             <>
               <span className="text-[10px] text-muted-foreground/40 hidden sm:inline">|</span>
-              <ConfidenceSummary data={version.confidenceSummary} size="sm" />
+              <InlineConfidenceBar data={version.confidenceSummary} />
             </>
           )}
         </div>

@@ -414,7 +414,7 @@ export function MaterialList({
       </div>
 
       {/* Material items — scrollable */}
-      <div className="flex-1 min-h-0 relative">
+      <div className="flex-1 min-h-0 overflow-hidden relative">
         <ScrollArea className="absolute inset-0">
           <div className="w-full" role="list" aria-label="Material items">
             {materials.map((item) => (

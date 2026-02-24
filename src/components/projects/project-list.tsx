@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -593,6 +594,9 @@ function DownloadReportSheet({
     setTimeout(() => {
       setExporting(false);
       setExportComplete(true);
+      toast.success(`Report exported as ${format === "csv" ? "CSV" : "Excel"}`, {
+        description: `${selectedIds.size} document${selectedIds.size !== 1 ? "s" : ""} included in the report.`,
+      });
     }, 1500);
   };
 

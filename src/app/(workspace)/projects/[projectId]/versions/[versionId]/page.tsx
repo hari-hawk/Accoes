@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
   FileText,
@@ -757,11 +758,15 @@ export default function VersionOverviewPage() {
   };
 
   const handleConfirmUpload = () => {
+    const fileCount = uploadFiles.length;
     setUploading(true);
     setTimeout(() => {
       setUploading(false);
       setUploadDialogOpen(false);
       setUploadFiles([]);
+      toast.success(`${fileCount} file${fileCount !== 1 ? "s" : ""} uploaded successfully`, {
+        description: "Files have been queued for AI processing.",
+      });
     }, 1200);
   };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useParams } from "next/navigation";
 import { Share2, Link2, Mail, Check } from "lucide-react";
 import { MilestoneProgressBar } from "@/components/layout/milestone-progress-bar";
@@ -31,6 +32,7 @@ function HeaderActions({
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
+    toast.success("Link copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
   };
 

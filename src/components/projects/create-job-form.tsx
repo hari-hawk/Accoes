@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
   Upload,
@@ -332,6 +333,9 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
   };
 
   const handleCreate = () => {
+    toast.success("Project created!", {
+      description: "Document extraction has started. We'll notify you when it's ready.",
+    });
     router.push("/projects");
   };
 

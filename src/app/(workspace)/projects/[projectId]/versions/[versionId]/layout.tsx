@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { WorkflowStageBar } from "@/components/layout/workflow-stage-bar";
+import { MilestoneProgressBar } from "@/components/layout/milestone-progress-bar";
 import { VersionInfoHeader } from "@/components/workspace/version-info-header";
 import { WorkspaceProvider } from "@/providers/workspace-provider";
 import { ProjectDetailSheet } from "@/components/projects/project-detail-sheet";
@@ -32,7 +32,7 @@ export default function VersionLayout({
   return (
     <WorkspaceProvider project={project} version={version}>
       <VersionInfoHeader version={version} project={project} onProjectNameClick={handleProjectNameClick} />
-      <WorkflowStageBar
+      <MilestoneProgressBar
         currentStage={version.workflowStage}
         projectId={project.id}
         versionId={version.id}

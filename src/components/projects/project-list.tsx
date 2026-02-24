@@ -8,16 +8,15 @@ import {
   FolderKanban,
   Download,
   FileText,
-  FileSpreadsheet,
-  FileType,
   CheckCircle2,
   AlertTriangle,
   XCircle,
   Check,
   Loader2,
+  ChevronDown,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Sheet,
@@ -28,40 +27,33 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { SearchInput } from "@/components/shared/search-input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatusIndicator } from "@/components/shared/status-indicator";
 import { cn } from "@/lib/utils";
+import { VALIDATION_STATUS_CONFIG } from "@/lib/constants";
 import { ProjectCard } from "./project-card";
 import { ProjectFilters } from "./project-filters";
 import { ProjectDetailSheet } from "./project-detail-sheet";
 // CreateProjectDialog replaced by /projects/create page
 import { useProjects } from "@/hooks/use-projects";
+import { useMaterials } from "@/hooks/use-materials";
 import { mockProjects } from "@/data/mock-projects";
 import { getDocumentsByVersion } from "@/data/mock-documents";
-import { getValidationsByVersion } from "@/data/mock-validations";
 import { getVersionsByProject } from "@/data/mock-versions";
-import type { Project, Document as DocType, ValidationResult } from "@/data/types";
-
-/* -------------------------------------------------------------------------- */
-/*  Status config for badges inside Download Report dialog                     */
-/* -------------------------------------------------------------------------- */
-const statusConfig = {
-  pre_approved: { label: "Pre-Approved", color: "bg-status-pre-approved-bg text-status-pre-approved", icon: CheckCircle2 },
-  review_required: { label: "Review Required", color: "bg-status-review-required-bg text-status-review-required", icon: AlertTriangle },
-  action_mandatory: { label: "Action Mandatory", color: "bg-status-action-mandatory-bg text-status-action-mandatory", icon: XCircle },
-};
-
-const fileIconMap: Record<string, typeof FileText> = {
-  pdf: FileText,
-  xlsx: FileSpreadsheet,
-  docx: FileType,
-};
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+import type { Project, ValidationStatus } from "@/data/types";
 
 /* -------------------------------------------------------------------------- */
 /*  Hero Section — with business-impact metric cards                           */
@@ -467,6 +459,41 @@ function ProjectListRow({
 /*  Download Report Sheet (Right-side panel)                                   */
 /* -------------------------------------------------------------------------- */
 
+/** Score chip for report items — displays "PS: 98%" or "PI: 74%" with color coding */
+function ReportScoreChip({ label, score }: { label: string; score: number | undefined }) {
+  if (score === undefined) return null;
+  const color =
+    score >= 80
+      ? "bg-status-pre-approved-bg text-status-pre-approved"
+      : score >= 60
+        ? "bg-status-review-required-bg text-status-review-required"
+        : "bg-status-action-mandatory-bg text-status-action-mandatory";
+  return (
+    <span className={cn("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-bold tabular-nums", color)}>
+      {label}: {score}%
+    </span>
+  );
+}
+
+/** Status filter options with icons and colors */
+const REPORT_STATUS_OPTIONS: {
+  key: ValidationStatus;
+  label: string;
+  icon: typeof CheckCircle2;
+  color: string;
+  dotColor: string;
+}[] = [
+  { key: "pre_approved", label: "Pre-Approved", icon: CheckCircle2, color: "text-status-pre-approved", dotColor: "bg-status-pre-approved" },
+  { key: "review_required", label: "Review Required", icon: AlertTriangle, color: "text-status-review-required", dotColor: "bg-status-review-required" },
+  { key: "action_mandatory", label: "Action Mandatory", icon: XCircle, color: "text-status-action-mandatory", dotColor: "bg-status-action-mandatory" },
+];
+
+const statusDotColors: Record<string, string> = {
+  pre_approved: "bg-status-pre-approved",
+  review_required: "bg-status-review-required",
+  action_mandatory: "bg-status-action-mandatory",
+};
+
 function DownloadReportSheet({
   project,
   open,
@@ -476,40 +503,83 @@ function DownloadReportSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
+  /* ---- All useState hooks MUST be before any early returns (React 19 strict) ---- */
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<Set<ValidationStatus>>(new Set());
+  const [statusPopoverOpen, setStatusPopoverOpen] = useState(false);
+  const [exportFormat, setExportFormat] = useState<"csv" | "xlsx">("csv");
   const [exporting, setExporting] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
 
-  // Get documents for this project's latest version
-  const documents: DocType[] = project?.latestVersionId
-    ? getDocumentsByVersion(
-        getVersionsByProject(project.id).find((v) => v.id === project.latestVersionId)?.id ?? ""
-      )
-    : [];
+  /* ---- Data from hook ---- */
+  const versionId = project?.latestVersionId ?? "";
+  const { allMaterials } = useMaterials(versionId);
 
-  const validations: ValidationResult[] = project?.latestVersionId
-    ? getValidationsByVersion(
-        getVersionsByProject(project.id).find((v) => v.id === project.latestVersionId)?.id ?? ""
-      )
-    : [];
+  /* ---- Local filtering ---- */
+  const filteredMaterials = allMaterials.filter((m) => {
+    // Search filter
+    if (search) {
+      const lower = search.toLowerCase();
+      const matchesSearch =
+        m.document.fileName.toLowerCase().includes(lower) ||
+        m.document.specSection.toLowerCase().includes(lower) ||
+        m.document.specSectionTitle.toLowerCase().includes(lower);
+      if (!matchesSearch) return false;
+    }
+    // Status filter
+    if (statusFilter.size > 0) {
+      if (!m.validation?.status || !statusFilter.has(m.validation.status)) return false;
+    }
+    return true;
+  });
 
-  const allSelected = documents.length > 0 && selectedDocIds.size === documents.length;
+  /* ---- Status counts (from ALL materials, not filtered) ---- */
+  const statusCountMap: Record<ValidationStatus, number> = {
+    pre_approved: allMaterials.filter((m) => m.validation?.status === "pre_approved").length,
+    review_required: allMaterials.filter((m) => m.validation?.status === "review_required").length,
+    action_mandatory: allMaterials.filter((m) => m.validation?.status === "action_mandatory").length,
+  };
 
-  const toggleDoc = (docId: string) => {
-    setSelectedDocIds((prev) => {
+  /* ---- Selection helpers ---- */
+  const allSelected =
+    filteredMaterials.length > 0 &&
+    filteredMaterials.every((m) => selectedIds.has(m.document.id));
+
+  const toggleItem = (id: string) => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(docId)) next.delete(docId);
-      else next.add(docId);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
 
   const toggleAll = () => {
     if (allSelected) {
-      setSelectedDocIds(new Set());
+      // Deselect all filtered items
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        filteredMaterials.forEach((m) => next.delete(m.document.id));
+        return next;
+      });
     } else {
-      setSelectedDocIds(new Set(documents.map((d) => d.id)));
+      // Select all filtered items
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        filteredMaterials.forEach((m) => next.add(m.document.id));
+        return next;
+      });
     }
+  };
+
+  const toggleStatusFilter = (status: ValidationStatus) => {
+    setStatusFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
   };
 
   const handleExport = () => {
@@ -522,14 +592,22 @@ function DownloadReportSheet({
 
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {
-      // Reset state when closing
-      setSelectedDocIds(new Set());
+      // Reset ALL state when closing
+      setSelectedIds(new Set());
+      setSearch("");
+      setStatusFilter(new Set());
+      setStatusPopoverOpen(false);
+      setExportFormat("csv");
       setExporting(false);
       setExportComplete(false);
     }
     onOpenChange(isOpen);
   };
 
+  const activeFilterCount = statusFilter.size;
+  const formatLabel = exportFormat === "csv" ? "CSV" : "Excel";
+
+  /* ---- Early return after all hooks ---- */
   if (!project) return null;
 
   return (
@@ -564,8 +642,8 @@ function DownloadReportSheet({
               <div>
                 <p className="text-base font-semibold">Report Generated</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {selectedDocIds.size} document{selectedDocIds.size !== 1 ? "s" : ""} exported
-                  successfully as PDF
+                  {selectedIds.size} document{selectedIds.size !== 1 ? "s" : ""} exported
+                  successfully as {formatLabel}
                 </p>
               </div>
               <Button
@@ -579,81 +657,253 @@ function DownloadReportSheet({
           </div>
         ) : (
           <>
-            <ScrollArea className="flex-1 min-h-0">
-              <div className="p-6 space-y-4">
-                {/* Select all / count header */}
-                {documents.length > 0 && (
-                  <div className="flex items-center justify-between">
-                    <button
-                      type="button"
-                      className="text-xs font-medium text-nav-accent hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 rounded-sm px-1 py-0.5"
-                      onClick={toggleAll}
-                      aria-label={allSelected ? "Deselect all documents" : "Select all documents"}
+            {/* Filter Header */}
+            <div className="px-4 pt-4 pb-3 space-y-2 border-b shrink-0">
+              {/* Search */}
+              <SearchInput
+                placeholder="Search materials..."
+                value={search}
+                onChange={setSearch}
+                className="[&_input]:h-8"
+              />
+
+              {/* Row 2: Document dropdown + Status filter */}
+              <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
+                <Select defaultValue="all">
+                  <SelectTrigger className="h-8 text-xs w-full">
+                    <SelectValue placeholder="All Documents" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Documents</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Status multi-select popover */}
+                <Popover open={statusPopoverOpen} onOpenChange={setStatusPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "h-8 w-full text-xs justify-between font-normal px-3",
+                        activeFilterCount > 0 && "border-primary/40 bg-primary/5"
+                      )}
+                      aria-label={`Filter by status${activeFilterCount > 0 ? ` — ${activeFilterCount} selected` : ""}`}
                     >
-                      {allSelected ? "Deselect All" : "Select All"}
-                    </button>
-                    <Badge variant="secondary" className="text-xs tabular-nums">
-                      {selectedDocIds.size} / {documents.length} selected
-                    </Badge>
-                  </div>
-                )}
+                      <span className="truncate">
+                        {activeFilterCount === 0
+                          ? "All Status"
+                          : activeFilterCount === 1
+                            ? REPORT_STATUS_OPTIONS.find((s) => statusFilter.has(s.key))?.label ?? "1 Status"
+                            : `${activeFilterCount} Status`}
+                      </span>
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden="true" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-2" align="start">
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between px-2 py-1">
+                        <span className="text-xs font-semibold text-muted-foreground">Filter by Status</span>
+                        {activeFilterCount > 0 && (
+                          <button
+                            type="button"
+                            className="text-[11px] text-primary hover:underline font-medium"
+                            onClick={() => setStatusFilter(new Set())}
+                          >
+                            Clear all
+                          </button>
+                        )}
+                      </div>
+                      <div className="h-px bg-border" />
+                      {REPORT_STATUS_OPTIONS.map((opt) => {
+                        const Icon = opt.icon;
+                        const isActive = statusFilter.has(opt.key);
+                        const count = statusCountMap[opt.key];
+                        return (
+                          <label
+                            key={opt.key}
+                            className={cn(
+                              "flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors",
+                              isActive ? "bg-primary/5" : "hover:bg-muted/50"
+                            )}
+                          >
+                            <Checkbox
+                              checked={isActive}
+                              onCheckedChange={() => toggleStatusFilter(opt.key)}
+                              className="h-3.5 w-3.5"
+                            />
+                            <Icon className={cn("h-3.5 w-3.5 shrink-0", opt.color)} aria-hidden="true" />
+                            <span className="text-xs font-medium flex-1">{opt.label}</span>
+                            <span className="text-[11px] text-muted-foreground tabular-nums font-medium">{count}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-                {/* Document list */}
-                {documents.length > 0 ? (
-                  <div className="space-y-1.5" role="group" aria-label="Available documents for export">
-                    {documents.map((doc) => {
-                      const validation = validations.find((v) => v.documentId === doc.id);
-                      const config = validation ? statusConfig[validation.status] : null;
-                      const StatusIcon = config?.icon;
-                      const FileIcon = fileIconMap[doc.fileType] ?? FileText;
-                      const isChecked = selectedDocIds.has(doc.id);
+              {/* Active filter chips */}
+              {activeFilterCount > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {REPORT_STATUS_OPTIONS.filter((s) => statusFilter.has(s.key)).map((opt) => (
+                    <span
+                      key={opt.key}
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                        VALIDATION_STATUS_CONFIG[opt.key].bgColor,
+                        VALIDATION_STATUS_CONFIG[opt.key].color
+                      )}
+                    >
+                      {opt.label}
+                      <button
+                        type="button"
+                        className="hover:opacity-70 transition-opacity"
+                        onClick={() => toggleStatusFilter(opt.key)}
+                        aria-label={`Remove ${opt.label} filter`}
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </span>
+                  ))}
+                  <button
+                    type="button"
+                    className="text-[11px] text-muted-foreground hover:text-foreground transition-colors ml-1"
+                    onClick={() => setStatusFilter(new Set())}
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
 
-                      return (
-                        <label
-                          key={doc.id}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-3 rounded-lg border cursor-pointer transition-all",
-                            "focus-within:ring-2 focus-within:ring-nav-accent focus-within:ring-offset-1",
-                            isChecked
-                              ? "border-nav-accent/40 bg-nav-accent/5 shadow-sm"
-                              : "border-border/50 hover:border-border hover:bg-muted/20"
-                          )}
-                        >
-                          <Checkbox
-                            checked={isChecked}
-                            onCheckedChange={() => toggleDoc(doc.id)}
-                            aria-label={`Select ${doc.fileName}`}
-                            className="shrink-0"
-                          />
-                          <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                            <FileIcon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              {/* Select all + status count badges */}
+              <div className="flex items-center gap-3 text-xs">
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={toggleAll}
+                    className="h-3.5 w-3.5"
+                  />
+                  <span className="text-muted-foreground">Select all</span>
+                </label>
+                <div className="flex items-center gap-2 ml-auto" role="group" aria-label="Status counts">
+                  <span className="flex items-center gap-1 text-status-pre-approved" aria-label={`${statusCountMap.pre_approved} pre-approved`}>
+                    <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                    {statusCountMap.pre_approved}
+                  </span>
+                  <span className="flex items-center gap-1 text-status-review-required" aria-label={`${statusCountMap.review_required} review required`}>
+                    <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                    {statusCountMap.review_required}
+                  </span>
+                  <span className="flex items-center gap-1 text-status-action-mandatory" aria-label={`${statusCountMap.action_mandatory} action mandatory`}>
+                    <XCircle className="h-3 w-3" aria-hidden="true" />
+                    {statusCountMap.action_mandatory}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Material items — scrollable */}
+            <ScrollArea className="flex-1 min-h-0">
+              <div role="list" aria-label="Materials for export">
+                {filteredMaterials.length > 0 ? (
+                  filteredMaterials.map((item) => {
+                    const isChecked = selectedIds.has(item.document.id);
+                    const status = item.validation?.status;
+                    const effectiveDecision = item.validation?.decision;
+                    const psScore = item.paValidation?.confidenceScore;
+                    const piScore = item.piValidation?.confidenceScore;
+                    const overallScore = item.validation?.confidenceScore;
+                    const hasSubScores = psScore !== undefined || piScore !== undefined;
+
+                    return (
+                      <label
+                        key={item.document.id}
+                        className={cn(
+                          "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b",
+                          isChecked
+                            ? "bg-nav-accent/5 border-l-2 border-l-nav-accent"
+                            : "hover:bg-muted/30 border-l-2 border-l-transparent"
+                        )}
+                      >
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={() => toggleItem(item.document.id)}
+                          aria-label={`Select ${item.document.fileName}`}
+                          className="mt-1 shrink-0"
+                        />
+
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          {/* Material name */}
+                          <div className="flex items-center gap-1.5">
+                            {status && (
+                              <span
+                                className={cn(
+                                  "h-2 w-2 rounded-full shrink-0",
+                                  statusDotColors[status]
+                                )}
+                              />
+                            )}
+                            <p className="text-sm font-medium leading-tight truncate">
+                              {item.document.fileName.replace(/\.[^/.]+$/, "")}
+                            </p>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{doc.fileName}</p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs font-mono font-semibold text-nav-accent">
-                                {doc.specSection}
-                              </span>
-                              <span className="text-[11px] text-muted-foreground" aria-label={`File size: ${formatFileSize(doc.fileSize)}`}>
-                                {formatFileSize(doc.fileSize)}
-                              </span>
+
+                          {/* Spec section */}
+                          <p className="text-xs text-muted-foreground mt-1 leading-tight truncate">
+                            <span className="font-mono font-semibold text-primary/80">
+                              {item.document.specSection}
+                            </span>
+                            {" — "}
+                            {item.document.specSectionTitle}
+                          </p>
+
+                          {/* Score chips + decision/status badge */}
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            {hasSubScores ? (
+                              <>
+                                <ReportScoreChip label="PS" score={psScore} />
+                                <ReportScoreChip label="PI" score={piScore} />
+                              </>
+                            ) : (
+                              <ReportScoreChip label="Score" score={overallScore} />
+                            )}
+
+                            {/* Decision or validation status badge */}
+                            <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                              {effectiveDecision && effectiveDecision !== "pending" ? (
+                                <span
+                                  className={cn(
+                                    "inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold leading-none capitalize",
+                                    effectiveDecision === "approved"
+                                      ? "bg-status-pre-approved-bg text-status-pre-approved"
+                                      : effectiveDecision === "revisit"
+                                        ? "bg-status-review-required-bg text-status-review-required"
+                                        : "bg-muted text-muted-foreground"
+                                  )}
+                                >
+                                  {effectiveDecision.replace(/_/g, " ")}
+                                </span>
+                              ) : (
+                                status && (
+                                  <span
+                                    className={cn(
+                                      "inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold leading-none",
+                                      VALIDATION_STATUS_CONFIG[status].bgColor,
+                                      VALIDATION_STATUS_CONFIG[status].color
+                                    )}
+                                  >
+                                    {VALIDATION_STATUS_CONFIG[status].label}
+                                  </span>
+                                )
+                              )}
                             </div>
                           </div>
-                          <div className="shrink-0">
-                            {config && StatusIcon ? (
-                              <Badge variant="secondary" className={cn("text-[11px]", config.color)}>
-                                <StatusIcon className="h-3 w-3 mr-1" aria-hidden="true" />
-                                {config.label}
-                              </Badge>
-                            ) : (
-                              <Badge variant="secondary" className="text-[11px]">Pending</Badge>
-                            )}
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-                ) : (
+                        </div>
+                      </label>
+                    );
+                  })
+                ) : allMaterials.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="w-14 h-14 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
                       <FileText className="h-6 w-6 text-muted-foreground/60" aria-hidden="true" />
@@ -661,6 +911,16 @@ function DownloadReportSheet({
                     <p className="text-sm font-medium text-muted-foreground">No documents available</p>
                     <p className="text-xs text-muted-foreground/60 mt-1 max-w-[200px]">
                       Upload documents to this project&apos;s latest version first
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="w-14 h-14 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
+                      <FileText className="h-6 w-6 text-muted-foreground/60" aria-hidden="true" />
+                    </div>
+                    <p className="text-sm font-medium text-muted-foreground">No materials match filters</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1 max-w-[200px]">
+                      Try adjusting your search or status filters
                     </p>
                   </div>
                 )}
@@ -673,18 +933,29 @@ function DownloadReportSheet({
                 <Button
                   variant="outline"
                   onClick={() => handleClose(false)}
-                  className="flex-1"
                 >
                   Cancel
                 </Button>
+                <Select
+                  value={exportFormat}
+                  onValueChange={(v) => setExportFormat(v as "csv" | "xlsx")}
+                >
+                  <SelectTrigger className="h-9 w-24 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="csv">CSV</SelectItem>
+                    <SelectItem value="xlsx">Excel</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button
                   onClick={handleExport}
-                  disabled={selectedDocIds.size === 0 || exporting}
+                  disabled={selectedIds.size === 0 || exporting}
                   className="flex-1 gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity"
                   aria-label={
-                    selectedDocIds.size === 0
-                      ? "Select documents to export"
-                      : `Export ${selectedDocIds.size} document${selectedDocIds.size !== 1 ? "s" : ""}`
+                    selectedIds.size === 0
+                      ? "Select materials to export"
+                      : `Export ${selectedIds.size} material${selectedIds.size !== 1 ? "s" : ""}`
                   }
                 >
                   {exporting ? (
@@ -695,7 +966,7 @@ function DownloadReportSheet({
                   ) : (
                     <>
                       <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                      Export{selectedDocIds.size > 0 ? ` (${selectedDocIds.size})` : ""}
+                      Export{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
                     </>
                   )}
                 </Button>

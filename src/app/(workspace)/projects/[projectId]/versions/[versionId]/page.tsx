@@ -342,8 +342,12 @@ function MaterialIndexGridCard({
           </Badge>
           <Button
             size="sm"
-            className="h-7 text-xs gap-1 gradient-accent text-white border-0 hover:opacity-90"
+            className={cn(
+              "h-7 text-xs gap-1 gradient-accent text-white border-0 hover:opacity-90 transition-opacity",
+              selectedIds.size > 0 && "opacity-50 pointer-events-none"
+            )}
             onClick={onUpload}
+            disabled={selectedIds.size > 0}
             aria-label="Re-upload files — replaces active files"
           >
             <Upload className="h-3 w-3" aria-hidden="true" />

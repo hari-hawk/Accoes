@@ -42,6 +42,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWorkspace } from "@/providers/workspace-provider";
 import { FullScreenPdfViewer } from "@/components/documents/full-screen-pdf-viewer";
+import { FileUploadCard } from "@/components/projects/file-upload-card";
 import { formatPercentage } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -924,7 +925,7 @@ export default function VersionOverviewPage() {
       {/*  Upload Files Dialog (Conformance)                            */}
       {/* ------------------------------------------------------------------ */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md overflow-hidden">
           <DialogHeader>
             <DialogTitle>Upload Files</DialogTitle>
             <DialogDescription>
@@ -961,30 +962,20 @@ export default function VersionOverviewPage() {
             ) : (
               <div className="space-y-3">
                 <ScrollArea className="max-h-[240px]">
-                  <div className="space-y-2 pr-2">
-                    {uploadFiles.map((file) => (
-                      <div
-                        key={file.id}
-                        className="flex items-center gap-3 p-3 rounded-lg border bg-muted/10"
-                      >
-                        <div className="h-8 w-8 rounded-lg bg-ds-primary-100 flex items-center justify-center shrink-0">
-                          <FileText className="h-4 w-4 text-ds-primary-800" aria-hidden="true" />
+                  <div className="flex flex-col gap-2 pr-2" role="list" aria-label="Files to upload">
+                    {uploadFiles.map((file) => {
+                      const ext = file.name.split(".").pop()?.toLowerCase() ?? "other";
+                      return (
+                        <div key={file.id} role="listitem">
+                          <FileUploadCard
+                            name={file.name}
+                            size={file.size}
+                            type={ext}
+                            onRemove={() => handleRemoveUploadFile(file.id)}
+                          />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{file.name}</p>
-                          <p className="text-xs text-muted-foreground">{file.size}</p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                          onClick={() => handleRemoveUploadFile(file.id)}
-                          aria-label={`Remove ${file.name}`}
-                        >
-                          <X className="h-3.5 w-3.5" aria-hidden="true" />
-                        </Button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </ScrollArea>
 

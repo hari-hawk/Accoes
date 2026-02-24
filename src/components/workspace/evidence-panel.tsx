@@ -420,7 +420,7 @@ function CommentsActivityPanel({
   };
 
   return (
-    <div className="w-[340px] border-l flex flex-col h-full shrink-0 bg-muted/15" role="complementary" aria-label="Comments and activity panel">
+    <div className="w-[340px] border-l flex flex-col h-full shrink-0 bg-background" role="complementary" aria-label="Comments and activity panel">
       {/* Header with material name */}
       <div className="px-4 py-3 border-b shrink-0 space-y-2 bg-background">
         <div className="flex items-center justify-between">
@@ -794,7 +794,7 @@ export function EvidencePanel({
         </div>
 
         {/* Content area — flex-1 + min-h-0 ensures scrollable within flex column */}
-        <div className="flex-1 min-h-0 overflow-hidden relative bg-muted/20">
+        <div className="flex-1 min-h-0 overflow-hidden relative bg-background">
           <ScrollArea className="absolute inset-0">
             <div className="p-5">
             {activeValidation ? (

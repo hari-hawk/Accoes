@@ -18,8 +18,7 @@ import {
   MapPin,
   Briefcase,
   Activity,
-  MessageSquare,
-  Send,
+  History,
   ChevronDown,
   ChevronRight,
   ArrowLeft,
@@ -72,7 +71,6 @@ import { mockUsers, currentUser } from "@/data/mock-users";
 import { getVersionsByProject } from "@/data/mock-versions";
 import { getDocumentsByVersion } from "@/data/mock-documents";
 import { getActivityLogsByProject } from "@/data/mock-activity-logs";
-import { getProjectComments } from "@/data/mock-project-comments";
 import { cn } from "@/lib/utils";
 import type { Project, Document as DocType, ProjectStatus } from "@/data/types";
 
@@ -182,6 +180,19 @@ const mockMigFiles = [
 const mockSpecFiles = [
   { id: "ps-1", fileName: "UCD_Project9592330_Project_Specification_Volume_1_2026-02.pdf", fileType: "pdf", fileSize: 16482304, totalPages: 342 },
   { id: "ps-2", fileName: "UCD_Project9592330_Project_Specification_Volume_2_2026-02.pdf", fileType: "pdf", fileSize: 13107200, totalPages: 278 },
+];
+
+// Material Matrix files — current + historical
+const currentMatrixFiles = [
+  { id: "mig-7", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v3.csv", fileType: "csv", fileSize: 548864, version: "v3" },
+  { id: "mig-8", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v3.csv", fileType: "csv", fileSize: 516096, version: "v3" },
+  { id: "mig-9", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v3.csv", fileType: "csv", fileSize: 483328, version: "v3" },
+];
+
+const historicalMatrixFiles = [
+  { id: "mig-1", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v1.csv", fileType: "csv", fileSize: 524288, version: "v1", confidence: 72 },
+  { id: "mig-2", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v1.csv", fileType: "csv", fileSize: 491520, version: "v1", confidence: 68 },
+  { id: "mig-3", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v1.csv", fileType: "csv", fileSize: 458752, version: "v1", confidence: 75 },
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -420,7 +431,6 @@ export function ProjectDetailSheet({
   const [editLocation, setEditLocation] = useState("");
   const [editStatus, setEditStatus] = useState<ProjectStatus>("in_progress");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [commentText, setCommentText] = useState("");
   const [activityFilter, setActivityFilter] = useState("3d");
   const [previewSpec, setPreviewSpec] = useState<typeof mockSpecFiles[number] | null>(null);
 
@@ -439,9 +449,8 @@ export function ProjectDetailSheet({
     .map((id) => mockUsers.find((u) => u.id === id))
     .filter(Boolean) as typeof mockUsers;
 
-  // Activity logs and comments
+  // Activity logs
   const activityLogs = getActivityLogsByProject(project.id);
-  const projectComments = getProjectComments(project.id);
 
   // Filter activity by time range
   const filterMs =
@@ -471,12 +480,7 @@ export function ProjectDetailSheet({
     setEditing(false);
   };
 
-  const handleSendComment = () => {
-    if (commentText.trim()) {
-      // Mock send — in production this would call an API
-      setCommentText("");
-    }
-  };
+  const [matrixHistoryOpen, setMatrixHistoryOpen] = useState(false);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -683,21 +687,21 @@ export function ProjectDetailSheet({
               <Separator />
 
               {/* ======================================================== */}
-              {/*  Tabs: Conformance | Recent Activity | Comments  */}
+              {/*  Tabs: Documents | Activity | Material Matrix             */}
               {/* ======================================================== */}
               <Tabs defaultValue="files" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="files" className="text-xs gap-1.5">
                     <FileText className="h-3.5 w-3.5" />
-                    Conformance
+                    Documents
                   </TabsTrigger>
                   <TabsTrigger value="activity" className="text-xs gap-1.5">
                     <Activity className="h-3.5 w-3.5" />
-                    Recent Activity
+                    Activity
                   </TabsTrigger>
-                  <TabsTrigger value="comments" className="text-xs gap-1.5">
-                    <MessageSquare className="h-3.5 w-3.5" />
-                    Comments
+                  <TabsTrigger value="matrix" className="text-xs gap-1.5">
+                    <Layers className="h-3.5 w-3.5" />
+                    Material Matrix
                   </TabsTrigger>
                 </TabsList>
 
@@ -872,72 +876,76 @@ export function ProjectDetailSheet({
                   )}
                 </TabsContent>
 
-                {/* --- Comments Tab --- */}
-                <TabsContent value="comments" className="mt-4">
-                  {projectComments.length > 0 ? (
-                    <div className="space-y-3">
-                      {projectComments.map((comment) => {
-                        const user = mockUsers.find(
-                          (u) => u.id === comment.authorId
-                        );
+                {/* --- Material Matrix Tab --- */}
+                <TabsContent value="matrix" className="mt-4 space-y-3">
+                  {/* Current Matrix files */}
+                  <CollapsibleSection
+                    title="Current Matrix Files"
+                    icon={Layers}
+                    count={currentMatrixFiles.length}
+                    defaultOpen
+                    id="section-current-matrix"
+                  >
+                    <div className="divide-y" role="list" aria-label="Current material matrix files">
+                      {currentMatrixFiles.map((file) => {
+                        const ftConfig = fileTypeConfig[file.fileType] ?? fileTypeConfig.csv;
+                        const FileIcon = ftConfig.icon;
                         return (
-                          <div key={comment.id} className="flex gap-3">
-                            <Avatar className="h-7 w-7 shrink-0 mt-0.5">
-                              {user?.avatarUrl && (
-                                <AvatarImage
-                                  src={user.avatarUrl}
-                                  alt={user?.name ?? ""}
-                                />
-                              )}
-                              <AvatarFallback className="text-[9px] font-bold">
-                                {user ? getInitials(user.name) : "?"}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium">
-                                  {user?.name ?? "Unknown"}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {formatRelativeTime(comment.createdAt)}
-                                </span>
-                              </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {comment.content}
-                              </p>
+                          <div key={file.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors" role="listitem">
+                            <div className="h-7 w-7 rounded-md bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0">
+                              <FileIcon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                             </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate">{file.fileName}</p>
+                              <span className="text-[10px] text-muted-foreground">{formatFileSize(file.fileSize)} — {file.version}</span>
+                            </div>
+                            <Badge variant="secondary" className="text-[9px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Active</Badge>
                           </div>
                         );
                       })}
                     </div>
-                  ) : (
-                    <div className="py-8 text-center text-sm text-muted-foreground">
-                      No comments yet
+                  </CollapsibleSection>
+
+                  {/* Historical Matrix files */}
+                  {historicalMatrixFiles.length > 0 && (
+                    <div className="border rounded-lg overflow-hidden" role="region" aria-labelledby="section-history-matrix">
+                      <button
+                        type="button"
+                        id="section-history-matrix"
+                        className="flex items-center gap-2 w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors"
+                        onClick={() => setMatrixHistoryOpen(!matrixHistoryOpen)}
+                        aria-expanded={matrixHistoryOpen}
+                      >
+                        {matrixHistoryOpen ? (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
+                        ) : (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
+                        )}
+                        <History className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
+                        <span className="text-xs font-medium flex-1">History</span>
+                        <Badge variant="secondary" className="text-[10px]">{historicalMatrixFiles.length}</Badge>
+                      </button>
+                      {matrixHistoryOpen && (
+                        <div className="border-t divide-y bg-muted/10" role="list" aria-label="Historical matrix files">
+                          {historicalMatrixFiles.map((file) => {
+                            const ftConfig = fileTypeConfig[file.fileType] ?? fileTypeConfig.csv;
+                            const FileIcon = ftConfig.icon;
+                            return (
+                              <div key={file.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors" role="listitem">
+                                <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
+                                  <FileIcon className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium truncate text-muted-foreground">{file.fileName}</p>
+                                  <span className="text-[10px] text-muted-foreground">{formatFileSize(file.fileSize)} — {file.version} — {file.confidence}% confidence</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
-
-                  {/* Comment input */}
-                  <div className="flex items-center gap-2 mt-4 pt-3 border-t" role="form" aria-label="Add a comment">
-                    <Input
-                      placeholder="Write a comment..."
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleSendComment();
-                      }}
-                      className="flex-1 text-sm"
-                      aria-label="Comment text"
-                    />
-                    <Button
-                      size="sm"
-                      className="shrink-0 gap-1.5"
-                      onClick={handleSendComment}
-                      aria-label="Send comment"
-                    >
-                      <Send className="h-3.5 w-3.5" aria-hidden="true" />
-                      Send
-                    </Button>
-                  </div>
                 </TabsContent>
               </Tabs>
 

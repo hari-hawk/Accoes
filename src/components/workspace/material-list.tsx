@@ -5,7 +5,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
-  Filter,
+  ChevronDown,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -250,7 +250,7 @@ export function MaterialList({
   const activeFilterCount = statusFilter.size;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-muted/20" role="region" aria-label="Material list panel">
+    <div className="flex h-full flex-col overflow-hidden bg-background" role="region" aria-label="Material list panel">
       {/* Filter header */}
       <div className="border-b p-3 space-y-2 shrink-0 bg-background" role="search" aria-label="Filter materials">
         {/* Row 1: Search — full width */}
@@ -258,6 +258,7 @@ export function MaterialList({
           placeholder="Search materials..."
           value={search}
           onChange={onSearchChange}
+          className="[&_input]:h-8"
         />
 
         {/* Row 2: Document dropdown + Status filter — two columns */}
@@ -281,27 +282,19 @@ export function MaterialList({
                 variant="outline"
                 size="sm"
                 className={cn(
-                  "h-8 w-full text-xs justify-between gap-1.5 font-normal",
+                  "h-8 w-full text-xs justify-between font-normal px-3",
                   activeFilterCount > 0 && "border-primary/40 bg-primary/5"
                 )}
                 aria-label={`Filter by status${activeFilterCount > 0 ? ` — ${activeFilterCount} selected` : ""}`}
               >
-                <span className="flex items-center gap-1.5 truncate">
-                  <Filter className="h-3 w-3 shrink-0" aria-hidden="true" />
+                <span className="truncate">
                   {activeFilterCount === 0
                     ? "All Status"
                     : activeFilterCount === 1
                       ? STATUS_OPTIONS.find((s) => statusFilter.has(s.key))?.label ?? "1 Status"
                       : `${activeFilterCount} Status`}
                 </span>
-                {activeFilterCount > 0 && (
-                  <span
-                    className="h-4 w-4 rounded-full bg-primary text-[9px] font-bold text-primary-foreground flex items-center justify-center shrink-0"
-                    aria-hidden="true"
-                  >
-                    {activeFilterCount}
-                  </span>
-                )}
+                <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden="true" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-2" align="start">

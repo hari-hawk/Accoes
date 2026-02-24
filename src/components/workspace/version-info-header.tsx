@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusIndicator } from "@/components/shared/status-indicator";
-import { DateDisplay } from "@/components/shared/date-display";
 import { cn } from "@/lib/utils";
 import type { Version, Project, ConfidenceSummary as ConfidenceSummaryType } from "@/data/types";
 
@@ -71,7 +70,7 @@ export function VersionInfoHeader({
             <ArrowLeft className="h-3.5 w-3.5" />
           </Link>
         </Button>
-        <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
+        <div className="flex items-center gap-2 min-w-0">
           <button
             type="button"
             className="text-sm font-semibold truncate hover:underline hover:text-nav-accent transition-colors cursor-pointer"
@@ -85,14 +84,10 @@ export function VersionInfoHeader({
           <span className="text-xs text-muted-foreground truncate shrink-0">
             {project.client}
           </span>
+          <span className="text-[10px] text-muted-foreground/40 hidden sm:inline">|</span>
           <span className="text-xs font-mono text-muted-foreground shrink-0">
             {project.jobId}
           </span>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-            <FileText className="h-3 w-3" />
-            {version.documentIds.length} docs
-          </div>
-          <DateDisplay date={version.updatedAt} className="text-xs shrink-0" />
           {version.confidenceSummary.total > 0 && (
             <>
               <span className="text-[10px] text-muted-foreground/40 hidden sm:inline">|</span>

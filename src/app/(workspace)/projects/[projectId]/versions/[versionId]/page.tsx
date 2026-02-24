@@ -108,10 +108,8 @@ interface MockUploadFile {
 /* -------------------------------------------------------------------------- */
 
 function ProjectSpecificationsCard({
-  onReUpload,
   onPreview,
 }: {
-  onReUpload: () => void;
   onPreview: (spec: typeof mockProjectSpecs[number]) => void;
 }) {
   const [selectedSpecIds, setSelectedSpecIds] = useState<Set<string>>(new Set());
@@ -177,15 +175,6 @@ function ProjectSpecificationsCard({
             <Badge variant="secondary" className="text-xs">
               {mockProjectSpecs.length} {mockProjectSpecs.length === 1 ? "file" : "files"}
             </Badge>
-            <Button
-              size="sm"
-              className="h-7 text-xs gap-1 gradient-accent text-white border-0 hover:opacity-90"
-              onClick={onReUpload}
-              aria-label="Upload specification documents"
-            >
-              <Upload className="h-3 w-3" aria-hidden="true" />
-              Upload
-            </Button>
           </div>
         </div>
 
@@ -328,9 +317,6 @@ function MaterialIndexGridCard({
         <div className="flex items-center gap-2">
           <Layers className="h-4 w-4 text-primary" aria-hidden="true" />
           <h3 className="font-semibold text-sm">Material Matrix</h3>
-          <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-            Current
-          </Badge>
         </div>
         <div className="flex items-center gap-2">
           {selectedIds.size > 0 && (
@@ -358,10 +344,10 @@ function MaterialIndexGridCard({
             size="sm"
             className="h-7 text-xs gap-1 gradient-accent text-white border-0 hover:opacity-90"
             onClick={onUpload}
-            aria-label="Upload new files"
+            aria-label="Re-upload files — replaces active files"
           >
             <Upload className="h-3 w-3" aria-hidden="true" />
-            Upload
+            Re-upload
           </Button>
         </div>
       </div>
@@ -423,6 +409,9 @@ function MaterialIndexGridCard({
                   </span>
                 </div>
               </div>
+              <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 shrink-0">
+                Active
+              </Badge>
               <ChevronRight className="h-4 w-4 text-muted-foreground/0 group-hover/row:text-muted-foreground transition-colors shrink-0" aria-hidden="true" />
             </div>
           );
@@ -729,11 +718,6 @@ export default function VersionOverviewPage() {
   // PDF preview state for Project Specifications
   const [previewSpec, setPreviewSpec] = useState<typeof mockProjectSpecs[number] | null>(null);
 
-  // Re-upload dialog for Project Specifications
-  const [specUploadOpen, setSpecUploadOpen] = useState(false);
-  const [specUploadFiles, setSpecUploadFiles] = useState<MockUploadFile[]>([]);
-  const [specUploadCounter, setSpecUploadCounter] = useState(0);
-  const [specUploading, setSpecUploading] = useState(false);
 
   const confidence = confidenceSummary.overallConfidence;
   const confidenceColor =
@@ -776,35 +760,6 @@ export default function VersionOverviewPage() {
     }, 1200);
   };
 
-  // Spec re-upload handlers
-  const handleSimulateSpecUpload = () => {
-    const batch: MockUploadFile[] = [
-      { id: `spec-${specUploadCounter}`, name: "Project Specifications - Volume 4.pdf", size: "8.5 MB" },
-    ];
-    setSpecUploadCounter((c) => c + 1);
-    setSpecUploadFiles((prev) => [...prev, ...batch]);
-  };
-
-  const handleAddOneMoreSpec = () => {
-    setSpecUploadFiles((prev) => [
-      ...prev,
-      { id: `spec-${specUploadCounter}`, name: `Additional_Spec_Volume_${specUploadCounter + 1}.pdf`, size: "5.0 MB" },
-    ]);
-    setSpecUploadCounter((c) => c + 1);
-  };
-
-  const handleRemoveSpecFile = (id: string) => {
-    setSpecUploadFiles((prev) => prev.filter((f) => f.id !== id));
-  };
-
-  const handleConfirmSpecUpload = () => {
-    setSpecUploading(true);
-    setTimeout(() => {
-      setSpecUploading(false);
-      setSpecUploadOpen(false);
-      setSpecUploadFiles([]);
-    }, 1200);
-  };
 
   return (
     <div className="absolute inset-0 overflow-auto">
@@ -833,7 +788,6 @@ export default function VersionOverviewPage() {
 
           {/* Project Specifications — at the bottom */}
           <ProjectSpecificationsCard
-            onReUpload={() => setSpecUploadOpen(true)}
             onPreview={(spec) => setPreviewSpec(spec)}
           />
         </div>
@@ -1058,107 +1012,6 @@ export default function VersionOverviewPage() {
               className="gradient-accent text-white border-0"
             >
               {uploading ? "Uploading..." : `Upload ${uploadFiles.length} File${uploadFiles.length !== 1 ? "s" : ""}`}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ------------------------------------------------------------------ */}
-      {/*  Re-upload Specifications Dialog                                    */}
-      {/* ------------------------------------------------------------------ */}
-      <Dialog open={specUploadOpen} onOpenChange={setSpecUploadOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upload Specifications</DialogTitle>
-            <DialogDescription>
-              Upload updated or additional project specification documents.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 pt-2">
-            {specUploadFiles.length === 0 ? (
-              <div
-                className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-8 text-center hover:border-nav-accent/40 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 outline-none"
-                onClick={handleSimulateSpecUpload}
-                role="button"
-                tabIndex={0}
-                aria-label="Click to select specification files"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    handleSimulateSpecUpload();
-                  }
-                }}
-              >
-                <div className="mx-auto w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
-                  <BookOpen className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-                </div>
-                <p className="text-sm font-medium">Click to select specification files</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  PDF files — up to 50MB each
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  These will be added alongside existing specifications
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <ScrollArea className={specUploadFiles.length > 4 ? "h-[180px]" : ""}>
-                  <div className="space-y-2 pr-2">
-                    {specUploadFiles.map((file) => (
-                      <div
-                        key={file.id}
-                        className="flex items-center gap-3 p-3 rounded-lg border bg-muted/10"
-                      >
-                        <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                          <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" aria-hidden="true" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{file.name}</p>
-                          <p className="text-xs text-muted-foreground">{file.size}</p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                          onClick={() => handleRemoveSpecFile(file.id)}
-                          aria-label={`Remove ${file.name}`}
-                        >
-                          <X className="h-3.5 w-3.5" aria-hidden="true" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    {specUploadFiles.length} file{specUploadFiles.length !== 1 ? "s" : ""} selected
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs gap-1"
-                    onClick={handleAddOneMoreSpec}
-                  >
-                    <Plus className="h-3 w-3" aria-hidden="true" />
-                    Add More
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setSpecUploadOpen(false); setSpecUploadFiles([]); }}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirmSpecUpload}
-              disabled={specUploadFiles.length === 0 || specUploading}
-              className="gradient-accent text-white border-0"
-            >
-              {specUploading ? "Uploading..." : `Upload ${specUploadFiles.length} File${specUploadFiles.length !== 1 ? "s" : ""}`}
             </Button>
           </DialogFooter>
         </DialogContent>

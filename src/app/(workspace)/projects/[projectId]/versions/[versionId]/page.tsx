@@ -925,7 +925,7 @@ export default function VersionOverviewPage() {
       {/*  Upload Files Dialog (Conformance)                            */}
       {/* ------------------------------------------------------------------ */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-        <DialogContent className="sm:max-w-md overflow-hidden">
+        <DialogContent className="sm:max-w-lg overflow-hidden">
           <DialogHeader>
             <DialogTitle>Upload Files</DialogTitle>
             <DialogDescription>
@@ -933,7 +933,7 @@ export default function VersionOverviewPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 pt-2">
+          <div className="space-y-4 pt-2 min-w-0 overflow-hidden">
             {uploadFiles.length === 0 ? (
               <div
                 className="rounded-xl border-2 border-dashed border-muted-foreground/40 p-8 text-center hover:border-nav-accent/40 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 outline-none"
@@ -961,12 +961,12 @@ export default function VersionOverviewPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                <ScrollArea className="max-h-[240px]">
-                  <div className="flex flex-col gap-2 pr-2" role="list" aria-label="Files to upload">
+                <ScrollArea className="max-h-[240px] -mx-1">
+                  <div className="flex flex-col gap-2 px-1 py-1" role="list" aria-label="Files to upload">
                     {uploadFiles.map((file) => {
                       const ext = file.name.split(".").pop()?.toLowerCase() ?? "other";
                       return (
-                        <div key={file.id} role="listitem">
+                        <div key={file.id} role="listitem" className="min-w-0">
                           <FileUploadCard
                             name={file.name}
                             size={file.size}

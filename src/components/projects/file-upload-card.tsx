@@ -63,7 +63,7 @@ export function FileUploadCard({
   const FileIcon = config.icon;
 
   return (
-    <div className="relative group rounded-xl border bg-card shadow-card p-3 pr-8 flex items-center gap-3 w-full">
+    <div className="relative group rounded-xl border bg-card shadow-card p-3 pr-8 flex items-center gap-3 w-full overflow-hidden">
       {/* Remove button — vertically centered */}
       <Button
         variant="ghost"
@@ -89,7 +89,7 @@ export function FileUploadCard({
       </div>
 
       {/* File info */}
-      <div className="min-w-0">
+      <div className="flex-1 min-w-0">
         <p className="text-xs font-medium truncate">{name}</p>
         <p className="text-[11px] text-muted-foreground">{size}</p>
       </div>

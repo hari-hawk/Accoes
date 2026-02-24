@@ -41,7 +41,8 @@ export default function ReviewPage() {
     search,
     setSearch,
     statusFilter,
-    setStatusFilter,
+    toggleStatusFilter,
+    clearStatusFilter,
     selectedId,
     setSelectedId,
     selectedMaterial,
@@ -138,7 +139,8 @@ export default function ReviewPage() {
             onSelect={setSelectedId}
             onToggleCheck={toggleCheck}
             onSearchChange={setSearch}
-            onStatusFilterChange={setStatusFilter}
+            onToggleStatusFilter={toggleStatusFilter}
+            onClearStatusFilter={clearStatusFilter}
           />
         </ResizablePanel>
         <ResizableHandle withHandle />

@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
+  Filter,
+  X,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -14,6 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { SearchInput } from "@/components/shared/search-input";
 import { cn } from "@/lib/utils";
 import { VALIDATION_STATUS_CONFIG } from "@/lib/constants";
@@ -178,6 +187,19 @@ function MaterialListItem({
   );
 }
 
+/** Status filter options with icons and colors */
+const STATUS_OPTIONS: {
+  key: ValidationStatus;
+  label: string;
+  icon: typeof CheckCircle2;
+  color: string;
+  dotColor: string;
+}[] = [
+  { key: "pre_approved", label: "Pre-Approved", icon: CheckCircle2, color: "text-status-pre-approved", dotColor: "bg-status-pre-approved" },
+  { key: "review_required", label: "Review Required", icon: AlertTriangle, color: "text-status-review-required", dotColor: "bg-status-review-required" },
+  { key: "action_mandatory", label: "Action Mandatory", icon: XCircle, color: "text-status-action-mandatory", dotColor: "bg-status-action-mandatory" },
+];
+
 export function MaterialList({
   materials,
   selectedId,
@@ -188,19 +210,23 @@ export function MaterialList({
   onSelect,
   onToggleCheck,
   onSearchChange,
-  onStatusFilterChange,
+  onToggleStatusFilter,
+  onClearStatusFilter,
 }: {
   materials: MaterialItem[];
   selectedId: string | null;
   checkedIds: Set<string>;
   decisions: Record<string, DecisionStatus>;
   search: string;
-  statusFilter: ValidationStatus | "all";
+  statusFilter: Set<ValidationStatus>;
   onSelect: (id: string) => void;
   onToggleCheck: (id: string) => void;
   onSearchChange: (value: string) => void;
-  onStatusFilterChange: (value: ValidationStatus | "all") => void;
+  onToggleStatusFilter: (status: ValidationStatus) => void;
+  onClearStatusFilter: () => void;
 }) {
+  const [statusPopoverOpen, setStatusPopoverOpen] = useState(false);
+
   const preApprovedCount = materials.filter(
     (m) => m.validation?.status === "pre_approved"
   ).length;
@@ -211,36 +237,148 @@ export function MaterialList({
     (m) => m.validation?.status === "action_mandatory"
   ).length;
 
+  const statusCountMap: Record<ValidationStatus, number> = {
+    pre_approved: preApprovedCount,
+    review_required: reviewCount,
+    action_mandatory: actionCount,
+  };
+
   const allChecked =
     materials.length > 0 &&
     materials.every((m) => checkedIds.has(m.document.id));
+
+  const activeFilterCount = statusFilter.size;
 
   return (
     <div className="flex h-full flex-col overflow-hidden" role="region" aria-label="Material list panel">
       {/* Filter header */}
       <div className="border-b p-3 space-y-2 shrink-0" role="search" aria-label="Filter materials">
+        {/* Row 1: Search — full width */}
         <SearchInput
-          placeholder="Search from Conformance"
+          placeholder="Search materials..."
           value={search}
           onChange={onSearchChange}
         />
-        <Select defaultValue="all">
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue placeholder="All Documents" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Documents</SelectItem>
-            <SelectItem value="mig-1">UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v1.csv</SelectItem>
-            <SelectItem value="mig-2">UCD_HobbsVet_Heating_Matrix_Index_Grid_v1.csv</SelectItem>
-            <SelectItem value="mig-3">UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v1.csv</SelectItem>
-            <SelectItem value="mig-4">UCD_Project9592330_Plumbing_Matrix_Index_Grid_2026-02.csv</SelectItem>
-            <SelectItem value="mig-5">UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv</SelectItem>
-            <SelectItem value="mig-6">UCD_Project9592330_Mechanical_Matrix_Index_Grid_2026-02.csv</SelectItem>
-            <SelectItem value="mig-7">UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v3.csv</SelectItem>
-            <SelectItem value="mig-8">UCD_HobbsVet_Heating_Matrix_Index_Grid_v3.csv</SelectItem>
-            <SelectItem value="mig-9">UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v3.csv</SelectItem>
-          </SelectContent>
-        </Select>
+
+        {/* Row 2: Document dropdown + Status filter — two columns */}
+        <div className="grid grid-cols-2 gap-2">
+          <Select defaultValue="all">
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="All Documents" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Documents</SelectItem>
+              <SelectItem value="mig-7">UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v3.csv</SelectItem>
+              <SelectItem value="mig-8">UCD_HobbsVet_Heating_Matrix_Index_Grid_v3.csv</SelectItem>
+              <SelectItem value="mig-9">UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v3.csv</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Status multi-select popover */}
+          <Popover open={statusPopoverOpen} onOpenChange={setStatusPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-8 text-xs justify-between gap-1.5 font-normal",
+                  activeFilterCount > 0 && "border-primary/40 bg-primary/5"
+                )}
+                aria-label={`Filter by status${activeFilterCount > 0 ? ` — ${activeFilterCount} selected` : ""}`}
+              >
+                <span className="flex items-center gap-1.5 truncate">
+                  <Filter className="h-3 w-3 shrink-0" aria-hidden="true" />
+                  {activeFilterCount === 0
+                    ? "All Status"
+                    : activeFilterCount === 1
+                      ? STATUS_OPTIONS.find((s) => statusFilter.has(s.key))?.label ?? "1 Status"
+                      : `${activeFilterCount} Status`}
+                </span>
+                {activeFilterCount > 0 && (
+                  <span
+                    className="h-4 w-4 rounded-full bg-primary text-[9px] font-bold text-primary-foreground flex items-center justify-center shrink-0"
+                    aria-hidden="true"
+                  >
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2" align="start">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between px-2 py-1">
+                  <span className="text-xs font-semibold text-muted-foreground">Filter by Status</span>
+                  {activeFilterCount > 0 && (
+                    <button
+                      type="button"
+                      className="text-[10px] text-primary hover:underline font-medium"
+                      onClick={() => onClearStatusFilter()}
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+                <div className="h-px bg-border" />
+                {STATUS_OPTIONS.map((opt) => {
+                  const Icon = opt.icon;
+                  const isActive = statusFilter.has(opt.key);
+                  const count = statusCountMap[opt.key];
+                  return (
+                    <label
+                      key={opt.key}
+                      className={cn(
+                        "flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors",
+                        isActive ? "bg-primary/5" : "hover:bg-muted/50"
+                      )}
+                    >
+                      <Checkbox
+                        checked={isActive}
+                        onCheckedChange={() => onToggleStatusFilter(opt.key)}
+                        className="h-3.5 w-3.5"
+                      />
+                      <Icon className={cn("h-3.5 w-3.5 shrink-0", opt.color)} aria-hidden="true" />
+                      <span className="text-xs font-medium flex-1">{opt.label}</span>
+                      <span className="text-[10px] text-muted-foreground tabular-nums font-medium">{count}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* Active filter chips — show when any status filter is active */}
+        {activeFilterCount > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {STATUS_OPTIONS.filter((s) => statusFilter.has(s.key)).map((opt) => (
+              <span
+                key={opt.key}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                  VALIDATION_STATUS_CONFIG[opt.key].bgColor,
+                  VALIDATION_STATUS_CONFIG[opt.key].color
+                )}
+              >
+                {opt.label}
+                <button
+                  type="button"
+                  className="hover:opacity-70 transition-opacity"
+                  onClick={() => onToggleStatusFilter(opt.key)}
+                  aria-label={`Remove ${opt.label} filter`}
+                >
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </span>
+            ))}
+            <button
+              type="button"
+              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors ml-1"
+              onClick={onClearStatusFilter}
+            >
+              Clear
+            </button>
+          </div>
+        )}
 
         {/* Select all + status counts */}
         <div className="flex items-center gap-3 text-xs">

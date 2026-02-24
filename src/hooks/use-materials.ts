@@ -18,7 +18,7 @@ export interface MaterialItem {
 
 export function useMaterials(versionId: string) {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ValidationStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<Set<ValidationStatus>>(new Set());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [decisions, setDecisions] = useState<Record<string, DecisionStatus>>({});
@@ -47,9 +47,9 @@ export function useMaterials(versionId: string) {
       );
     }
 
-    if (statusFilter !== "all") {
+    if (statusFilter.size > 0) {
       result = result.filter(
-        (m) => m.validation?.status === statusFilter
+        (m) => m.validation?.status !== undefined && statusFilter.has(m.validation.status)
       );
     }
 
@@ -112,6 +112,17 @@ export function useMaterials(versionId: string) {
     []
   );
 
+  const toggleStatusFilter = useCallback((status: ValidationStatus) => {
+    setStatusFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
+  }, []);
+
+  const clearStatusFilter = useCallback(() => setStatusFilter(new Set()), []);
+
   return {
     materials: filteredMaterials,
     allMaterials: materials,
@@ -119,6 +130,8 @@ export function useMaterials(versionId: string) {
     setSearch: useCallback((v: string) => setSearch(v), []),
     statusFilter,
     setStatusFilter,
+    toggleStatusFilter,
+    clearStatusFilter,
     selectedId,
     setSelectedId,
     selectedMaterial,

@@ -45,6 +45,7 @@ export const PROJECT_STATUS_CONFIG: Record<
   ProjectStatus,
   { label: string; color: string }
 > = {
+  extracting: { label: "Extracting", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
   in_progress: { label: "In Progress", color: "bg-status-review-required-bg text-status-review-required" },
   active: { label: "Active", color: "bg-ds-primary-100 text-ds-primary-800" },
   on_hold: { label: "On Hold", color: "bg-muted text-muted-foreground" },
@@ -100,6 +101,11 @@ export const PROJECT_STAGE_CONFIG: Record<
   ProjectStage,
   { label: string; color: string; bgColor: string }
 > = {
+  extraction: {
+    label: "Extraction",
+    color: "text-amber-700 dark:text-amber-400",
+    bgColor: "bg-amber-100 dark:bg-amber-900/30",
+  },
   review_required: {
     label: "Review Required",
     color: "text-status-review-required",

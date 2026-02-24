@@ -30,7 +30,7 @@ function getConfig(status: StatusType) {
   return { label: status, color: "" };
 }
 
-const PULSE_STATUSES: StatusType[] = ["active", "processing"];
+const PULSE_STATUSES: StatusType[] = ["extracting", "active", "processing"];
 
 export function StatusIndicator({
   status,

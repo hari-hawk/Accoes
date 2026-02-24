@@ -1,6 +1,7 @@
 export type UserRole = "admin" | "global_viewer" | "submitter" | "reviewer" | "collaborator" | "viewer";
 
 export type ProjectStatus =
+  | "extracting"
   | "in_progress"
   | "active"
   | "on_hold"
@@ -35,6 +36,7 @@ export type DecisionStatus =
   | "revisit";
 
 export type ProjectStage =
+  | "extraction"
   | "review_required"
   | "action_mandatory"
   | "pre_approved"

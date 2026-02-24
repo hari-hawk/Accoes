@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { DraftProvider } from "@/providers/draft-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const inter = Inter({
@@ -34,6 +35,24 @@ export default function RootLayout({
         >
           <DraftProvider>
             <TooltipProvider>{children}</TooltipProvider>
+            <Toaster
+              position="top-center"
+              offset={64}
+              duration={5000}
+              visibleToasts={3}
+              toastOptions={{
+                unstyled: true,
+                classNames: {
+                  toast: "w-full max-w-md flex items-start gap-3 rounded-xl border px-4 py-3 shadow-card text-sm font-medium pointer-events-auto",
+                  title: "text-sm font-semibold",
+                  description: "text-xs text-muted-foreground mt-0.5",
+                  success: "bg-green-50 border-green-200 text-green-800 dark:bg-green-950/40 dark:border-green-800 dark:text-green-300",
+                  warning: "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300",
+                  error: "bg-red-50 border-red-200 text-red-800 dark:bg-red-950/40 dark:border-red-800 dark:text-red-300",
+                  info: "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300",
+                },
+              }}
+            />
           </DraftProvider>
         </ThemeProvider>
       </body>

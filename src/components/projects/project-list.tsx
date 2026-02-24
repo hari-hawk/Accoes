@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -1025,6 +1025,38 @@ export function ProjectList() {
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
   const [reportProject, setReportProject] = useState<Project | null>(null);
 
+
+  // TODO: Phase 2 — replace with real extraction status polling
+  const [completedExtractions, setCompletedExtractions] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const extractingIds = projects
+      .filter((p) => p.status === "extracting" && !completedExtractions.has(p.id))
+      .map((p) => p.id);
+
+    if (extractingIds.length === 0) return;
+
+    const timer = setTimeout(() => {
+      setCompletedExtractions((prev) => {
+        const next = new Set(prev);
+        extractingIds.forEach((id) => next.add(id));
+        return next;
+      });
+
+      // Fire a toast for each newly completed extraction
+      extractingIds.forEach((id) => {
+        const project = projects.find((p) => p.id === id);
+        if (project) {
+          toast.success(`${project.name} is ready for review!`, {
+            description: "Document extraction complete. You can now access the project.",
+          });
+        }
+      });
+    }, 30000); // 30 seconds
+
+    return () => clearTimeout(timer);
+  }, [projects, completedExtractions]);
+
   const handleCardClick = (project: Project) => {
     setSelectedProject(project);
     setSheetOpen(true);
@@ -1034,6 +1066,11 @@ export function ProjectList() {
     setReportProject(project);
     setReportSheetOpen(true);
   };
+
+  // Override extracting → active for completed extractions
+  const enrichedProjects = projects.map((p) =>
+    completedExtractions.has(p.id) ? { ...p, status: "active" as const } : p
+  );
 
   return (
     <div className="px-6 py-6 space-y-6 max-w-[1400px] mx-auto">
@@ -1053,7 +1090,7 @@ export function ProjectList() {
       />
 
       {/* Content */}
-      {projects.length === 0 ? (
+      {enrichedProjects.length === 0 ? (
         <EmptyState
           icon={FolderKanban}
           title="No projects found"
@@ -1069,7 +1106,7 @@ export function ProjectList() {
         </EmptyState>
       ) : viewMode === "grid" ? (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {projects.map((project) => (
+          {enrichedProjects.map((project) => (
             <ProjectCard
               key={project.id}
               project={project}
@@ -1089,7 +1126,7 @@ export function ProjectList() {
             <div className="shrink-0 w-24 text-right hidden lg:block" role="columnheader">Created</div>
             <div className="shrink-0 w-10" role="columnheader" aria-label="Actions" />
           </div>
-          {projects.map((project) => (
+          {enrichedProjects.map((project) => (
             <ProjectListRow
               key={project.id}
               project={project}

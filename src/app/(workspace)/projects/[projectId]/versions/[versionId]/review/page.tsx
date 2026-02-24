@@ -7,6 +7,7 @@ import {
   MousePointerClick,
   MessageSquare,
   RotateCcw,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,6 +34,7 @@ export default function ReviewPage() {
   const { project, version } = useWorkspace();
   const searchParams = useSearchParams();
   const initialItemId = searchParams.get("item");
+  const isReadOnly = searchParams.get("mode") === "readonly";
 
   const {
     materials,
@@ -85,8 +87,18 @@ export default function ReviewPage() {
 
   return (
     <div className="absolute inset-0 flex flex-col">
+      {/* Read-only banner for historical files */}
+      {isReadOnly && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 shrink-0">
+          <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+          <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
+            Historical record — view only. Comments and decisions from this version are preserved but cannot be edited.
+          </span>
+        </div>
+      )}
+
       {/* Batch Actions Bar */}
-      {checkedIds.size > 0 && (
+      {!isReadOnly && checkedIds.size > 0 && (
         <div className="flex items-center justify-between gap-3 border-b bg-primary/5 px-4 py-2 shrink-0" role="toolbar" aria-label="Batch actions for selected items">
           <span className="text-sm font-medium">
             {checkedIds.size} item{checkedIds.size !== 1 ? "s" : ""} selected

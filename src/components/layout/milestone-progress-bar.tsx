@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Check, FolderKanban, ShieldCheck, BookOpen } from "lucide-react";
+import { Check, FolderKanban, Grid3X3, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WorkflowStage } from "@/data/types";
 
@@ -28,9 +28,9 @@ const MILESTONES: Milestone[] = [
     unlockedAt: ["project", "upload", "process", "review", "export"],
   },
   {
-    key: "conformance",
-    label: "Conformance",
-    icon: ShieldCheck,
+    key: "material-matrix",
+    label: "Material Matrix",
+    icon: Grid3X3,
     path: "/review",
     unlockedAt: ["review", "export"],
   },
@@ -50,7 +50,7 @@ const MILESTONES: Milestone[] = [
 /** Determine which milestone is active based on the current pathname */
 function getActiveMilestone(pathname: string): string {
   if (pathname.includes("/submittal-binder")) return "submittal-binder";
-  if (pathname.includes("/review") || pathname.includes("/processing") || pathname.includes("/export")) return "conformance";
+  if (pathname.includes("/review") || pathname.includes("/processing") || pathname.includes("/export")) return "material-matrix";
   return "overview";
 }
 
@@ -84,10 +84,10 @@ export function MilestoneProgressBar({
 
   return (
     <nav
-      className="flex items-center justify-center px-6 py-3.5 border-b bg-background shrink-0"
+      className="flex items-center justify-center px-4 py-1.5 border-b bg-background shrink-0"
       aria-label="Project milestones"
     >
-      <div className="flex items-center w-full max-w-2xl">
+      <div className="flex items-center w-full max-w-xl">
         {MILESTONES.map((milestone, index) => {
           const isActive = milestone.key === activeMilestone;
           const isUnlocked = milestone.unlockedAt.includes(currentStage);
@@ -105,29 +105,27 @@ export function MilestoneProgressBar({
               {isUnlocked ? (
                 <Link
                   href={href}
-                  className={cn(
-                    "group flex items-center gap-2 shrink-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 rounded-full"
-                  )}
+                  className="group flex items-center gap-1.5 shrink-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-full"
                   aria-label={`${milestone.label}${isCompleted ? " (completed)" : isActive ? " (current)" : ""}`}
                   aria-current={isActive ? "step" : undefined}
                 >
                   {/* Circle indicator */}
                   <div
                     className={cn(
-                      "relative h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 border-2",
+                      "relative h-6 w-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 border-[1.5px]",
                       isActive
-                        ? "gradient-accent border-transparent shadow-md scale-110"
+                        ? "gradient-accent border-transparent shadow-sm"
                         : isCompleted
                           ? "bg-status-pre-approved border-status-pre-approved"
                           : "bg-background border-border hover:border-muted-foreground"
                     )}
                   >
                     {isCompleted && !isActive ? (
-                      <Check className="h-4 w-4 text-white" strokeWidth={3} />
+                      <Check className="h-3 w-3 text-white" strokeWidth={3} />
                     ) : (
                       <Icon
                         className={cn(
-                          "h-3.5 w-3.5",
+                          "h-3 w-3",
                           isActive
                             ? "text-white"
                             : "text-muted-foreground group-hover:text-foreground"
@@ -139,7 +137,7 @@ export function MilestoneProgressBar({
                   {/* Label */}
                   <span
                     className={cn(
-                      "text-xs font-medium whitespace-nowrap transition-colors",
+                      "text-[11px] font-medium whitespace-nowrap transition-colors",
                       isActive
                         ? "text-foreground font-semibold"
                         : isCompleted
@@ -152,15 +150,15 @@ export function MilestoneProgressBar({
                 </Link>
               ) : (
                 <div
-                  className="flex items-center gap-2 shrink-0 cursor-not-allowed"
+                  className="flex items-center gap-1.5 shrink-0 cursor-not-allowed"
                   aria-label={`${milestone.label} (locked)`}
                   aria-disabled="true"
                 >
                   {/* Locked circle */}
-                  <div className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 border-2 border-dashed border-muted-foreground/30 bg-muted/30">
-                    <Icon className="h-3.5 w-3.5 text-muted-foreground/40" />
+                  <div className="h-6 w-6 rounded-full flex items-center justify-center shrink-0 border-[1.5px] border-dashed border-muted-foreground/30 bg-muted/30">
+                    <Icon className="h-3 w-3 text-muted-foreground/40" />
                   </div>
-                  <span className="text-xs font-medium text-muted-foreground/40 whitespace-nowrap">
+                  <span className="text-[11px] font-medium text-muted-foreground/40 whitespace-nowrap">
                     {milestone.label}
                   </span>
                 </div>
@@ -168,10 +166,10 @@ export function MilestoneProgressBar({
 
               {/* Connector line */}
               {!isLast && (
-                <div className="flex-1 mx-3">
+                <div className="flex-1 mx-2.5">
                   <div
                     className={cn(
-                      "h-0.5 w-full rounded-full transition-all duration-500",
+                      "h-px w-full rounded-full transition-all duration-500",
                       index < completedUpTo
                         ? "bg-status-pre-approved"
                         : "bg-border"
@@ -179,7 +177,7 @@ export function MilestoneProgressBar({
                     style={
                       index < completedUpTo
                         ? undefined
-                        : { backgroundImage: "repeating-linear-gradient(90deg, var(--color-border) 0, var(--color-border) 6px, transparent 6px, transparent 12px)" }
+                        : { backgroundImage: "repeating-linear-gradient(90deg, var(--color-border) 0, var(--color-border) 4px, transparent 4px, transparent 8px)" }
                     }
                   />
                 </div>

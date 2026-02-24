@@ -23,7 +23,10 @@ import {
   Loader2,
   BookOpen,
   ChevronRight,
+  ChevronDown,
   Eye,
+  History,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -77,17 +80,20 @@ const mockProjectSpecs = [
   { id: "ps-2", fileName: "UCD_Project9592330_Project_Specification_Volume_2_2026-02.pdf", fileType: "pdf" as const, fileSize: 13107200, uploadedAt: "2026-02-05T09:05:00Z", totalPages: 278 },
 ];
 
-// Mock Conformance source files — 9 CSV files
-const mockMaterialIndexGridFiles = [
-  { id: "mig-1", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 524288, uploadedAt: "2026-02-05T10:00:00Z" },
-  { id: "mig-2", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 491520, uploadedAt: "2026-02-05T10:05:00Z" },
-  { id: "mig-3", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 458752, uploadedAt: "2026-02-05T10:10:00Z" },
-  { id: "mig-4", fileName: "UCD_Project9592330_Plumbing_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 537600, uploadedAt: "2026-02-05T10:15:00Z" },
-  { id: "mig-5", fileName: "UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 503808, uploadedAt: "2026-02-05T10:20:00Z" },
-  { id: "mig-6", fileName: "UCD_Project9592330_Mechanical_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 471040, uploadedAt: "2026-02-05T10:25:00Z" },
-  { id: "mig-7", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 548864, uploadedAt: "2026-02-05T10:30:00Z" },
-  { id: "mig-8", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 516096, uploadedAt: "2026-02-05T10:35:00Z" },
-  { id: "mig-9", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 483328, uploadedAt: "2026-02-05T10:40:00Z" },
+// Mock Material matrix files — split into current (active) and historical
+const currentMaterialFiles = [
+  { id: "mig-7", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 548864, uploadedAt: "2026-02-18T10:30:00Z" },
+  { id: "mig-8", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 516096, uploadedAt: "2026-02-18T10:35:00Z" },
+  { id: "mig-9", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 483328, uploadedAt: "2026-02-18T10:40:00Z" },
+];
+
+const historicalMaterialFiles = [
+  { id: "mig-1", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 524288, uploadedAt: "2026-02-05T10:00:00Z", version: "v1", processedAt: "2026-02-06T14:00:00Z", confidence: 72 },
+  { id: "mig-2", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 491520, uploadedAt: "2026-02-05T10:05:00Z", version: "v1", processedAt: "2026-02-06T14:05:00Z", confidence: 68 },
+  { id: "mig-3", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 458752, uploadedAt: "2026-02-05T10:10:00Z", version: "v1", processedAt: "2026-02-06T14:10:00Z", confidence: 75 },
+  { id: "mig-4", fileName: "UCD_Project9592330_Plumbing_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 537600, uploadedAt: "2026-02-10T10:15:00Z", version: "v2", processedAt: "2026-02-11T09:00:00Z", confidence: 81 },
+  { id: "mig-5", fileName: "UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 503808, uploadedAt: "2026-02-10T10:20:00Z", version: "v2", processedAt: "2026-02-11T09:05:00Z", confidence: 78 },
+  { id: "mig-6", fileName: "UCD_Project9592330_Mechanical_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 471040, uploadedAt: "2026-02-10T10:25:00Z", version: "v2", processedAt: "2026-02-11T09:10:00Z", confidence: 83 },
 ];
 
 interface MockUploadFile {
@@ -269,21 +275,24 @@ function ProjectSpecificationsCard({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Conformance Section                                                */
+/*  Material Matrix Section                                                */
 /* -------------------------------------------------------------------------- */
 
 function MaterialIndexGridCard({
   onUpload,
   onFileClick,
+  onHistoryFileClick,
 }: {
   onUpload: () => void;
   onFileClick?: (fileId: string) => void;
+  onHistoryFileClick?: (fileId: string) => void;
 }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
-  const files = mockMaterialIndexGridFiles;
+  const files = currentMaterialFiles;
   const allSelected = files.length > 0 && selectedIds.size === files.length;
 
   const toggleFile = (id: string) => {
@@ -318,7 +327,10 @@ function MaterialIndexGridCard({
       <div className="px-5 py-4 border-b flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Layers className="h-4 w-4 text-primary" aria-hidden="true" />
-          <h3 className="font-semibold text-sm">Conformance</h3>
+          <h3 className="font-semibold text-sm">Material Matrix</h3>
+          <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+            Current
+          </Badge>
         </div>
         <div className="flex items-center gap-2">
           {selectedIds.size > 0 && (
@@ -340,7 +352,7 @@ function MaterialIndexGridCard({
             </Button>
           )}
           <Badge variant="secondary" className="text-xs">
-            {files.length} files
+            {files.length} {files.length === 1 ? "file" : "files"}
           </Badge>
           <Button
             size="sm"
@@ -349,7 +361,7 @@ function MaterialIndexGridCard({
             aria-label="Upload new files"
           >
             <Upload className="h-3 w-3" aria-hidden="true" />
-            Upload Files
+            Upload
           </Button>
         </div>
       </div>
@@ -374,8 +386,8 @@ function MaterialIndexGridCard({
         </div>
       )}
 
-      {/* File list */}
-      <div className="divide-y" role="list" aria-label="Conformance source files">
+      {/* Active file list */}
+      <div className="divide-y" role="list" aria-label="Material matrix files">
         {files.map((file) => {
           const FileIcon = fileIconMap[file.fileType] ?? FileText;
           const isChecked = selectedIds.has(file.id);
@@ -416,6 +428,77 @@ function MaterialIndexGridCard({
           );
         })}
       </div>
+
+      {/* History section — collapsible */}
+      {historicalMaterialFiles.length > 0 && (
+        <>
+          <button
+            type="button"
+            className="w-full flex items-center justify-between gap-2 px-5 py-3 border-t bg-muted/20 hover:bg-muted/40 transition-colors text-left"
+            onClick={() => setHistoryOpen((prev) => !prev)}
+            aria-expanded={historyOpen}
+            aria-controls="history-file-list"
+          >
+            <span className="flex items-center gap-2">
+              <History className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+              <span className="text-xs font-semibold text-muted-foreground">History</span>
+              <Badge variant="secondary" className="text-[10px]">
+                {historicalMaterialFiles.length}
+              </Badge>
+            </span>
+            <ChevronDown
+              className={cn(
+                "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200",
+                historyOpen && "rotate-180"
+              )}
+              aria-hidden="true"
+            />
+          </button>
+
+          {historyOpen && (
+            <div id="history-file-list" className="divide-y bg-muted/10" role="list" aria-label="Historical material matrix files">
+              {historicalMaterialFiles.map((file) => {
+                const FileIcon = fileIconMap[file.fileType] ?? FileText;
+
+                return (
+                  <div
+                    key={file.id}
+                    className="flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors cursor-pointer group/row"
+                    role="listitem"
+                    onClick={() => onHistoryFileClick?.(file.id)}
+                  >
+                    <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0 relative">
+                      <FileIcon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                      <Lock className="h-2.5 w-2.5 text-muted-foreground/60 absolute -bottom-0.5 -right-0.5" aria-hidden="true" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate text-muted-foreground">{file.fileName}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">{file.version}</Badge>
+                        <span className="text-[11px] text-muted-foreground/70">
+                          {formatFileSize(file.fileSize)}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground/70">
+                          Processed {new Date(file.processedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground/70">
+                          {file.confidence}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Badge variant="secondary" className="text-[9px] bg-amber-100/60 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                        View Only
+                      </Badge>
+                      <Eye className="h-3.5 w-3.5 text-muted-foreground/0 group-hover/row:text-muted-foreground transition-colors" aria-hidden="true" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -472,7 +555,7 @@ function ProjectInsightsSection({
         {/* Stat 1: Conformance — total items count */}
         <div className="p-4">
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
-            Conformance
+            Material Matrix
           </p>
           <p className="text-2xl font-bold">{totalDocs}</p>
           <p className="text-xs text-muted-foreground mt-1">
@@ -735,13 +818,16 @@ export default function VersionOverviewPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left column: Conformance (top) + Project Specifications (bottom) */}
+        {/* Left column: Material Matrix (top) + Project Specifications (bottom) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Conformance — at the top */}
+          {/* Material Matrix — current + history */}
           <MaterialIndexGridCard
             onUpload={() => setUploadDialogOpen(true)}
             onFileClick={() => {
               router.push(`/projects/${project.id}/versions/${version.id}/review`);
+            }}
+            onHistoryFileClick={() => {
+              router.push(`/projects/${project.id}/versions/${version.id}/review?mode=readonly`);
             }}
           />
 

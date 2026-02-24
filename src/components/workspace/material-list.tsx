@@ -90,8 +90,8 @@ function MaterialListItem({
       className={cn(
         "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-inset outline-none",
         isSelected
-          ? "bg-primary/8 dark:bg-primary/12"
-          : "hover:bg-muted/50"
+          ? "bg-background shadow-[inset_3px_0_0_var(--color-primary)] border-b-primary/10"
+          : "hover:bg-background/80"
       )}
       onClick={onSelect}
       role="listitem"
@@ -250,9 +250,9 @@ export function MaterialList({
   const activeFilterCount = statusFilter.size;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden" role="region" aria-label="Material list panel">
+    <div className="flex h-full flex-col overflow-hidden bg-muted/20" role="region" aria-label="Material list panel">
       {/* Filter header */}
-      <div className="border-b p-3 space-y-2 shrink-0" role="search" aria-label="Filter materials">
+      <div className="border-b p-3 space-y-2 shrink-0 bg-background" role="search" aria-label="Filter materials">
         {/* Row 1: Search — full width */}
         <SearchInput
           placeholder="Search materials..."

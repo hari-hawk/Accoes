@@ -12,49 +12,55 @@ export function VersionInfoHeader({
   version,
   project,
   onProjectNameClick,
+  actions,
 }: {
   version: Version;
   project: Project;
   onProjectNameClick?: () => void;
+  /** Optional action buttons rendered on the right side */
+  actions?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-b bg-background shrink-0">
+    <div className="flex items-center justify-between px-4 py-2 border-b bg-background shrink-0">
       <div className="flex items-center gap-3 min-w-0">
-        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" asChild>
           <Link href="/projects" aria-label="Back to projects">
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-3.5 w-3.5" />
           </Link>
         </Button>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="text-sm font-semibold truncate hover:underline hover:text-nav-accent transition-colors cursor-pointer"
-              onClick={() => onProjectNameClick?.()}
-              aria-label={`View details for ${project.name}`}
-            >
-              {project.name}
-            </button>
-            <StatusIndicator status={version.status} />
+        <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
+          <button
+            type="button"
+            className="text-sm font-semibold truncate hover:underline hover:text-nav-accent transition-colors cursor-pointer"
+            onClick={() => onProjectNameClick?.()}
+            aria-label={`View details for ${project.name}`}
+          >
+            {project.name}
+          </button>
+          <StatusIndicator status={version.status} />
+          <span className="text-[10px] text-muted-foreground/40 hidden sm:inline">|</span>
+          <span className="text-xs text-muted-foreground truncate shrink-0">
+            {project.client}
+          </span>
+          <span className="text-xs font-mono text-muted-foreground shrink-0">
+            {project.jobId}
+          </span>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+            <FileText className="h-3 w-3" />
+            {version.documentIds.length} docs
           </div>
-          <div className="flex items-center gap-3 mt-1">
-            <span className="text-xs text-muted-foreground truncate shrink-0">
-              {project.client}
-            </span>
-            <span className="text-xs font-mono text-muted-foreground shrink-0">
-              {project.jobId}
-            </span>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-              <FileText className="h-3 w-3" />
-              {version.documentIds.length} docs
-            </div>
-            <DateDisplay date={version.updatedAt} className="text-xs shrink-0" />
-          </div>
+          <DateDisplay date={version.updatedAt} className="text-xs shrink-0" />
+          {version.confidenceSummary.total > 0 && (
+            <>
+              <span className="text-[10px] text-muted-foreground/40 hidden sm:inline">|</span>
+              <ConfidenceSummary data={version.confidenceSummary} size="sm" />
+            </>
+          )}
         </div>
       </div>
-      {version.confidenceSummary.total > 0 && (
-        <div className="shrink-0 ml-4">
-          <ConfidenceSummary data={version.confidenceSummary} size="md" />
+      {actions && (
+        <div className="shrink-0 ml-4 flex items-center gap-2">
+          {actions}
         </div>
       )}
     </div>

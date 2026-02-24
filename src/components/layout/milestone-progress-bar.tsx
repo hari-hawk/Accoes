@@ -92,7 +92,7 @@ export function MilestoneProgressBar({
 
   return (
     <nav
-      className="flex items-center justify-center px-4 py-1.5 border-b bg-background shrink-0"
+      className="flex items-center justify-center px-4 py-1 border-b bg-muted/30 shrink-0"
       aria-label="Project milestones"
     >
       <div className="flex items-center w-full max-w-2xl">
@@ -120,7 +120,7 @@ export function MilestoneProgressBar({
                   {/* Circle indicator */}
                   <div
                     className={cn(
-                      "relative h-6 w-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 border-[1.5px]",
+                      "relative h-5 w-5 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 border-[1.5px]",
                       isActive
                         ? "gradient-accent border-transparent shadow-sm"
                         : isCompleted
@@ -163,7 +163,7 @@ export function MilestoneProgressBar({
                   aria-disabled="true"
                 >
                   {/* Locked circle */}
-                  <div className="h-6 w-6 rounded-full flex items-center justify-center shrink-0 border-[1.5px] border-dashed border-muted-foreground/30 bg-muted/30">
+                  <div className="h-5 w-5 rounded-full flex items-center justify-center shrink-0 border-[1.5px] border-dashed border-muted-foreground/30 bg-muted/30">
                     <Icon className="h-3 w-3 text-muted-foreground/40" />
                   </div>
                   <span className="text-[11px] font-medium text-muted-foreground/40 whitespace-nowrap">
@@ -174,7 +174,7 @@ export function MilestoneProgressBar({
 
               {/* Connector line */}
               {!isLast && (
-                <div className="flex-1 mx-2.5">
+                <div className="flex-1 mx-2">
                   <div
                     className={cn(
                       "h-px w-full rounded-full transition-all duration-500",

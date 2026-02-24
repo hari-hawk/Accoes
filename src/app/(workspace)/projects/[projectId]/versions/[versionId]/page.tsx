@@ -960,7 +960,7 @@ export default function VersionOverviewPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                <ScrollArea className={uploadFiles.length > 4 ? "h-[180px]" : ""}>
+                <ScrollArea className="max-h-[240px]">
                   <div className="space-y-2 pr-2">
                     {uploadFiles.map((file) => (
                       <div

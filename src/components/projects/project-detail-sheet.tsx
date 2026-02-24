@@ -419,6 +419,8 @@ export function ProjectDetailSheet({
   const [selectedMatrixIds, setSelectedMatrixIds] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
+  const [matrixHistoryOpen, setMatrixHistoryOpen] = useState(false);
+  const [renderTime] = useState(() => Date.now());
 
   if (!project) return null;
 
@@ -429,14 +431,12 @@ export function ProjectDetailSheet({
 
   // Activity logs
   const activityLogs = getActivityLogsByProject(project.id);
-
-  // Filter activity by time range
   const filterMs =
     activityFilter === "3d"
       ? 3 * 24 * 60 * 60 * 1000
       : 7 * 24 * 60 * 60 * 1000;
   const filteredLogs = activityLogs.filter(
-    (log) => Date.now() - new Date(log.timestamp).getTime() <= filterMs
+    (log) => renderTime - new Date(log.timestamp).getTime() <= filterMs
   );
 
   const startEdit = () => {
@@ -457,8 +457,6 @@ export function ProjectDetailSheet({
     // Mock save — in production this would call an API
     setEditing(false);
   };
-
-  const [matrixHistoryOpen, setMatrixHistoryOpen] = useState(false);
 
   const allMatrixSelected =
     currentMatrixFiles.length > 0 &&

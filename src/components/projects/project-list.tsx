@@ -652,17 +652,19 @@ function DownloadReportSheet({
           </div>
         ) : (
           <>
-            {/* Filter Header */}
-            <div className="px-4 pt-4 pb-3 space-y-2 border-b shrink-0">
-              {/* Search */}
+            {/* Search */}
+            <div className="px-4 pt-3 pb-2 border-b shrink-0">
               <SearchInput
                 placeholder="Search materials..."
                 value={search}
                 onChange={setSearch}
-                className="[&_input]:h-8"
+                className="[&_input]:h-8 [&_input]:text-xs"
               />
+            </div>
 
-              {/* Row 2: Document dropdown + Status filter */}
+            {/* Filter Controls */}
+            <div className="px-4 pt-2 pb-2 space-y-2 border-b shrink-0 bg-muted/20">
+              {/* Row 1: Document dropdown + Status filter */}
               <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
                 <Select defaultValue="all">
                   <SelectTrigger className="h-8 text-xs w-full">
@@ -670,6 +672,9 @@ function DownloadReportSheet({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Documents</SelectItem>
+                    <SelectItem value="mig-7">Plumbing Matrix Index Grid</SelectItem>
+                    <SelectItem value="mig-8">Heating Matrix Index Grid</SelectItem>
+                    <SelectItem value="mig-9">Mechanical Matrix Index Grid</SelectItem>
                   </SelectContent>
                 </Select>
 

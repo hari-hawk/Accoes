@@ -90,18 +90,18 @@ const fileTypeConfig: Record<
   xlsx: {
     label: "XLSX",
     color:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+      "bg-status-pre-approved-bg text-status-pre-approved",
     icon: FileSpreadsheet,
   },
   docx: {
     label: "DOCX",
-    color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    color: "bg-ds-primary-100 text-ds-primary-800",
     icon: FileType,
   },
   csv: {
     label: "CSV",
     color:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+      "bg-status-pre-approved-bg text-status-pre-approved",
     icon: FileSpreadsheet,
   },
 };
@@ -140,7 +140,7 @@ const statusOptions: { value: ProjectStatus; label: string }[] = [
 const roleConfig: Record<string, { label: string; color: string }> = {
   admin: {
     label: "Owner",
-    color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    color: "bg-ds-primary-100 text-ds-primary-800",
   },
   collaborator: {
     label: "Collaborator",
@@ -149,7 +149,7 @@ const roleConfig: Record<string, { label: string; color: string }> = {
   viewer: {
     label: "Reviewer",
     color:
-      "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+      "bg-ds-primary-100 text-ds-primary-800",
   },
   // Legacy roles — map to new labels
   submitter: {
@@ -163,7 +163,7 @@ const roleConfig: Record<string, { label: string; color: string }> = {
   global_viewer: {
     label: "Reviewer",
     color:
-      "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+      "bg-ds-primary-100 text-ds-primary-800",
   },
 };
 
@@ -337,13 +337,13 @@ function InlineSharePanel({
             </div>
             <Badge
               variant="secondary"
-              className="text-[10px] shrink-0 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+              className="text-[11px] shrink-0 bg-ds-primary-100 text-ds-primary-800"
             >
               <Crown className="h-2.5 w-2.5 mr-1" />
               Owner
             </Badge>
           </div>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-[11px] text-muted-foreground">
             Only one person can be the project owner. Ownership can be
             transferred to another member.
           </p>
@@ -384,7 +384,7 @@ function InlineSharePanel({
                   </div>
                   <Badge
                     variant="secondary"
-                    className={cn("text-[10px] shrink-0", rc.color)}
+                    className={cn("text-[11px] shrink-0", rc.color)}
                   >
                     {rc.label}
                   </Badge>
@@ -725,14 +725,14 @@ export function ProjectDetailSheet({
                             className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors"
                             role="listitem"
                           >
-                            <div className="h-7 w-7 rounded-md bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0">
-                              <FileIcon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                            <div className="h-7 w-7 rounded-md bg-status-pre-approved-bg flex items-center justify-center shrink-0">
+                              <FileIcon className="h-3.5 w-3.5 text-status-pre-approved" aria-hidden="true" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium truncate">
                                 {file.fileName}
                               </p>
-                              <span className="text-[10px] text-muted-foreground">
+                              <span className="text-[11px] text-muted-foreground">
                                 {formatFileSize(file.fileSize)}
                               </span>
                             </div>
@@ -767,7 +767,7 @@ export function ProjectDetailSheet({
                               <p className="text-xs font-medium truncate">
                                 {file.fileName}
                               </p>
-                              <span className="text-[10px] text-muted-foreground">
+                              <span className="text-[11px] text-muted-foreground">
                                 {formatFileSize(file.fileSize)}
                               </span>
                             </div>
@@ -848,7 +848,7 @@ export function ProjectDetailSheet({
                                   alt={user.name}
                                 />
                               )}
-                              <AvatarFallback className="text-[9px] font-bold">
+                              <AvatarFallback className="text-[10px] font-bold">
                                 {user ? getInitials(user.name) : "?"}
                               </AvatarFallback>
                             </Avatar>
@@ -857,7 +857,7 @@ export function ProjectDetailSheet({
                                 <span className="text-xs font-medium">
                                   {user?.name ?? "Unknown"}
                                 </span>
-                                <span className="text-[10px] text-muted-foreground">
+                                <span className="text-[11px] text-muted-foreground">
                                   {formatRelativeTime(log.timestamp)}
                                 </span>
                               </div>
@@ -892,14 +892,14 @@ export function ProjectDetailSheet({
                         const FileIcon = ftConfig.icon;
                         return (
                           <div key={file.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors" role="listitem">
-                            <div className="h-7 w-7 rounded-md bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0">
-                              <FileIcon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                            <div className="h-7 w-7 rounded-md bg-status-pre-approved-bg flex items-center justify-center shrink-0">
+                              <FileIcon className="h-3.5 w-3.5 text-status-pre-approved" aria-hidden="true" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium truncate">{file.fileName}</p>
-                              <span className="text-[10px] text-muted-foreground">{formatFileSize(file.fileSize)} — {file.version}</span>
+                              <span className="text-[11px] text-muted-foreground">{formatFileSize(file.fileSize)} — {file.version}</span>
                             </div>
-                            <Badge variant="secondary" className="text-[9px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Active</Badge>
+                            <Badge variant="secondary" className="text-[11px] bg-status-pre-approved-bg text-status-pre-approved">Active</Badge>
                           </div>
                         );
                       })}
@@ -937,7 +937,7 @@ export function ProjectDetailSheet({
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs font-medium truncate text-muted-foreground">{file.fileName}</p>
-                                  <span className="text-[10px] text-muted-foreground">{formatFileSize(file.fileSize)} — {file.version} — {file.confidence}% confidence</span>
+                                  <span className="text-[11px] text-muted-foreground">{formatFileSize(file.fileSize)} — {file.version} — {file.confidence}% confidence</span>
                                 </div>
                               </div>
                             );

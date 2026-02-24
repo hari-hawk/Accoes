@@ -70,8 +70,8 @@ function getInitials(name: string): string {
 
 const fileTypeConfig: Record<string, { icon: typeof FileText; color: string }> = {
   pdf: { icon: FileText, color: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" },
-  xlsx: { icon: FileSpreadsheet, color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  csv: { icon: FileSpreadsheet, color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  xlsx: { icon: FileSpreadsheet, color: "bg-status-pre-approved-bg text-status-pre-approved" },
+  csv: { icon: FileSpreadsheet, color: "bg-status-pre-approved-bg text-status-pre-approved" },
   docx: { icon: FileType, color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" },
 };
 
@@ -280,10 +280,10 @@ export function CreateProjectDialog({
                       {uploadedFiles.filter((f) => f.category === "material_index").length > 0 && (
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                            <Badge variant="secondary" className="text-[11px] bg-status-pre-approved-bg text-status-pre-approved">
                               Conformance
                             </Badge>
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-[11px] text-muted-foreground">
                               {uploadedFiles.filter((f) => f.category === "material_index").length} file{uploadedFiles.filter((f) => f.category === "material_index").length !== 1 ? "s" : ""}
                             </span>
                           </div>
@@ -312,10 +312,10 @@ export function CreateProjectDialog({
                       {uploadedFiles.filter((f) => f.category === "specification").length > 0 && (
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-[10px] bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                            <Badge variant="secondary" className="text-[11px] bg-status-action-mandatory-bg text-status-action-mandatory">
                               Project Specification
                             </Badge>
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-[11px] text-muted-foreground">
                               {uploadedFiles.filter((f) => f.category === "specification").length} file{uploadedFiles.filter((f) => f.category === "specification").length !== 1 ? "s" : ""}
                             </span>
                           </div>
@@ -499,7 +499,7 @@ export function CreateProjectDialog({
                             {user.email}
                           </p>
                         </div>
-                        <Badge variant="secondary" className="text-[10px] shrink-0 capitalize">
+                        <Badge variant="secondary" className="text-[11px] shrink-0 capitalize">
                           {m.role === "global_viewer" ? "Reviewer" : m.role === "submitter" ? "Collaborator" : m.role}
                         </Badge>
                         <Button

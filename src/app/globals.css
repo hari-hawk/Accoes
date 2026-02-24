@@ -94,8 +94,8 @@
   --color-ds-neutral-900: #333333;
   --color-ds-neutral-800: #4A4A4A;
   --color-ds-neutral-700: #616161;
-  --color-ds-neutral-600: #787878;
-  --color-ds-neutral-500: #909090;
+  --color-ds-neutral-600: #6B6B6B;
+  --color-ds-neutral-500: #838383;
   --color-ds-neutral-400: #A8A8A8;
   --color-ds-neutral-300: #C0C0C0;
   --color-ds-neutral-200: #D8D8D8;
@@ -106,14 +106,14 @@
      ============================================ */
   --color-tag-blue: #1550FC;
   --color-tag-blue-light: #EFF4FF;
-  --color-tag-green: #009966;
-  --color-tag-green-light: #ECFDF5;
+  --color-tag-green: #007A54;
+  --color-tag-green-light: #E8F5EF;
   --color-tag-red: #E70008;
   --color-tag-red-light: #FBF3F2;
   --color-tag-orange: #F9FE0B;
   --color-tag-orange-light: #FBF3C7;
-  --color-tag-orange2: #F54900;
-  --color-tag-orange2-light: #FFF7ED;
+  --color-tag-orange2: #C43600;
+  --color-tag-orange2-light: #FFF3E8;
   --color-tag-purple: #8B5CF6;
   --color-tag-purple-light: #EDE9FE;
   --color-tag-brown: #78350F;
@@ -142,7 +142,7 @@
   --popover: #FFFFFF;
   --popover-foreground: #333333;
   --muted: #F0F0F0;
-  --muted-foreground: #787878;
+  --muted-foreground: #6B6B6B;
   --border: #D8D8D8;
   --input: #D8D8D8;
   --ring: #00529B;
@@ -165,9 +165,9 @@
   /* Charts — DS palette */
   --chart-1: #00529B;
   --chart-2: #e1a41d;
-  --chart-3: #009966;
+  --chart-3: #007A54;
   --chart-4: #8B5CF6;
-  --chart-5: #F54900;
+  --chart-5: #C43600;
 
   /* Top Navigation: DS primary-900 */
   --nav: #003075;
@@ -183,19 +183,19 @@
   --sidebar-accent: #EFF4FF;
   --sidebar-accent-foreground: #333333;
   --sidebar-border: #D8D8D8;
-  --sidebar-ring: #909090;
+  --sidebar-ring: #838383;
 
-  /* Validation Status — DS tag colors */
-  --status-pre-approved: #009966;
-  --status-pre-approved-bg: #ECFDF5;
-  --status-review-required: #D63F00;
-  --status-review-required-bg: #FFF7ED;
+  /* Validation Status — WCAG AA compliant (≥ 4.5:1 on white + badge bg) */
+  --status-pre-approved: #007A54;
+  --status-pre-approved-bg: #E8F5EF;
+  --status-review-required: #C43600;
+  --status-review-required-bg: #FFF3E8;
   --status-action-mandatory: #C50007;
   --status-action-mandatory-bg: #FBF3F2;
 
   /* Confidence — same as status */
-  --confidence-high: #009966;
-  --confidence-medium: #D63F00;
+  --confidence-high: #007A54;
+  --confidence-medium: #C43600;
   --confidence-low: #C50007;
 }
 
@@ -225,9 +225,9 @@
   --nav-gold: #e1a41d;
   --chart-1: #309AE8;
   --chart-2: #e1a41d;
-  --chart-3: #009966;
+  --chart-3: #007A54;
   --chart-4: #8B5CF6;
-  --chart-5: #F54900;
+  --chart-5: #C43600;
   --sidebar: #1a1f2e;
   --sidebar-foreground: #D8D8D8;
   --sidebar-primary: #309AE8;

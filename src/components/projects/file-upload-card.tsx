@@ -16,20 +16,20 @@ const fileTypeConfig: Record<
   },
   xlsx: {
     icon: FileSpreadsheet,
-    bgColor: "bg-emerald-100 dark:bg-emerald-900/30",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
+    bgColor: "bg-status-pre-approved-bg",
+    iconColor: "text-status-pre-approved",
     label: "XLS",
   },
   xls: {
     icon: FileSpreadsheet,
-    bgColor: "bg-emerald-100 dark:bg-emerald-900/30",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
+    bgColor: "bg-status-pre-approved-bg",
+    iconColor: "text-status-pre-approved",
     label: "XLS",
   },
   csv: {
     icon: FileSpreadsheet,
-    bgColor: "bg-emerald-100 dark:bg-emerald-900/30",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
+    bgColor: "bg-status-pre-approved-bg",
+    iconColor: "text-status-pre-approved",
     label: "CSV",
   },
   docx: {
@@ -40,8 +40,8 @@ const fileTypeConfig: Record<
   },
   other: {
     icon: File,
-    bgColor: "bg-amber-100 dark:bg-amber-900/30",
-    iconColor: "text-amber-600 dark:text-amber-400",
+    bgColor: "bg-status-review-required-bg",
+    iconColor: "text-status-review-required",
     label: "FILE",
   },
 };
@@ -91,7 +91,7 @@ export function FileUploadCard({
       {/* File info */}
       <div className="min-w-0">
         <p className="text-xs font-medium truncate">{name}</p>
-        <p className="text-[10px] text-muted-foreground">{size}</p>
+        <p className="text-[11px] text-muted-foreground">{size}</p>
       </div>
     </div>
   );

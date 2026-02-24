@@ -222,8 +222,8 @@ function ProjectSpecificationsCard({
                 />
 
                 {/* File icon */}
-                <div className="h-9 w-9 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-                  <FileIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+                <div className="h-9 w-9 rounded-lg bg-ds-primary-100 flex items-center justify-center shrink-0">
+                  <FileIcon className="h-4 w-4 text-ds-primary-800" aria-hidden="true" />
                 </div>
 
                 {/* File info */}
@@ -395,8 +395,8 @@ function MaterialIndexGridCard({
                 aria-label={`Select ${file.fileName}`}
                 className="shrink-0"
               />
-              <div className="h-9 w-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                <FileIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+              <div className="h-9 w-9 rounded-lg bg-status-pre-approved-bg flex items-center justify-center shrink-0">
+                <FileIcon className="h-4 w-4 text-status-pre-approved" aria-hidden="true" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{file.fileName}</p>
@@ -409,7 +409,7 @@ function MaterialIndexGridCard({
                   </span>
                 </div>
               </div>
-              <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 shrink-0">
+              <Badge variant="secondary" className="text-[11px] px-1.5 py-0 h-4 bg-status-pre-approved-bg text-status-pre-approved shrink-0">
                 Active
               </Badge>
               <ChevronRight className="h-4 w-4 text-muted-foreground/0 group-hover/row:text-muted-foreground transition-colors shrink-0" aria-hidden="true" />
@@ -464,19 +464,19 @@ function MaterialIndexGridCard({
                       <p className="text-sm font-medium truncate text-muted-foreground">{file.fileName}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">{file.version}</Badge>
-                        <span className="text-[11px] text-muted-foreground/70">
+                        <span className="text-[11px] text-muted-foreground">
                           {formatFileSize(file.fileSize)}
                         </span>
-                        <span className="text-[11px] text-muted-foreground/70">
+                        <span className="text-[11px] text-muted-foreground">
                           Processed {new Date(file.processedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
                         </span>
-                        <span className="text-[11px] text-muted-foreground/70">
+                        <span className="text-[11px] text-muted-foreground font-medium">
                           {file.confidence}%
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <Badge variant="secondary" className="text-[9px] bg-amber-100/60 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                      <Badge variant="secondary" className="text-[11px] bg-muted text-muted-foreground">
                         View Only
                       </Badge>
                       <Eye className="h-3.5 w-3.5 text-muted-foreground/0 group-hover/row:text-muted-foreground transition-colors" aria-hidden="true" />
@@ -678,7 +678,7 @@ function ProjectInsightsSection({
               <Users className="h-3 w-3" aria-hidden="true" />
               {project.memberIds.length} member{project.memberIds.length !== 1 ? "s" : ""}
             </span>
-            <span className="text-muted-foreground/40">·</span>
+            <span className="text-muted-foreground/60">·</span>
             <span>
               Updated{" "}
               {new Date(project.updatedAt).toLocaleDateString("en-GB", {
@@ -859,8 +859,8 @@ export default function VersionOverviewPage() {
                       <p className="text-xs font-medium">{activity.action}</p>
                       <p className="text-[11px] text-muted-foreground truncate">{activity.detail}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] font-medium text-primary/70">{activity.user}</span>
-                        <span className="text-[10px] text-muted-foreground/60">{activity.time}</span>
+                        <span className="text-[11px] font-medium text-primary">{activity.user}</span>
+                        <span className="text-[11px] text-muted-foreground">{activity.time}</span>
                       </div>
                     </div>
                   </div>
@@ -931,7 +931,7 @@ export default function VersionOverviewPage() {
           <div className="space-y-4 pt-2">
             {uploadFiles.length === 0 ? (
               <div
-                className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-8 text-center hover:border-nav-accent/40 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 outline-none"
+                className="rounded-xl border-2 border-dashed border-muted-foreground/40 p-8 text-center hover:border-nav-accent/40 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 outline-none"
                 onClick={handleSimulateUpload}
                 role="button"
                 tabIndex={0}
@@ -963,8 +963,8 @@ export default function VersionOverviewPage() {
                         key={file.id}
                         className="flex items-center gap-3 p-3 rounded-lg border bg-muted/10"
                       >
-                        <div className="h-8 w-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
-                          <FileText className="h-4 w-4 text-red-600 dark:text-red-400" aria-hidden="true" />
+                        <div className="h-8 w-8 rounded-lg bg-ds-primary-100 flex items-center justify-center shrink-0">
+                          <FileText className="h-4 w-4 text-ds-primary-800" aria-hidden="true" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{file.name}</p>

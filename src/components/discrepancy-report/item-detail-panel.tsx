@@ -41,8 +41,8 @@ const statusIcons: Record<DiscrepancyStatus, typeof CheckCircle2> = {
 
 const sourceIcons = [
   { label: "Conformance", icon: Table2, color: "text-blue-500" },
-  { label: "Project Specifications", icon: BookOpen, color: "text-purple-500" },
-  { label: "Project Index", icon: FileText, color: "text-amber-500" },
+  { label: "Project Specifications", icon: BookOpen, color: "text-ds-primary-800" },
+  { label: "Project Index", icon: FileText, color: "text-status-review-required" },
 ];
 
 export function ItemDetailPanel({
@@ -70,7 +70,7 @@ export function ItemDetailPanel({
           <p className="text-xs text-muted-foreground mt-0.5">
             {item.description}
           </p>
-          <p className="text-[10px] font-mono text-muted-foreground mt-1">
+          <p className="text-[11px] font-mono text-muted-foreground mt-1">
             {item.specSection}
           </p>
         </div>
@@ -183,7 +183,7 @@ export function ItemDetailPanel({
                     <span className="text-xs font-medium">
                       {author?.name ?? "Unknown"}
                     </span>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-[11px] text-muted-foreground">
                       {new Date(comment.createdAt).toLocaleDateString("en-GB", {
                         day: "2-digit",
                         month: "2-digit",

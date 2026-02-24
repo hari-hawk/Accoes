@@ -153,7 +153,7 @@ export function FullScreenPdfViewer({
                   </div>
 
                   {/* Footer */}
-                  <div className="pt-4 border-t text-center text-[10px] text-muted-foreground/60 italic">
+                  <div className="pt-4 border-t text-center text-[11px] text-muted-foreground italic">
                     Downtown Medical Center HVAC Renovation - Specification Document Rev 2.1
                   </div>
                 </div>
@@ -202,10 +202,10 @@ export function FullScreenPdfViewer({
                       onClick={() => setCurrentPage(citation.page)}
                     >
                       <div className="flex items-center justify-between">
-                        <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-0 text-[10px]">
+                        <Badge className="bg-status-pre-approved-bg text-status-pre-approved border-0 text-[11px]">
                           {citation.label}
                         </Badge>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-[11px] text-muted-foreground">
                           Page {citation.page}
                         </span>
                       </div>

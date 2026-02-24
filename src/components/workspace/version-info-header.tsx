@@ -80,17 +80,17 @@ export function VersionInfoHeader({
             {project.name}
           </button>
           <StatusIndicator status={version.status} />
-          <span className="text-[10px] text-muted-foreground/40 hidden sm:inline">|</span>
+          <span className="text-[11px] text-muted-foreground/60 hidden sm:inline">|</span>
           <span className="text-xs text-muted-foreground truncate shrink-0">
             {project.client}
           </span>
-          <span className="text-[10px] text-muted-foreground/40 hidden sm:inline">|</span>
+          <span className="text-[11px] text-muted-foreground/60 hidden sm:inline">|</span>
           <span className="text-xs font-mono text-muted-foreground shrink-0">
             {project.jobId}
           </span>
           {version.confidenceSummary.total > 0 && (
             <>
-              <span className="text-[10px] text-muted-foreground/40 hidden sm:inline">|</span>
+              <span className="text-[11px] text-muted-foreground/60 hidden sm:inline">|</span>
               <InlineConfidenceBar data={version.confidenceSummary} />
             </>
           )}

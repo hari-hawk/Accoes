@@ -45,9 +45,9 @@ export const PROJECT_STATUS_CONFIG: Record<
   ProjectStatus,
   { label: string; color: string }
 > = {
-  in_progress: { label: "In Progress", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-  active: { label: "Active", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-  on_hold: { label: "On Hold", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
+  in_progress: { label: "In Progress", color: "bg-status-review-required-bg text-status-review-required" },
+  active: { label: "Active", color: "bg-ds-primary-100 text-ds-primary-800" },
+  on_hold: { label: "On Hold", color: "bg-muted text-muted-foreground" },
   completed: { label: "Completed", color: "bg-status-pre-approved-bg text-status-pre-approved" },
 };
 
@@ -56,9 +56,9 @@ export const VERSION_STATUS_CONFIG: Record<
   { label: string; color: string }
 > = {
   draft: { label: "Draft", color: "bg-muted text-muted-foreground" },
-  uploading: { label: "Uploading", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-  processing: { label: "Processing", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-  in_review: { label: "In Review", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+  uploading: { label: "Uploading", color: "bg-ds-primary-100 text-ds-primary-800" },
+  processing: { label: "Processing", color: "bg-status-review-required-bg text-status-review-required" },
+  in_review: { label: "In Review", color: "bg-ds-primary-100 text-ds-primary-800" },
   complete: { label: "Complete", color: "bg-status-pre-approved-bg text-status-pre-approved" },
   error: { label: "Error", color: "bg-status-action-mandatory-bg text-status-action-mandatory" },
 };
@@ -126,13 +126,13 @@ export const ROLE_CONFIG: Record<
   UserRole,
   { label: string; color: string }
 > = {
-  admin: { label: "Owner", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  admin: { label: "Owner", color: "bg-ds-primary-100 text-ds-primary-800" },
   collaborator: { label: "Collaborator", color: "bg-status-pre-approved-bg text-status-pre-approved" },
-  viewer: { label: "Reviewer", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+  viewer: { label: "Reviewer", color: "bg-muted text-muted-foreground" },
   // Legacy roles — map to new names for backwards compatibility
-  global_viewer: { label: "Reviewer", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+  global_viewer: { label: "Reviewer", color: "bg-muted text-muted-foreground" },
   submitter: { label: "Collaborator", color: "bg-status-pre-approved-bg text-status-pre-approved" },
-  reviewer: { label: "Collaborator", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  reviewer: { label: "Collaborator", color: "bg-status-review-required-bg text-status-review-required" },
 };
 
 export const DISCREPANCY_STATUS_CONFIG: Record<

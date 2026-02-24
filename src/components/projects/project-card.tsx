@@ -59,7 +59,7 @@ export function ProjectCard({
         ? "bg-status-review-required"
         : confidence > 0
           ? "bg-status-action-mandatory"
-          : "bg-muted-foreground/30";
+          : "bg-muted";
 
   const hasVersions = !!project.latestVersionId;
 
@@ -111,12 +111,7 @@ export function ProjectCard({
             {project.projectType && (
               <Badge
                 variant="secondary"
-                className={cn(
-                  "text-[10px] font-bold px-2 py-0.5",
-                  project.projectType === "dr"
-                    ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
-                    : "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400"
-                )}
+                className="text-[11px] font-bold px-2 py-0.5 bg-ds-primary-100 text-ds-primary-800"
               >
                 {project.projectType === "dr" ? "Discrepancy Report" : "Design Job"}
               </Badge>
@@ -127,7 +122,7 @@ export function ProjectCard({
 
         {/* Row 2: Confidence bar + percentage */}
         <div className="mt-2.5" aria-label={`Confidence: ${confidence > 0 ? `${confidence}%` : "Pending"}`}>
-          <div className="flex items-center justify-between text-[11px] mb-1">
+          <div className="flex items-center justify-between text-xs mb-1">
             <span className="text-muted-foreground font-medium flex items-center gap-1">
               <TrendingUp className="h-3 w-3" aria-hidden="true" />
               Confidence
@@ -146,7 +141,7 @@ export function ProjectCard({
 
         {/* Row 3: Breakdown badges + Avatar stack */}
         <div className="mt-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 text-[11px]" aria-label="Validation breakdown">
+          <div className="flex items-center gap-2.5 text-xs" aria-label="Validation breakdown">
             <div className="flex items-center gap-0.5 text-status-pre-approved" aria-label={`${project.confidenceSummary.preApproved} pre-approved`}>
               <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
               <span className="font-medium">{project.confidenceSummary.preApproved}</span>
@@ -192,10 +187,10 @@ export function ProjectCard({
           <button
             type="button"
             className={cn(
-              "flex items-center gap-1.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-sm outline-none px-0.5",
+              "flex items-center gap-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-sm outline-none px-0.5",
               hasDocuments
                 ? "text-muted-foreground hover:text-nav-accent"
-                : "text-muted-foreground/40 cursor-not-allowed"
+                : "text-muted-foreground/60 cursor-not-allowed"
             )}
             disabled={!hasDocuments}
             onClick={(e) => {
@@ -213,7 +208,7 @@ export function ProjectCard({
           </button>
         ) : (
           <span
-            className="flex items-center gap-1.5 text-[11px] text-muted-foreground/40 font-medium cursor-not-allowed"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground/60 font-medium cursor-not-allowed"
             aria-label="Download report unavailable — no versions"
           >
             <Download className="h-3 w-3" aria-hidden="true" />

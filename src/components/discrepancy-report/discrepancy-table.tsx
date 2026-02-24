@@ -130,7 +130,7 @@ export function DiscrepancyTable({
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {item.description}
                         </p>
-                        <p className="text-[10px] font-mono text-muted-foreground mt-0.5">
+                        <p className="text-[11px] font-mono text-muted-foreground mt-0.5">
                           {item.specSection}
                         </p>
                       </div>
@@ -167,13 +167,13 @@ export function DiscrepancyTable({
                       <div className="flex items-center gap-2">
                         <Badge
                           variant="secondary"
-                          className={`text-[10px] shrink-0 ${config.color} ${config.bgColor}`}
+                          className={`text-[11px] shrink-0 ${config.color} ${config.bgColor}`}
                         >
                           <StatusIcon className="h-3 w-3 mr-1" />
                           {config.label}
                         </Badge>
                         {item.comments.length > 0 && (
-                          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                          <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
                             <MessageSquare className="h-3 w-3" />
                             {item.comments.length}
                           </span>

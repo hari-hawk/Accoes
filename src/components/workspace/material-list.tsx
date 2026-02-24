@@ -54,7 +54,7 @@ function ScoreChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold tabular-nums",
+        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-bold tabular-nums",
         color
       )}
     >
@@ -156,7 +156,7 @@ function MaterialListItem({
               /* Show decision badge when user has made a decision */
               <span
                 className={cn(
-                  "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none capitalize",
+                  "inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold leading-none capitalize",
                   effectiveDecision === "approved"
                     ? "bg-status-pre-approved-bg text-status-pre-approved"
                     : effectiveDecision === "revisit"
@@ -171,7 +171,7 @@ function MaterialListItem({
               status && (
                 <span
                   className={cn(
-                    "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none",
+                    "inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold leading-none",
                     VALIDATION_STATUS_CONFIG[status].bgColor,
                     VALIDATION_STATUS_CONFIG[status].color
                   )}
@@ -304,7 +304,7 @@ export function MaterialList({
                   {activeFilterCount > 0 && (
                     <button
                       type="button"
-                      className="text-[10px] text-primary hover:underline font-medium"
+                      className="text-[11px] text-primary hover:underline font-medium"
                       onClick={() => onClearStatusFilter()}
                     >
                       Clear all
@@ -331,7 +331,7 @@ export function MaterialList({
                       />
                       <Icon className={cn("h-3.5 w-3.5 shrink-0", opt.color)} aria-hidden="true" />
                       <span className="text-xs font-medium flex-1">{opt.label}</span>
-                      <span className="text-[10px] text-muted-foreground tabular-nums font-medium">{count}</span>
+                      <span className="text-[11px] text-muted-foreground tabular-nums font-medium">{count}</span>
                     </label>
                   );
                 })}
@@ -347,7 +347,7 @@ export function MaterialList({
               <span
                 key={opt.key}
                 className={cn(
-                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
                   VALIDATION_STATUS_CONFIG[opt.key].bgColor,
                   VALIDATION_STATUS_CONFIG[opt.key].color
                 )}
@@ -365,7 +365,7 @@ export function MaterialList({
             ))}
             <button
               type="button"
-              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors ml-1"
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors ml-1"
               onClick={onClearStatusFilter}
             >
               Clear

@@ -98,7 +98,7 @@ function PSTabContent({
 
       {/* AI Analysis card */}
       <div className="rounded-md border border-border/70 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3.5 space-y-2.5">
-        <h4 className="text-[10px] text-ds-neutral-500 font-medium uppercase tracking-wider">
+        <h4 className="text-[11px] text-ds-neutral-600 font-medium uppercase tracking-wider">
           AI Analysis
         </h4>
         <p className="text-[13px] text-ds-neutral-900 leading-relaxed">
@@ -322,7 +322,7 @@ function MatchCardHeader({
         </span>
         <span
           className={cn(
-            "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide",
+            "inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide",
             MATCH_TYPE_COLORS[match.matchType] ?? "bg-muted text-muted-foreground"
           )}
         >
@@ -343,13 +343,13 @@ function MatchCardBody({ match }: { match: IndexMatch }) {
       {/* 2×2 key-value grid */}
       <div className="grid grid-cols-2 divide-x divide-border/60">
         <div className="px-3.5 py-2.5">
-          <p className="text-[10px] text-ds-neutral-500 font-medium uppercase tracking-wider mb-0.5">
+          <p className="text-[11px] text-ds-neutral-600 font-medium uppercase tracking-wider mb-0.5">
             Category
           </p>
           <p className="text-[13px] text-ds-neutral-900">{match.category}</p>
         </div>
         <div className="px-3.5 py-2.5">
-          <p className="text-[10px] text-ds-neutral-500 font-medium uppercase tracking-wider mb-0.5">
+          <p className="text-[11px] text-ds-neutral-600 font-medium uppercase tracking-wider mb-0.5">
             Subcategory
           </p>
           <p className="text-[13px] text-ds-neutral-900">{match.subCategory}</p>
@@ -357,13 +357,13 @@ function MatchCardBody({ match }: { match: IndexMatch }) {
       </div>
       <div className="grid grid-cols-2 divide-x divide-border/60 border-t border-border/60">
         <div className="px-3.5 py-2.5">
-          <p className="text-[10px] text-ds-neutral-500 font-medium uppercase tracking-wider mb-0.5">
+          <p className="text-[11px] text-ds-neutral-600 font-medium uppercase tracking-wider mb-0.5">
             Item Description
           </p>
           <p className="text-[13px] text-ds-neutral-900">{match.itemDescription}</p>
         </div>
         <div className="px-3.5 py-2.5">
-          <p className="text-[10px] text-ds-neutral-500 font-medium uppercase tracking-wider mb-0.5">
+          <p className="text-[11px] text-ds-neutral-600 font-medium uppercase tracking-wider mb-0.5">
             Size
           </p>
           <p className="text-[13px] text-ds-neutral-900">{match.size}</p>
@@ -372,7 +372,7 @@ function MatchCardBody({ match }: { match: IndexMatch }) {
 
       {/* Reason — softly tinted section */}
       <div className="border-t border-border/60 bg-ds-bg-gray-light px-3.5 py-2.5">
-        <p className="text-[10px] text-ds-neutral-500 font-medium uppercase tracking-wider mb-0.5">
+        <p className="text-[11px] text-ds-neutral-600 font-medium uppercase tracking-wider mb-0.5">
           Reason
         </p>
         <p className="text-[13px] text-ds-neutral-800 leading-relaxed">{match.reason}</p>
@@ -448,7 +448,7 @@ function CommentsActivityPanel({
               <MessageSquare className="h-3 w-3" aria-hidden="true" />
               Comments
               {allComments.length > 0 && (
-                <span className="h-4 min-w-[16px] rounded-full bg-primary/15 text-primary text-[9px] font-bold px-1 flex items-center justify-center">
+                <span className="h-4 min-w-[16px] rounded-full bg-primary/15 text-primary text-[10px] font-bold px-1 flex items-center justify-center">
                   {allComments.length}
                 </span>
               )}
@@ -456,7 +456,7 @@ function CommentsActivityPanel({
             <TabsTrigger value="activity" className="text-xs gap-1.5">
               Activity
               {activityLogs.length > 0 && (
-                <span className="h-4 min-w-[16px] rounded-full bg-muted text-muted-foreground text-[9px] font-bold px-1 flex items-center justify-center">
+                <span className="h-4 min-w-[16px] rounded-full bg-muted text-muted-foreground text-[10px] font-bold px-1 flex items-center justify-center">
                   {activityLogs.length}
                 </span>
               )}
@@ -508,7 +508,7 @@ function CommentsActivityPanel({
                           <span className="text-[11px] font-semibold">
                             {isCurrentUser ? "You" : user?.name ?? "Unknown"}
                           </span>
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[11px] text-muted-foreground">
                             {formatRelativeTime(comment.createdAt)}
                           </span>
                         </div>
@@ -556,7 +556,7 @@ function CommentsActivityPanel({
                         <span className="text-[11px] font-medium">
                           {user?.name ?? "Unknown"}
                         </span>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-[11px] text-muted-foreground">
                           {formatRelativeTime(log.timestamp)}
                         </span>
                       </div>
@@ -746,7 +746,7 @@ export function EvidencePanel({
               >
                 <MessageSquare className="h-4 w-4" aria-hidden="true" />
                 {commentCount > 0 && !showComments && (
-                  <span className="absolute -top-1 -right-1 h-4 min-w-[16px] rounded-full bg-primary text-[9px] font-bold text-primary-foreground flex items-center justify-center px-1" aria-hidden="true">
+                  <span className="absolute -top-1 -right-1 h-4 min-w-[16px] rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center px-1" aria-hidden="true">
                     {commentCount}
                   </span>
                 )}

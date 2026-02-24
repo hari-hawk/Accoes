@@ -104,7 +104,7 @@ const categoryConfig: Record<string, { label: string; color: string }> = {
   material_metrics: {
     label: "Material Metrics",
     color:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+      "bg-status-pre-approved-bg text-status-pre-approved",
   },
   project_specification: {
     label: "Project Specification",
@@ -114,7 +114,7 @@ const categoryConfig: Record<string, { label: string; color: string }> = {
   project_documents: {
     label: "Project Documents",
     color:
-      "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+      "bg-status-review-required-bg text-status-review-required",
   },
 };
 
@@ -126,7 +126,7 @@ const roleConfig: Record<string, { label: string; color: string }> = {
   viewer: {
     label: "Reviewer",
     color:
-      "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+      "bg-ds-primary-100 text-ds-primary-800",
   },
 };
 
@@ -395,7 +395,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
               <Badge
                 variant="secondary"
                 className={cn(
-                  "text-[10px] font-bold px-2 py-0.5",
+                  "text-[11px] font-bold px-2 py-0.5",
                   categoryConfig.material_metrics.color
                 )}
               >
@@ -404,7 +404,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
               <span className="text-[11px] text-muted-foreground">CSV, XLS</span>
             </div>
             <div
-              className="rounded-xl border-2 border-dashed border-emerald-400/30 p-8 text-center hover:border-emerald-400/60 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 outline-none"
+              className="rounded-xl border-2 border-dashed border-primary/30 p-8 text-center hover:border-primary/60 hover:bg-primary/5 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none"
               role="button"
               tabIndex={0}
               aria-label="Click to upload material matrix files (CSV, XLS)"
@@ -416,12 +416,12 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
                 }
               }}
             >
-              <div className="mx-auto w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3">
-                <Upload className="h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+              <div className="mx-auto w-12 h-12 rounded-2xl bg-status-pre-approved-bg flex items-center justify-center mb-3">
+                <Upload className="h-6 w-6 text-status-pre-approved" aria-hidden="true" />
               </div>
               <p className="text-sm font-medium">
                 Drag &amp; drop or{" "}
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold underline underline-offset-2">
+                <span className="text-status-pre-approved font-semibold underline underline-offset-2">
                   browse
                 </span>
               </p>
@@ -459,7 +459,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
               <Badge
                 variant="secondary"
                 className={cn(
-                  "text-[10px] font-bold px-2 py-0.5",
+                  "text-[11px] font-bold px-2 py-0.5",
                   categoryConfig.project_specification.color
                 )}
               >
@@ -742,7 +742,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
                   </div>
                   <Badge
                     variant="secondary"
-                    className={cn("text-[10px] shrink-0", rc.color)}
+                    className={cn("text-[11px] shrink-0", rc.color)}
                   >
                     {rc.label}
                   </Badge>

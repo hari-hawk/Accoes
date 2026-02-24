@@ -267,19 +267,19 @@ function HeroSection() {
               )}
             </div>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
-              <span className="flex items-center gap-1 text-[10px] text-white/50">
+              <span className="flex items-center gap-1 text-[11px] text-white/70">
                 <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "var(--chart-1)" }} />
                 Active
               </span>
-              <span className="flex items-center gap-1 text-[10px] text-white/50">
+              <span className="flex items-center gap-1 text-[11px] text-white/70">
                 <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "var(--nav-gold)" }} />
                 In Progress
               </span>
-              <span className="flex items-center gap-1 text-[10px] text-white/50">
+              <span className="flex items-center gap-1 text-[11px] text-white/70">
                 <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "var(--status-pre-approved)" }} />
                 Completed
               </span>
-              <span className="flex items-center gap-1 text-[10px] text-white/50">
+              <span className="flex items-center gap-1 text-[11px] text-white/70">
                 <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "var(--ds-neutral-600, #787878)" }} />
                 On Hold
               </span>
@@ -316,7 +316,7 @@ function HeroSection() {
                 }}
               />
             </div>
-            <p className="text-[10px] text-white/50 mt-1.5 text-right">
+            <p className="text-[11px] text-white/70 mt-1.5 text-right">
               {compliancePct}% compliant
             </p>
           </div>
@@ -435,7 +435,7 @@ function ProjectListRow({
               "inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none",
               hasDocuments
                 ? "text-muted-foreground hover:text-nav-accent hover:bg-muted/50"
-                : "text-muted-foreground/30 cursor-not-allowed"
+                : "text-muted-foreground/60 cursor-not-allowed"
             )}
             aria-label={
               hasDocuments
@@ -451,7 +451,7 @@ function ProjectListRow({
           </button>
         ) : (
           <span
-            className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/30 cursor-not-allowed"
+            className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/60 cursor-not-allowed"
             role="img"
             aria-label="Download report unavailable — no versions"
           >
@@ -641,12 +641,12 @@ function DownloadReportSheet({
                           </div>
                           <div className="shrink-0">
                             {config && StatusIcon ? (
-                              <Badge variant="secondary" className={cn("text-[10px]", config.color)}>
+                              <Badge variant="secondary" className={cn("text-[11px]", config.color)}>
                                 <StatusIcon className="h-3 w-3 mr-1" aria-hidden="true" />
                                 {config.label}
                               </Badge>
                             ) : (
-                              <Badge variant="secondary" className="text-[10px]">Pending</Badge>
+                              <Badge variant="secondary" className="text-[11px]">Pending</Badge>
                             )}
                           </div>
                         </label>
@@ -656,7 +656,7 @@ function DownloadReportSheet({
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="w-14 h-14 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
-                      <FileText className="h-6 w-6 text-muted-foreground/40" aria-hidden="true" />
+                      <FileText className="h-6 w-6 text-muted-foreground/60" aria-hidden="true" />
                     </div>
                     <p className="text-sm font-medium text-muted-foreground">No documents available</p>
                     <p className="text-xs text-muted-foreground/60 mt-1 max-w-[200px]">

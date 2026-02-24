@@ -163,10 +163,10 @@ export function MilestoneProgressBar({
                   aria-disabled="true"
                 >
                   {/* Locked circle */}
-                  <div className="h-6 w-6 rounded-full flex items-center justify-center shrink-0 border-[1.5px] border-dashed border-muted-foreground/30 bg-muted/30">
-                    <Icon className="h-3 w-3 text-muted-foreground/40" />
+                  <div className="h-6 w-6 rounded-full flex items-center justify-center shrink-0 border-[1.5px] border-dashed border-muted-foreground/50 bg-muted/30">
+                    <Icon className="h-3 w-3 text-muted-foreground/60" />
                   </div>
-                  <span className="text-xs font-medium text-muted-foreground/40 whitespace-nowrap">
+                  <span className="text-xs font-medium text-muted-foreground/60 whitespace-nowrap">
                     {milestone.label}
                   </span>
                 </div>

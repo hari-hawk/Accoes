@@ -29,9 +29,9 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 import { FullScreenPdfViewer, type Citation } from "@/components/documents/full-screen-pdf-viewer";
-import { mockUsers } from "@/data/mock-users";
+import { mockUsers, currentUser } from "@/data/mock-users";
 import { getActivityLogsByProject } from "@/data/mock-activity-logs";
-import { getProjectComments } from "@/data/mock-project-comments";
+import { getMaterialComments, getMaterialCommentCount } from "@/data/mock-material-comments";
 import { cn } from "@/lib/utils";
 import type { MaterialItem } from "@/hooks/use-materials";
 import type {
@@ -387,45 +387,165 @@ function MatchCardBody({ match }: { match: IndexMatch }) {
 
 function CommentsActivityPanel({
   projectId,
+  documentId,
+  documentName,
   onClose,
 }: {
   projectId: string;
+  documentId: string;
+  documentName: string;
   onClose: () => void;
 }) {
+  const [activeTab, setActiveTab] = useState<"comments" | "activity">("comments");
   const [commentText, setCommentText] = useState("");
+  const [localComments, setLocalComments] = useState<{ id: string; authorId: string; content: string; createdAt: string }[]>([]);
   const activityLogs = getActivityLogsByProject(projectId);
-  const projectComments = getProjectComments(projectId);
+  const materialComments = getMaterialComments(documentId);
+
+  // Merge mock + locally added comments, sorted chronologically
+  const allComments = [...materialComments, ...localComments].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+
+  const handleSendComment = () => {
+    if (!commentText.trim()) return;
+    const newComment = {
+      id: `local-${Date.now()}`,
+      authorId: currentUser.id,
+      content: commentText.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    setLocalComments((prev) => [...prev, newComment]);
+    setCommentText("");
+  };
 
   return (
-    <div className="w-[320px] border-l flex flex-col h-full shrink-0" role="complementary" aria-label="Comments and activity panel">
-      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-        <h3 className="text-sm font-semibold" id="comments-panel-title">Comments & Activity</h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 text-xs"
-          onClick={onClose}
-          aria-label="Close comments panel"
+    <div className="w-[340px] border-l flex flex-col h-full shrink-0" role="complementary" aria-label="Comments and activity panel">
+      {/* Header with material name */}
+      <div className="px-4 py-3 border-b shrink-0 space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold truncate" id="comments-panel-title">
+            {documentName}
+          </h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs shrink-0"
+            onClick={onClose}
+            aria-label="Close comments panel"
+          >
+            Close
+          </Button>
+        </div>
+
+        {/* Tabs: Comments | Activity */}
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as "comments" | "activity")}
         >
-          Close
-        </Button>
+          <TabsList className="grid w-full grid-cols-2 h-8">
+            <TabsTrigger value="comments" className="text-xs gap-1.5">
+              <MessageSquare className="h-3 w-3" aria-hidden="true" />
+              Comments
+              {allComments.length > 0 && (
+                <span className="h-4 min-w-[16px] rounded-full bg-primary/15 text-primary text-[9px] font-bold px-1 flex items-center justify-center">
+                  {allComments.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="text-xs gap-1.5">
+              Activity
+              {activityLogs.length > 0 && (
+                <span className="h-4 min-w-[16px] rounded-full bg-muted text-muted-foreground text-[9px] font-bold px-1 flex items-center justify-center">
+                  {activityLogs.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
+      {/* Content area */}
       <div className="flex-1 min-h-0 relative">
         <ScrollArea className="absolute inset-0">
-          <div className="p-4 space-y-4">
-            {/* Activity */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                Activity
-              </h4>
-              {activityLogs.map((log) => {
+          <div className="p-4 space-y-3">
+            {activeTab === "comments" ? (
+              /* ---- Comments Tab: Per-material threaded conversation ---- */
+              allComments.length > 0 ? (
+                allComments.map((comment) => {
+                  const user = mockUsers.find((u) => u.id === comment.authorId);
+                  const isCurrentUser = comment.authorId === currentUser.id;
+
+                  return (
+                    <div
+                      key={comment.id}
+                      className={cn(
+                        "flex gap-2.5",
+                        isCurrentUser && "flex-row-reverse"
+                      )}
+                    >
+                      <Avatar className="h-7 w-7 shrink-0 mt-0.5">
+                        {user?.avatarUrl && (
+                          <AvatarImage
+                            src={user.avatarUrl}
+                            alt={user?.name ?? ""}
+                          />
+                        )}
+                        <AvatarFallback className="text-[10px] font-medium">
+                          {user ? getInitials(user.name) : "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div
+                        className={cn(
+                          "min-w-0 flex-1 max-w-[85%]",
+                          isCurrentUser && "flex flex-col items-end"
+                        )}
+                      >
+                        <div className={cn(
+                          "flex items-center gap-1.5 mb-0.5",
+                          isCurrentUser && "flex-row-reverse"
+                        )}>
+                          <span className="text-[11px] font-semibold">
+                            {isCurrentUser ? "You" : user?.name ?? "Unknown"}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {formatRelativeTime(comment.createdAt)}
+                          </span>
+                        </div>
+                        <div
+                          className={cn(
+                            "rounded-lg px-3 py-2 text-xs leading-relaxed",
+                            isCurrentUser
+                              ? "bg-primary text-primary-foreground rounded-tr-sm"
+                              : "bg-muted/60 text-foreground rounded-tl-sm"
+                          )}
+                        >
+                          {comment.content}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="py-8 text-center">
+                  <MessageSquare className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" aria-hidden="true" />
+                  <p className="text-xs text-muted-foreground font-medium">
+                    No comments yet
+                  </p>
+                  <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+                    Be the first to comment on this material
+                  </p>
+                </div>
+              )
+            ) : (
+              /* ---- Activity Tab ---- */
+              activityLogs.map((log) => {
                 const user = mockUsers.find((u) => u.id === log.userId);
                 return (
                   <div key={log.id} className="flex gap-2.5">
                     <Avatar className="h-6 w-6 shrink-0 mt-0.5">
                       {user?.avatarUrl && (
-                        <AvatarImage src={user.avatarUrl} alt={user.name} />
+                        <AvatarImage src={user.avatarUrl} alt={user?.name ?? ""} />
                       )}
                       <AvatarFallback className="text-[10px] font-medium">
                         {user ? getInitials(user.name) : "?"}
@@ -446,72 +566,48 @@ function CommentsActivityPanel({
                     </div>
                   </div>
                 );
-              })}
-            </div>
-
-            <Separator />
-
-            {/* Comments */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                Comments
-              </h4>
-              {projectComments.map((comment) => {
-                const user = mockUsers.find((u) => u.id === comment.authorId);
-                return (
-                  <div key={comment.id} className="flex gap-2.5">
-                    <Avatar className="h-6 w-6 shrink-0 mt-0.5">
-                      {user?.avatarUrl && (
-                        <AvatarImage
-                          src={user.avatarUrl}
-                          alt={user?.name ?? ""}
-                        />
-                      )}
-                      <AvatarFallback className="text-[10px] font-medium">
-                        {user ? getInitials(user.name) : "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1">
-                        <span className="text-[11px] font-medium">
-                          {user?.name ?? "Unknown"}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {formatRelativeTime(comment.createdAt)}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {comment.content}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+              })
+            )}
           </div>
         </ScrollArea>
       </div>
 
-      {/* Comment input */}
-      <div className="border-t p-3 shrink-0" role="form" aria-label="Add a comment">
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder="Write a comment..."
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && commentText.trim()) {
-                setCommentText("");
-              }
-            }}
-            className="flex-1 text-xs h-8"
-            aria-label="Comment text"
-          />
-          <Button size="icon" className="h-8 w-8 shrink-0" aria-label="Send comment">
-            <Send className="h-3.5 w-3.5" aria-hidden="true" />
-          </Button>
+      {/* Comment input — only show on Comments tab */}
+      {activeTab === "comments" && (
+        <div className="border-t p-3 shrink-0" role="form" aria-label="Add a comment">
+          <div className="flex items-center gap-2">
+            <Avatar className="h-7 w-7 shrink-0">
+              {currentUser.avatarUrl && (
+                <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
+              )}
+              <AvatarFallback className="text-[10px] font-medium">
+                {getInitials(currentUser.name)}
+              </AvatarFallback>
+            </Avatar>
+            <Input
+              placeholder="Write a comment..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && commentText.trim()) {
+                  handleSendComment();
+                }
+              }}
+              className="flex-1 text-xs h-8"
+              aria-label="Comment text"
+            />
+            <Button
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={handleSendComment}
+              disabled={!commentText.trim()}
+              aria-label="Send comment"
+            >
+              <Send className="h-3.5 w-3.5" aria-hidden="true" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -540,6 +636,9 @@ export function EvidencePanel({
   const [pdfOpen, setPdfOpen] = useState(false);
   const [pdfHighlight, setPdfHighlight] = useState("");
   const [pdfHighlightPage, setPdfHighlightPage] = useState<number | undefined>();
+
+  // Comment count for the badge
+  const commentCount = getMaterialCommentCount(document.id);
 
   // Map categories to PS/PI naming
   const getActiveValidation = (): ValidationResult | undefined => {
@@ -636,16 +735,21 @@ export function EvidencePanel({
                 </SelectContent>
               </Select>
 
-              {/* Comment icon */}
+              {/* Comment icon with count badge */}
               <Button
                 variant={showComments ? "default" : "outline"}
                 size="icon"
-                className="h-8 w-8"
+                className="h-8 w-8 relative"
                 onClick={() => setShowComments(!showComments)}
-                aria-label={showComments ? "Hide comments and activity" : "Show comments and activity"}
+                aria-label={showComments ? "Hide comments and activity" : `Show comments and activity${commentCount > 0 ? ` (${commentCount})` : ""}`}
                 aria-expanded={showComments}
               >
                 <MessageSquare className="h-4 w-4" aria-hidden="true" />
+                {commentCount > 0 && !showComments && (
+                  <span className="absolute -top-1 -right-1 h-4 min-w-[16px] rounded-full bg-primary text-[9px] font-bold text-primary-foreground flex items-center justify-center px-1" aria-hidden="true">
+                    {commentCount}
+                  </span>
+                )}
               </Button>
             </div>
           </div>
@@ -722,10 +826,12 @@ export function EvidencePanel({
         </div>
       </div>
 
-      {/* Comments & Activity side panel */}
+      {/* Comments & Activity side panel — scoped to selected material */}
       {showComments && projectId && (
         <CommentsActivityPanel
           projectId={projectId}
+          documentId={document.id}
+          documentName={document.fileName.replace(/\.[^/.]+$/, "")}
           onClose={() => setShowComments(false)}
         />
       )}

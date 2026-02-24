@@ -261,9 +261,9 @@ export function MaterialList({
         />
 
         {/* Row 2: Document dropdown + Status filter — two columns */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
           <Select defaultValue="all">
-            <SelectTrigger className="h-8 text-xs">
+            <SelectTrigger className="h-8 text-xs w-full">
               <SelectValue placeholder="All Documents" />
             </SelectTrigger>
             <SelectContent>
@@ -281,7 +281,7 @@ export function MaterialList({
                 variant="outline"
                 size="sm"
                 className={cn(
-                  "h-8 text-xs justify-between gap-1.5 font-normal",
+                  "h-8 w-full text-xs justify-between gap-1.5 font-normal",
                   activeFilterCount > 0 && "border-primary/40 bg-primary/5"
                 )}
                 aria-label={`Filter by status${activeFilterCount > 0 ? ` — ${activeFilterCount} selected` : ""}`}

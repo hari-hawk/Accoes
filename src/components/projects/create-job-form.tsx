@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   Upload,
@@ -379,6 +380,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
   /* ---------------------------------------------------------------------- */
 
   return (
+    <>
     <div className="space-y-6">
       {/* ================================================================ */}
       {/*  Section 1: Upload Documents                                      */}
@@ -785,44 +787,51 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
         </Button>
       </div>
 
-      {/* ================================================================ */}
-      {/*  Cancel Confirmation Dialog                                       */}
-      {/* ================================================================ */}
-      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
-        <AlertDialogContent className="relative">
-          {/* Close icon */}
-          <button
-            type="button"
-            className="absolute top-4 right-4 h-6 w-6 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 outline-none"
-            onClick={() => setCancelDialogOpen(false)}
-            aria-label="Close dialog"
-          >
-            <X className="h-4 w-4" />
-          </button>
-
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have unsaved changes. Would you like to save this as a draft
-              or discard your changes?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 sm:gap-2">
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDiscard}
-            >
-              Discard
-            </AlertDialogAction>
-            <AlertDialogAction
-              className="gradient-action text-white border-0"
-              onClick={handleSaveAsDraft}
-            >
-              Save as Draft
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
+
+    {/* ================================================================ */}
+    {/*  Cancel Confirmation Dialog — portaled to body to escape          */}
+    {/*  CSS transform containment from animate-fade-up                  */}
+    {/* ================================================================ */}
+    {typeof document !== "undefined" &&
+      createPortal(
+        <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+          <AlertDialogContent className="relative">
+            {/* Close icon */}
+            <button
+              type="button"
+              className="absolute top-4 right-4 h-6 w-6 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 outline-none"
+              onClick={() => setCancelDialogOpen(false)}
+              aria-label="Close dialog"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <AlertDialogHeader>
+              <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+              <AlertDialogDescription>
+                You have unsaved changes. Would you like to save this as a draft
+                or discard your changes?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="gap-2 sm:gap-2">
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={handleDiscard}
+              >
+                Discard
+              </AlertDialogAction>
+              <AlertDialogAction
+                className="gradient-action text-white border-0"
+                onClick={handleSaveAsDraft}
+              >
+                Save as Draft
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>,
+        document.body
+      )}
+    </>
   );
 }

@@ -488,12 +488,6 @@ const REPORT_STATUS_OPTIONS: {
   { key: "action_mandatory", label: "Action Mandatory", icon: XCircle, color: "text-status-action-mandatory", dotColor: "bg-status-action-mandatory" },
 ];
 
-const statusDotColors: Record<string, string> = {
-  pre_approved: "bg-status-pre-approved",
-  review_required: "bg-status-review-required",
-  action_mandatory: "bg-status-action-mandatory",
-};
-
 function DownloadReportSheet({
   project,
   open,
@@ -513,6 +507,7 @@ function DownloadReportSheet({
   const [exportComplete, setExportComplete] = useState(false);
 
   /* ---- Data from hook ---- */
+  // TODO: Phase 2 — extract a lighter read-only hook to avoid unused internal state
   const versionId = project?.latestVersionId ?? "";
   const { allMaterials } = useMaterials(versionId);
 
@@ -819,6 +814,7 @@ function DownloadReportSheet({
                     return (
                       <label
                         key={item.document.id}
+                        role="listitem"
                         className={cn(
                           "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b",
                           isChecked
@@ -840,7 +836,7 @@ function DownloadReportSheet({
                               <span
                                 className={cn(
                                   "h-2 w-2 rounded-full shrink-0",
-                                  statusDotColors[status]
+                                  REPORT_STATUS_OPTIONS.find((o) => o.key === status)?.dotColor
                                 )}
                               />
                             )}

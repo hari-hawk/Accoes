@@ -23,6 +23,7 @@ export const mockProjects: Project[] = [
       overallConfidence: 92,
     },
     stage: "approved",
+    projectType: "dr",
   },
   {
     id: "proj-2",
@@ -46,6 +47,7 @@ export const mockProjects: Project[] = [
       overallConfidence: 78,
     },
     stage: "action_mandatory",
+    projectType: "design_job",
   },
   {
     id: "proj-3",
@@ -69,6 +71,7 @@ export const mockProjects: Project[] = [
       overallConfidence: 0,
     },
     stage: "review_required",
+    projectType: "dr",
   },
   {
     id: "proj-4",
@@ -92,6 +95,7 @@ export const mockProjects: Project[] = [
       overallConfidence: 0,
     },
     stage: "pre_approved",
+    projectType: "design_job",
   },
   {
     id: "proj-5",
@@ -115,6 +119,7 @@ export const mockProjects: Project[] = [
       overallConfidence: 88,
     },
     stage: "pre_approved",
+    projectType: "dr",
   },
   {
     id: "proj-6",
@@ -138,6 +143,7 @@ export const mockProjects: Project[] = [
       overallConfidence: 81,
     },
     stage: "review_required",
+    projectType: "design_job",
   },
   {
     id: "proj-7",
@@ -161,6 +167,7 @@ export const mockProjects: Project[] = [
       overallConfidence: 85,
     },
     stage: "pre_approved",
+    projectType: "dr",
   },
   {
     id: "proj-8",
@@ -184,6 +191,7 @@ export const mockProjects: Project[] = [
       overallConfidence: 91,
     },
     stage: "approved",
+    projectType: "design_job",
   },
   {
     id: "proj-9",
@@ -207,5 +215,6 @@ export const mockProjects: Project[] = [
       overallConfidence: 0,
     },
     stage: "pre_approved",
+    projectType: "dr",
   },
 ];

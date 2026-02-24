@@ -16,6 +16,7 @@ import {
   AvatarGroup,
   AvatarGroupCount,
 } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { StatusIndicator } from "@/components/shared/status-indicator";
 import { mockUsers } from "@/data/mock-users";
 import { getDocumentsByVersion } from "@/data/mock-documents";
@@ -106,7 +107,22 @@ export function ProjectCard({
               {project.jobId}
             </p>
           </div>
-          <StatusIndicator status={project.status} />
+          <div className="flex items-center gap-1.5 shrink-0">
+            {project.projectType && (
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "text-[10px] font-bold px-2 py-0.5",
+                  project.projectType === "dr"
+                    ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
+                    : "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400"
+                )}
+              >
+                {project.projectType === "dr" ? "DR" : "Design Job"}
+              </Badge>
+            )}
+            <StatusIndicator status={project.status} />
+          </div>
         </div>
 
         {/* Row 2: Confidence bar + percentage */}

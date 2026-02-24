@@ -63,7 +63,7 @@ export function FileUploadCard({
   const FileIcon = config.icon;
 
   return (
-    <div className="relative group rounded-xl border bg-card shadow-card p-3 pr-8 flex items-center gap-3 min-w-[200px] max-w-[260px]">
+    <div className="relative group rounded-xl border bg-card shadow-card p-3 pr-8 flex items-center gap-3 w-full">
       {/* Remove button — top-right corner */}
       <Button
         variant="ghost"

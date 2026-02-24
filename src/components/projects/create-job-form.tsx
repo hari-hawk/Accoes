@@ -12,11 +12,11 @@ import {
   Hash,
   Users,
   Building2,
+  Layers,
 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -39,7 +39,7 @@ import { useDrafts, type DraftData } from "@/providers/draft-provider";
 import { generateJobId } from "@/lib/job-id-generator";
 import { mockUsers } from "@/data/mock-users";
 import { cn } from "@/lib/utils";
-import type { UserRole } from "@/data/types";
+import type { UserRole, ProjectType } from "@/data/types";
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                      */
@@ -222,6 +222,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
   const [priority, setPriority] = useState<"high" | "medium" | "low">(
     initialDraft?.priority ?? "high"
   );
+  const [projectType, setProjectType] = useState<ProjectType>("dr");
 
   // Access control
   const [members, setMembers] = useState<MemberEntry[]>(
@@ -436,7 +437,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
                   {filesByCategory["material_metrics"].length} file
                   {filesByCategory["material_metrics"].length !== 1 ? "s" : ""} uploaded
                 </span>
-                <div className="flex flex-wrap gap-2.5" role="list" aria-label="Material matrix files">
+                <div className="flex flex-col gap-2" role="list" aria-label="Material matrix files">
                   {filesByCategory["material_metrics"].map((file) => (
                     <div key={file.id} role="listitem">
                       <FileUploadCard
@@ -500,7 +501,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
                   {filesByCategory["project_specification"].length} file
                   {filesByCategory["project_specification"].length !== 1 ? "s" : ""} uploaded
                 </span>
-                <div className="flex flex-wrap gap-2.5" role="list" aria-label="Project specification files">
+                <div className="flex flex-col gap-2" role="list" aria-label="Project specification files">
                   {filesByCategory["project_specification"].map((file) => (
                     <div key={file.id} role="listitem">
                       <FileUploadCard
@@ -642,6 +643,48 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Row 3 */}
+          <div className="space-y-2">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <Layers className="h-3 w-3" aria-hidden="true" />
+              Project Type
+            </span>
+            <div
+              className="flex items-center h-10 rounded-md border bg-background"
+              role="radiogroup"
+              aria-label="Project type"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={projectType === "dr"}
+                className={cn(
+                  "flex-1 h-full text-xs font-semibold rounded-l-md transition-all",
+                  projectType === "dr"
+                    ? "gradient-accent text-white shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+                onClick={() => setProjectType("dr")}
+              >
+                DR
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={projectType === "design_job"}
+                className={cn(
+                  "flex-1 h-full text-xs font-semibold rounded-r-md transition-all",
+                  projectType === "design_job"
+                    ? "gradient-accent text-white shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+                onClick={() => setProjectType("design_job")}
+              >
+                Design Job
+              </button>
+            </div>
+          </div>
         </div>
       </SectionCard>
 
@@ -765,7 +808,17 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
       {/*  Cancel Confirmation Dialog                                       */}
       {/* ================================================================ */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="relative">
+          {/* Close icon */}
+          <button
+            type="button"
+            className="absolute top-4 right-4 h-6 w-6 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 outline-none"
+            onClick={() => setCancelDialogOpen(false)}
+            aria-label="Close dialog"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
           <AlertDialogHeader>
             <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
             <AlertDialogDescription>
@@ -774,9 +827,6 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-2">
-            <AlertDialogCancel onClick={() => setCancelDialogOpen(false)}>
-              Go Back
-            </AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDiscard}

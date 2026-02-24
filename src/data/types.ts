@@ -40,6 +40,8 @@ export type ProjectStage =
   | "pre_approved"
   | "approved";
 
+export type ProjectType = "dr" | "design_job";
+
 export type DocumentType = "pdf" | "xlsx" | "docx";
 
 export type ExportFormat = "pdf" | "csv" | "xlsx";
@@ -76,6 +78,7 @@ export interface Project {
   totalDocuments: number;
   confidenceSummary: ConfidenceSummary;
   stage: ProjectStage;
+  projectType: ProjectType;
 }
 
 export interface ProcessingLogEntry {

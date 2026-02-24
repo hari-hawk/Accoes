@@ -3,12 +3,14 @@
 import Link from "next/link";
 import {
   Download,
+  Loader2,
   MapPin,
   TrendingUp,
   CheckCircle2,
   AlertTriangle,
   XCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Avatar,
   AvatarFallback,
@@ -68,6 +70,8 @@ export function ProjectCard({
     getVersionsByProject(project.id).find((v) => v.id === project.latestVersionId)?.id ?? ""
   ).length > 0;
 
+  const isExtracting = project.status === "extracting";
+
   // Resolve member IDs to user objects (show max 3)
   const members = project.memberIds
     .map((id) => mockUsers.find((u) => u.id === id))
@@ -84,7 +88,13 @@ export function ProjectCard({
   const cardContent = (
     <>
       {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-0.5 gradient-accent opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+      {isExtracting ? (
+        <div className="absolute top-0 left-0 right-0 h-1 bg-amber-100 dark:bg-amber-900/30 overflow-hidden" aria-label="Extraction in progress">
+          <div className="h-full w-1/3 bg-amber-400 dark:bg-amber-500 rounded-full animate-indeterminate" />
+        </div>
+      ) : (
+        <div className="absolute top-0 left-0 right-0 h-0.5 gradient-accent opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+      )}
 
       <div className="px-4 py-4">
         {/* Row 1: Name + Job ID + Status */}
@@ -127,8 +137,8 @@ export function ProjectCard({
               <TrendingUp className="h-3 w-3" aria-hidden="true" />
               Confidence
             </span>
-            <span className={cn("font-bold text-xs", confidenceColor)}>
-              {confidence > 0 ? `${confidence}%` : "Pending"}
+            <span className={cn("font-bold text-xs", isExtracting ? "text-amber-600 dark:text-amber-400" : confidenceColor)}>
+              {isExtracting ? "Extracting..." : confidence > 0 ? `${confidence}%` : "Pending"}
             </span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden" role="progressbar" aria-valuenow={confidence} aria-valuemin={0} aria-valuemax={100}>
@@ -142,18 +152,24 @@ export function ProjectCard({
         {/* Row 3: Breakdown badges + Avatar stack */}
         <div className="mt-2.5 flex items-center justify-between">
           <div className="flex items-center gap-2.5 text-xs" aria-label="Validation breakdown">
-            <div className="flex items-center gap-0.5 text-status-pre-approved" aria-label={`${project.confidenceSummary.preApproved} pre-approved`}>
-              <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-              <span className="font-medium">{project.confidenceSummary.preApproved}</span>
-            </div>
-            <div className="flex items-center gap-0.5 text-status-review-required" aria-label={`${project.confidenceSummary.reviewRequired} review required`}>
-              <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-              <span className="font-medium">{project.confidenceSummary.reviewRequired}</span>
-            </div>
-            <div className="flex items-center gap-0.5 text-status-action-mandatory" aria-label={`${project.confidenceSummary.actionMandatory} action mandatory`}>
-              <XCircle className="h-3 w-3" aria-hidden="true" />
-              <span className="font-medium">{project.confidenceSummary.actionMandatory}</span>
-            </div>
+            {isExtracting ? (
+              <span className="text-xs text-muted-foreground italic">Processing documents…</span>
+            ) : (
+              <>
+                <div className="flex items-center gap-0.5 text-status-pre-approved" aria-label={`${project.confidenceSummary.preApproved} pre-approved`}>
+                  <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                  <span className="font-medium">{project.confidenceSummary.preApproved}</span>
+                </div>
+                <div className="flex items-center gap-0.5 text-status-review-required" aria-label={`${project.confidenceSummary.reviewRequired} review required`}>
+                  <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                  <span className="font-medium">{project.confidenceSummary.reviewRequired}</span>
+                </div>
+                <div className="flex items-center gap-0.5 text-status-action-mandatory" aria-label={`${project.confidenceSummary.actionMandatory} action mandatory`}>
+                  <XCircle className="h-3 w-3" aria-hidden="true" />
+                  <span className="font-medium">{project.confidenceSummary.actionMandatory}</span>
+                </div>
+              </>
+            )}
           </div>
           <AvatarGroup>
             {visibleMembers.map((user) => (
@@ -183,7 +199,12 @@ export function ProjectCard({
         role="group"
         aria-label="Quick actions"
       >
-        {hasVersions ? (
+        {isExtracting ? (
+          <span className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-medium">
+            <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+            Processing documents...
+          </span>
+        ) : hasVersions ? (
           <button
             type="button"
             className={cn(
@@ -218,6 +239,33 @@ export function ProjectCard({
       </div>
     </>
   );
+
+  // Wrapper: extracting state — non-navigable, shows toast
+  if (isExtracting) {
+    return (
+      <article
+        className="group relative rounded-xl border bg-card shadow-card transition-all duration-300 overflow-hidden animate-fade-up opacity-90 cursor-not-allowed"
+        aria-label={`${project.name} — Extracting documents`}
+        onClick={() => {
+          toast.warning("Document extraction & conformance report in progress.", {
+            description: "We'll notify you once it's ready.",
+          });
+        }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toast.warning("Document extraction & conformance report in progress.", {
+              description: "We'll notify you once it's ready.",
+            });
+          }
+        }}
+      >
+        {cardContent}
+      </article>
+    );
+  }
 
   // Wrapper: <Link> for navigable cards, <div> with click handler for non-version cards
   if (hasVersions) {

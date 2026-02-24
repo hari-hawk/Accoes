@@ -5,7 +5,6 @@ import {
   Pencil,
   X,
   Save,
-  Upload,
   FileText,
   FileSpreadsheet,
   FileType,
@@ -890,29 +889,6 @@ export function ProjectDetailSheet({
                     </div>
                   </CollapsibleSection>
 
-                  {/* Upload drop zone */}
-                  <div
-                    className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-6 text-center hover:border-nav-accent/40 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-2 outline-none"
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Drop files here to upload or click to select"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                      }
-                    }}
-                  >
-                    <div className="mx-auto w-10 h-10 rounded-lg bg-muted flex items-center justify-center mb-3">
-                      <Upload className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-                    </div>
-                    <p className="text-sm font-medium">
-                      Drop files here to upload
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      CSV / XLS for Material Matrix, PDF for Specifications
-                      — up to 50MB each
-                    </p>
-                  </div>
                 </TabsContent>
 
                 {/* --- Recent Activity Tab --- */}

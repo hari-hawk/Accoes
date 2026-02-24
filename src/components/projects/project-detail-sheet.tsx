@@ -27,6 +27,8 @@ import {
   Layers,
   BookOpen,
   Eye,
+  Download,
+  Lock,
 } from "lucide-react";
 import {
   Sheet,
@@ -170,12 +172,6 @@ const roleConfig: Record<string, { label: string; color: string }> = {
 /* -------------------------------------------------------------------------- */
 /*  Mock data for the documents tab sections                                   */
 /* -------------------------------------------------------------------------- */
-
-const mockMigFiles = [
-  { id: "conf-1", fileName: "UCD_HobbsVet_Plumbing_Conformance_Report_v3.pdf", fileType: "pdf", fileSize: 2097152 },
-  { id: "conf-2", fileName: "UCD_HobbsVet_Heating_Conformance_Report_v3.pdf", fileType: "pdf", fileSize: 1835008 },
-  { id: "conf-3", fileName: "UCD_HobbsVet_Mechanical_Conformance_Report_v3.pdf", fileType: "pdf", fileSize: 1572864 },
-];
 
 const mockSpecFiles = [
   { id: "ps-1", fileName: "UCD_Project9592330_Project_Specification_Volume_1_2026-02.pdf", fileType: "pdf", fileSize: 16482304, totalPages: 342 },
@@ -690,7 +686,7 @@ export function ProjectDetailSheet({
               {/*  Tabs: Documents | Activity | Material Matrix             */}
               {/* ======================================================== */}
               <Tabs defaultValue="files" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="files" className="text-xs gap-1.5">
                     <FileText className="h-3.5 w-3.5" />
                     Documents
@@ -699,30 +695,26 @@ export function ProjectDetailSheet({
                     <Activity className="h-3.5 w-3.5" />
                     Activity
                   </TabsTrigger>
-                  <TabsTrigger value="matrix" className="text-xs gap-1.5">
-                    <Layers className="h-3.5 w-3.5" />
-                    Material Matrix
-                  </TabsTrigger>
                 </TabsList>
 
-                {/* --- Conformance Tab --- */}
+                {/* --- Documents Tab --- */}
                 <TabsContent value="files" className="mt-4 space-y-3">
-                  {/* Section 1: Conformance source files */}
+                  {/* Section 1: Material Matrix — active files */}
                   <CollapsibleSection
-                    title="Conformance Reports"
+                    title="Material Matrix"
                     icon={Layers}
-                    count={mockMigFiles.length}
+                    count={currentMatrixFiles.length}
                     defaultOpen
-                    id="section-mig"
+                    id="section-matrix"
                   >
-                    <div className="divide-y" role="list" aria-label="Conformance files">
-                      {mockMigFiles.map((file) => {
+                    <div className="divide-y" role="list" aria-label="Active material matrix files">
+                      {currentMatrixFiles.map((file) => {
                         const ftConfig = fileTypeConfig[file.fileType] ?? fileTypeConfig.csv;
                         const FileIcon = ftConfig.icon;
                         return (
                           <div
                             key={file.id}
-                            className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors"
+                            className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors group/mfile"
                             role="listitem"
                           >
                             <div className="h-7 w-7 rounded-md bg-status-pre-approved-bg flex items-center justify-center shrink-0">
@@ -732,15 +724,119 @@ export function ProjectDetailSheet({
                               <p className="text-xs font-medium truncate">
                                 {file.fileName}
                               </p>
-                              <span className="text-[11px] text-muted-foreground">
-                                {formatFileSize(file.fileSize)}
-                              </span>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[11px] text-muted-foreground">
+                                  {formatFileSize(file.fileSize)}
+                                </span>
+                                <span className="text-[11px] text-muted-foreground font-mono">
+                                  {file.version}
+                                </span>
+                              </div>
                             </div>
+                            <Badge variant="secondary" className="text-[11px] px-1.5 py-0 h-4 bg-status-pre-approved-bg text-status-pre-approved shrink-0">
+                              Active
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 shrink-0 text-muted-foreground/0 group-hover/mfile:text-muted-foreground hover:!text-primary transition-colors"
+                              aria-label={`Preview ${file.fileName}`}
+                            >
+                              <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 shrink-0 text-muted-foreground/0 group-hover/mfile:text-muted-foreground hover:!text-primary transition-colors"
+                              aria-label={`Download ${file.fileName}`}
+                            >
+                              <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                            </Button>
                           </div>
                         );
                       })}
                     </div>
                   </CollapsibleSection>
+
+                  {/* Material Matrix History — collapsible */}
+                  {historicalMatrixFiles.length > 0 && (
+                    <div className="border rounded-lg overflow-hidden" role="region" aria-labelledby="section-matrix-history">
+                      <button
+                        type="button"
+                        id="section-matrix-history"
+                        className="flex items-center gap-2 w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-inset outline-none"
+                        onClick={() => setMatrixHistoryOpen(!matrixHistoryOpen)}
+                        aria-expanded={matrixHistoryOpen}
+                        aria-controls="matrix-history-list"
+                      >
+                        {matrixHistoryOpen ? (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
+                        ) : (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
+                        )}
+                        <History className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
+                        <span className="text-xs font-medium flex-1">History</span>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {historicalMatrixFiles.length}
+                        </Badge>
+                      </button>
+                      {matrixHistoryOpen && (
+                        <div id="matrix-history-list" className="border-t divide-y bg-muted/10" role="list" aria-label="Historical material matrix files">
+                          {historicalMatrixFiles.map((file) => {
+                            const ftConfig = fileTypeConfig[file.fileType] ?? fileTypeConfig.csv;
+                            const FileIcon = ftConfig.icon;
+                            return (
+                              <div
+                                key={file.id}
+                                className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors group/hfile"
+                                role="listitem"
+                              >
+                                <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0 relative">
+                                  <FileIcon className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                                  <Lock className="h-2 w-2 text-muted-foreground/60 absolute -bottom-0.5 -right-0.5" aria-hidden="true" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium truncate text-muted-foreground">
+                                    {file.fileName}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <Badge variant="secondary" className="text-[9px] px-1 py-0 h-3.5">
+                                      {file.version}
+                                    </Badge>
+                                    <span className="text-[11px] text-muted-foreground">
+                                      {formatFileSize(file.fileSize)}
+                                    </span>
+                                    <span className="text-[11px] text-muted-foreground font-medium">
+                                      {file.confidence}%
+                                    </span>
+                                  </div>
+                                </div>
+                                <Badge variant="secondary" className="text-[11px] bg-muted text-muted-foreground shrink-0">
+                                  View Only
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 shrink-0 text-muted-foreground/0 group-hover/hfile:text-muted-foreground hover:!text-primary transition-colors"
+                                  aria-label={`Preview ${file.fileName}`}
+                                >
+                                  <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 shrink-0 text-muted-foreground/0 group-hover/hfile:text-muted-foreground hover:!text-primary transition-colors"
+                                  aria-label={`Download ${file.fileName}`}
+                                >
+                                  <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Section 2: Project Specifications — with preview */}
                   <CollapsibleSection
@@ -774,11 +870,19 @@ export function ProjectDetailSheet({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 shrink-0 text-muted-foreground/0 group-hover/spec:text-muted-foreground hover:!text-primary transition-colors"
+                              className="h-6 w-6 shrink-0 text-muted-foreground/0 group-hover/spec:text-muted-foreground hover:!text-primary transition-colors"
                               onClick={() => setPreviewSpec(file)}
                               aria-label={`Preview ${file.fileName}`}
                             >
                               <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 shrink-0 text-muted-foreground/0 group-hover/spec:text-muted-foreground hover:!text-primary transition-colors"
+                              aria-label={`Download ${file.fileName}`}
+                            >
+                              <Download className="h-3.5 w-3.5" aria-hidden="true" />
                             </Button>
                           </div>
                         );
@@ -805,8 +909,8 @@ export function ProjectDetailSheet({
                       Drop files here to upload
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      CSV for Conformance, PDF for Specifications — up
-                      to 50MB each
+                      CSV / XLS for Material Matrix, PDF for Specifications
+                      — up to 50MB each
                     </p>
                   </div>
                 </TabsContent>
@@ -876,77 +980,6 @@ export function ProjectDetailSheet({
                   )}
                 </TabsContent>
 
-                {/* --- Material Matrix Tab --- */}
-                <TabsContent value="matrix" className="mt-4 space-y-3">
-                  {/* Current Matrix files */}
-                  <CollapsibleSection
-                    title="Current Matrix Files"
-                    icon={Layers}
-                    count={currentMatrixFiles.length}
-                    defaultOpen
-                    id="section-current-matrix"
-                  >
-                    <div className="divide-y" role="list" aria-label="Current material matrix files">
-                      {currentMatrixFiles.map((file) => {
-                        const ftConfig = fileTypeConfig[file.fileType] ?? fileTypeConfig.csv;
-                        const FileIcon = ftConfig.icon;
-                        return (
-                          <div key={file.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors" role="listitem">
-                            <div className="h-7 w-7 rounded-md bg-status-pre-approved-bg flex items-center justify-center shrink-0">
-                              <FileIcon className="h-3.5 w-3.5 text-status-pre-approved" aria-hidden="true" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium truncate">{file.fileName}</p>
-                              <span className="text-[11px] text-muted-foreground">{formatFileSize(file.fileSize)} — {file.version}</span>
-                            </div>
-                            <Badge variant="secondary" className="text-[11px] bg-status-pre-approved-bg text-status-pre-approved">Active</Badge>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CollapsibleSection>
-
-                  {/* Historical Matrix files */}
-                  {historicalMatrixFiles.length > 0 && (
-                    <div className="border rounded-lg overflow-hidden" role="region" aria-labelledby="section-history-matrix">
-                      <button
-                        type="button"
-                        id="section-history-matrix"
-                        className="flex items-center gap-2 w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors"
-                        onClick={() => setMatrixHistoryOpen(!matrixHistoryOpen)}
-                        aria-expanded={matrixHistoryOpen}
-                      >
-                        {matrixHistoryOpen ? (
-                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
-                        ) : (
-                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
-                        )}
-                        <History className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
-                        <span className="text-xs font-medium flex-1">History</span>
-                        <Badge variant="secondary" className="text-[10px]">{historicalMatrixFiles.length}</Badge>
-                      </button>
-                      {matrixHistoryOpen && (
-                        <div className="border-t divide-y bg-muted/10" role="list" aria-label="Historical matrix files">
-                          {historicalMatrixFiles.map((file) => {
-                            const ftConfig = fileTypeConfig[file.fileType] ?? fileTypeConfig.csv;
-                            const FileIcon = ftConfig.icon;
-                            return (
-                              <div key={file.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors" role="listitem">
-                                <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
-                                  <FileIcon className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-medium truncate text-muted-foreground">{file.fileName}</p>
-                                  <span className="text-[11px] text-muted-foreground">{formatFileSize(file.fileSize)} — {file.version} — {file.confidence}% confidence</span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </TabsContent>
               </Tabs>
 
               {/* ======================================================== */}

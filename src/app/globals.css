@@ -462,6 +462,60 @@
   }
 }
 
+/* ============================================
+   Sonner Toast — Close Button + Progress Bar
+   ============================================ */
+[data-sonner-toast] [data-close-button] {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.5rem;
+  width: 1.5rem;
+  border: none;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+[data-sonner-toast] [data-close-button]:hover {
+  opacity: 1;
+  background-color: var(--muted);
+}
+
+/* Progress countdown bar */
+[data-sonner-toast]::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  transform-origin: left;
+  animation: toast-countdown 5s linear forwards;
+}
+
+/* Pause countdown on hover (matches Sonner's auto-dismiss pause) */
+[data-sonner-toaster]:hover [data-sonner-toast]::after {
+  animation-play-state: paused;
+}
+
+/* Variant colors for progress bar */
+[data-sonner-toast][data-type="success"]::after { background-color: #22c55e; }
+[data-sonner-toast][data-type="warning"]::after { background-color: #f59e0b; }
+[data-sonner-toast][data-type="error"]::after   { background-color: #ef4444; }
+[data-sonner-toast][data-type="info"]::after    { background-color: #3b82f6; }
+
+@keyframes toast-countdown {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
 @keyframes indeterminate {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(400%); }

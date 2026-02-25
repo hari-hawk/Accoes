@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import {
   CheckCircle2,
   MousePointerClick,
@@ -10,7 +11,6 @@ import {
   Lock,
   Download,
   Loader2,
-  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -67,32 +67,22 @@ export default function ReviewPage() {
 
   // Export state
   const [exporting, setExporting] = useState(false);
-  const [exportProgress, setExportProgress] = useState(0);
-  const [exportComplete, setExportComplete] = useState(false);
 
   const startExport = () => {
     setExporting(true);
-    setExportProgress(0);
-    setExportComplete(false);
+    const count = checkedIds.size;
+    let progress = 0;
 
     const interval = setInterval(() => {
-      setExportProgress((prev) => {
-        const next = prev + 8 + Math.random() * 12;
-        if (next >= 100) {
-          clearInterval(interval);
-          setExportComplete(true);
-          setExporting(false);
-          return 100;
-        }
-        return next;
-      });
+      progress += 8 + Math.random() * 12;
+      if (progress >= 100) {
+        clearInterval(interval);
+        setExporting(false);
+        toast.success("Export complete", {
+          description: `${count} item${count !== 1 ? "s" : ""} exported as Excel`,
+        });
+      }
     }, 200);
-  };
-
-  const resetExport = () => {
-    setExporting(false);
-    setExportProgress(0);
-    setExportComplete(false);
   };
 
   // Auto-select: prioritize query param, otherwise first material
@@ -275,23 +265,6 @@ export default function ReviewPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Export complete notification */}
-      {exportComplete && (
-        <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
-          <div className="flex items-center gap-3 rounded-lg border bg-background px-4 py-3 shadow-lg">
-            <div className="rounded-full bg-status-pre-approved/10 p-1.5">
-              <Check className="h-4 w-4 text-status-pre-approved" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Export complete</p>
-              <p className="text-xs text-muted-foreground">{checkedIds.size} items exported as Excel</p>
-            </div>
-            <Button size="sm" variant="ghost" className="ml-2 h-7 text-xs" onClick={resetExport}>
-              Dismiss
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

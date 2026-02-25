@@ -46,8 +46,8 @@ export const PROJECT_STATUS_CONFIG: Record<
   { label: string; color: string }
 > = {
   extracting: { label: "Extracting", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-  in_progress: { label: "In Progress", color: "bg-status-review-required-bg text-status-review-required" },
-  active: { label: "Active", color: "bg-ds-primary-100 text-ds-primary-800" },
+  in_progress: { label: "In Progress", color: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400" },
+  active: { label: "Active", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400" },
   on_hold: { label: "On Hold", color: "bg-muted text-muted-foreground" },
   completed: { label: "Completed", color: "bg-status-pre-approved-bg text-status-pre-approved" },
 };

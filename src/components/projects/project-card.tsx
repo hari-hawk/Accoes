@@ -44,7 +44,7 @@ export function ProjectCard({
   onNameClick?: (project: Project) => void;
   onDownloadReport?: (project: Project) => void;
 }) {
-  const confidence = project.confidenceSummary.overallConfidence;
+  const { overallConfidence: confidence, preApproved, reviewRequired, actionMandatory, total } = project.confidenceSummary;
   const confidenceColor =
     confidence >= 80
       ? "text-status-pre-approved"
@@ -130,9 +130,9 @@ export function ProjectCard({
           </div>
         </div>
 
-        {/* Row 2: Confidence bar + percentage */}
+        {/* Row 2: Confidence + Stacked Segment Bar */}
         <div className="mt-2.5" aria-label={`Confidence: ${confidence > 0 ? `${confidence}%` : "Pending"}`}>
-          <div className="flex items-center justify-between text-xs mb-1">
+          <div className="flex items-center justify-between text-xs mb-1.5">
             <span className="text-muted-foreground font-medium flex items-center gap-1">
               <TrendingUp className="h-3 w-3" aria-hidden="true" />
               Confidence
@@ -141,33 +141,77 @@ export function ProjectCard({
               {isExtracting ? "Extracting..." : confidence > 0 ? `${confidence}%` : "Pending"}
             </span>
           </div>
-          <div className="h-1.5 rounded-full bg-muted overflow-hidden" role="progressbar" aria-valuenow={confidence} aria-valuemin={0} aria-valuemax={100}>
-            <div
-              className={cn("h-full rounded-full transition-all duration-500", barColor)}
-              style={{ width: confidence > 0 ? `${confidence}%` : "0%" }}
-            />
+          {/* Stacked segment bar — shows pre-approved / review / action breakdown */}
+          <div className="h-2.5 rounded-full bg-muted overflow-hidden flex" role="progressbar" aria-valuenow={confidence} aria-valuemin={0} aria-valuemax={100}>
+            {isExtracting ? (
+              <div className="h-full w-1/3 bg-amber-400 dark:bg-amber-500 rounded-full animate-indeterminate" />
+            ) : total > 0 ? (
+              <>
+                {preApproved > 0 && (
+                  <div
+                    className={cn(
+                      "h-full bg-status-pre-approved transition-all duration-500",
+                      reviewRequired === 0 && actionMandatory === 0 && "rounded-r-full"
+                    )}
+                    style={{ width: `${(preApproved / total) * 100}%` }}
+                    title={`${preApproved} Pre-Approved`}
+                  />
+                )}
+                {reviewRequired > 0 && (
+                  <div
+                    className={cn(
+                      "h-full bg-status-review-required transition-all duration-500",
+                      preApproved === 0 && "rounded-l-full",
+                      actionMandatory === 0 && "rounded-r-full"
+                    )}
+                    style={{ width: `${(reviewRequired / total) * 100}%` }}
+                    title={`${reviewRequired} Review Required`}
+                  />
+                )}
+                {actionMandatory > 0 && (
+                  <div
+                    className={cn(
+                      "h-full bg-status-action-mandatory transition-all duration-500",
+                      preApproved === 0 && reviewRequired === 0 && "rounded-l-full",
+                      "rounded-r-full"
+                    )}
+                    style={{ width: `${(actionMandatory / total) * 100}%` }}
+                    title={`${actionMandatory} Action Mandatory`}
+                  />
+                )}
+              </>
+            ) : null}
           </div>
         </div>
 
-        {/* Row 3: Breakdown badges + Avatar stack */}
+        {/* Row 3: Colored pill badges + Avatar stack */}
         <div className="mt-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 text-xs" aria-label="Validation breakdown">
+          <div className="flex items-center gap-1.5 flex-wrap" aria-label="Validation breakdown">
             {isExtracting ? (
               <span className="text-xs text-muted-foreground italic">Processing documents…</span>
             ) : (
               <>
-                <div className="flex items-center gap-0.5 text-status-pre-approved" aria-label={`${project.confidenceSummary.preApproved} pre-approved`}>
-                  <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-                  <span className="font-medium">{project.confidenceSummary.preApproved}</span>
-                </div>
-                <div className="flex items-center gap-0.5 text-status-review-required" aria-label={`${project.confidenceSummary.reviewRequired} review required`}>
-                  <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                  <span className="font-medium">{project.confidenceSummary.reviewRequired}</span>
-                </div>
-                <div className="flex items-center gap-0.5 text-status-action-mandatory" aria-label={`${project.confidenceSummary.actionMandatory} action mandatory`}>
-                  <XCircle className="h-3 w-3" aria-hidden="true" />
-                  <span className="font-medium">{project.confidenceSummary.actionMandatory}</span>
-                </div>
+                {preApproved > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-status-pre-approved-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-pre-approved" aria-label={`${preApproved} pre-approved`}>
+                    <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
+                    {preApproved}
+                  </span>
+                )}
+                {reviewRequired > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-status-review-required-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-review-required" aria-label={`${reviewRequired} review required`}>
+                    <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
+                    {reviewRequired}
+                  </span>
+                )}
+                {actionMandatory > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-status-action-mandatory-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-action-mandatory" aria-label={`${actionMandatory} action mandatory`}>
+                    <XCircle className="h-2.5 w-2.5" aria-hidden="true" />
+                    {actionMandatory}
+                  </span>
+                )}
+                {total === 0 && (
+                  <span className="text-[10px] text-muted-foreground italic">No documents</span>
+                )}
               </>
             )}
           </div>

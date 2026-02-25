@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   CheckCircle2,
@@ -11,6 +11,8 @@ import {
   Lock,
   Download,
   Loader2,
+  ArrowRight,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,6 +36,7 @@ import { useMaterials } from "@/hooks/use-materials";
 
 
 export default function ReviewPage() {
+  const router = useRouter();
   const { project, version } = useWorkspace();
   const searchParams = useSearchParams();
   const initialItemId = searchParams.get("item");
@@ -41,6 +44,7 @@ export default function ReviewPage() {
 
   const {
     materials,
+    allMaterials,
     search,
     setSearch,
     statusFilter,
@@ -58,6 +62,17 @@ export default function ReviewPage() {
     activeCategory,
     setActiveCategory,
   } = useMaterials(version.id);
+
+  // ── Review progress tracking ──
+  const totalMaterials = allMaterials.length;
+  const decidedCount = useMemo(() => {
+    return allMaterials.filter((m) => {
+      const d = decisions[m.document.id];
+      return d && d !== "pending";
+    }).length;
+  }, [allMaterials, decisions]);
+  const allDecided = totalMaterials > 0 && decidedCount === totalMaterials;
+  const progressPercent = totalMaterials > 0 ? Math.round((decidedCount / totalMaterials) * 100) : 0;
 
   // Comment dialog state
   const [commentDialogOpen, setCommentDialogOpen] = useState(false);
@@ -205,6 +220,50 @@ export default function ReviewPage() {
           )}
         </ResizablePanel>
       </ResizablePanelGroup>
+
+      {/* ── Review Progress Bar ── */}
+      {!isReadOnly && (
+        <div className="shrink-0 border-t bg-card px-4 py-2.5">
+          <div className="flex items-center gap-4">
+            {/* Progress segment */}
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="relative h-2 flex-1 max-w-xs rounded-full bg-muted overflow-hidden">
+                <div
+                  className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-out ${
+                    allDecided
+                      ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"
+                      : "bg-primary/70"
+                  }`}
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                {decidedCount}/{totalMaterials} reviewed
+              </span>
+            </div>
+
+            {/* Proceed button */}
+            <Button
+              size="sm"
+              className={`shrink-0 transition-all duration-300 ${
+                allDecided
+                  ? "gradient-accent text-white border-0 shadow-glow hover:opacity-90"
+                  : "opacity-50 cursor-not-allowed"
+              }`}
+              disabled={!allDecided}
+              onClick={() =>
+                router.push(
+                  `/projects/${project.id}/versions/${version.id}/submittal-binder`
+                )
+              }
+            >
+              <BookOpen className="mr-1.5 h-3.5 w-3.5" />
+              Proceed to Submittal Binder
+              <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Add Comment Dialog */}
       <Dialog open={commentDialogOpen} onOpenChange={setCommentDialogOpen}>

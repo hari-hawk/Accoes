@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { toast } from "sonner";
 import {
   Search,
   Plus,
@@ -55,7 +56,7 @@ interface UserRow {
   avatarUrl?: string;
 }
 
-const mockUserData: UserRow[] = [
+const INITIAL_USERS: UserRow[] = [
   { id: "u1", name: "Sarah Mitchell", email: "sarah.mitchell@accoes.com", role: "Admin", createdDate: "05/01/2026", projects: "All", avatarUrl: "https://i.pravatar.cc/150?u=sarah" },
   { id: "u2", name: "James Chen", email: "james.chen@accoes.com", role: "Submitter", createdDate: "10/01/2026", projects: "RCT, HDM, MLE", isCurrentUser: true, avatarUrl: "https://i.pravatar.cc/150?u=james" },
   { id: "u3", name: "Maria Garcia", email: "maria.garcia@accoes.com", role: "Reviewer", createdDate: "15/01/2026", projects: "RCT, DOR", avatarUrl: "https://i.pravatar.cc/150?u=maria" },
@@ -89,8 +90,15 @@ function getInitials(name: string): string {
 }
 
 export default function UserManagementPage() {
+  const [users, setUsers] = useState<UserRow[]>(INITIAL_USERS);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+
+  // Add User dialog
+  const [addUserOpen, setAddUserOpen] = useState(false);
+  const [addName, setAddName] = useState("");
+  const [addEmail, setAddEmail] = useState("");
+  const [addRole, setAddRole] = useState<UserRoleLabel>("Submitter");
 
   // Change Role dialog
   const [changeRoleOpen, setChangeRoleOpen] = useState(false);
@@ -101,7 +109,7 @@ export default function UserManagementPage() {
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferUser, setTransferUser] = useState<UserRow | null>(null);
 
-  const filtered = mockUserData.filter((user) => {
+  const filtered = users.filter((user) => {
     const matchSearch =
       user.name.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase());
@@ -109,11 +117,11 @@ export default function UserManagementPage() {
     return matchSearch && matchRole;
   });
 
-  const totalUsers = mockUserData.length;
-  const adminCount = mockUserData.filter((u) => u.role === "Admin").length;
-  const submitterCount = mockUserData.filter((u) => u.role === "Submitter").length;
-  const reviewerCount = mockUserData.filter((u) => u.role === "Reviewer").length;
-  const viewerCount = mockUserData.filter((u) => u.role === "Global Viewer").length;
+  const totalUsers = users.length;
+  const adminCount = users.filter((u) => u.role === "Admin").length;
+  const submitterCount = users.filter((u) => u.role === "Submitter").length;
+  const reviewerCount = users.filter((u) => u.role === "Reviewer").length;
+  const viewerCount = users.filter((u) => u.role === "Global Viewer").length;
 
   const summaryCards = [
     {
@@ -146,6 +154,32 @@ export default function UserManagementPage() {
     },
   ];
 
+  const handleAddUser = useCallback(() => {
+    if (!addName.trim() || !addEmail.trim()) return;
+
+    const today = new Date();
+    const formatted = `${String(today.getDate()).padStart(2, "0")}/${String(today.getMonth() + 1).padStart(2, "0")}/${today.getFullYear()}`;
+
+    const newUser: UserRow = {
+      id: `u${Date.now()}`,
+      name: addName.trim(),
+      email: addEmail.trim().toLowerCase(),
+      role: addRole,
+      createdDate: formatted,
+      projects: "None",
+      avatarUrl: `https://i.pravatar.cc/150?u=${addEmail.trim().toLowerCase()}`,
+    };
+
+    setUsers((prev) => [newUser, ...prev]);
+    setAddUserOpen(false);
+    setAddName("");
+    setAddEmail("");
+    setAddRole("Submitter");
+    toast.success(`${newUser.name} added successfully`, {
+      description: `Assigned as ${newUser.role}`,
+    });
+  }, [addName, addEmail, addRole]);
+
   const handleOpenChangeRole = (user: UserRow) => {
     setChangeRoleUser(user);
     setNewRole(user.role);
@@ -167,7 +201,10 @@ export default function UserManagementPage() {
             Manage team members, roles, and project access
           </p>
         </div>
-        <Button className="gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity font-semibold">
+        <Button
+          className="gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity font-semibold"
+          onClick={() => setAddUserOpen(true)}
+        >
           <Plus className="mr-1.5 h-4 w-4" />
           Add User
         </Button>
@@ -402,6 +439,83 @@ export default function UserManagementPage() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add User Dialog */}
+      <Dialog open={addUserOpen} onOpenChange={(open) => {
+        setAddUserOpen(open);
+        if (!open) {
+          setAddName("");
+          setAddEmail("");
+          setAddRole("Submitter");
+        }
+      }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>
+              Invite a team member and assign their role
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleAddUser();
+            }}
+            className="space-y-4 pt-2"
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="add-name" className="text-xs text-muted-foreground">Full Name</Label>
+              <Input
+                id="add-name"
+                placeholder="e.g. John Doe"
+                value={addName}
+                onChange={(e) => setAddName(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="add-email" className="text-xs text-muted-foreground">Email Address</Label>
+              <Input
+                id="add-email"
+                type="email"
+                placeholder="e.g. john.doe@accoes.com"
+                value={addEmail}
+                onChange={(e) => setAddEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Role</Label>
+              <Select value={addRole} onValueChange={(v) => setAddRole(v as UserRoleLabel)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Admin">Admin</SelectItem>
+                  <SelectItem value="Global Viewer">Global Viewer</SelectItem>
+                  <SelectItem value="Submitter">Submitter</SelectItem>
+                  <SelectItem value="Reviewer">Reviewer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAddUserOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="gradient-accent text-white border-0 shadow-glow hover:opacity-90"
+                disabled={!addName.trim() || !addEmail.trim()}
+              >
+                Add User
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

@@ -269,14 +269,12 @@ function FiltersBar({
 
 function ExpandedEntryContent({
   entry,
-  onCollapse,
 }: {
   entry: HydroMatrixEntry;
-  onCollapse: () => void;
 }) {
   return (
     <div className="animate-accordion-down overflow-hidden">
-      <div className="bg-muted/20 border-t px-4 py-3">
+      <div className="bg-muted/40 border-t border-l-2 border-l-nav-accent/40 px-4 py-3">
         {/* Index Description */}
         <p className="text-sm leading-relaxed text-ds-neutral-900 mb-3">
           {entry.indexDescription}
@@ -308,18 +306,6 @@ function ExpandedEntryContent({
             <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Material</span>
             <p className="text-xs text-ds-neutral-900">{entry.materialCategory}</p>
           </div>
-        </div>
-
-        {/* Collapse action */}
-        <div className="flex justify-end mt-3 pt-2 border-t border-muted">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs text-muted-foreground"
-            onClick={onCollapse}
-          >
-            Collapse
-          </Button>
         </div>
       </div>
     </div>
@@ -491,10 +477,7 @@ function CategoryGroup({
             {isExpanded && (
               <tr className="border-b">
                 <td colSpan={7} className="p-0">
-                  <ExpandedEntryContent
-                    entry={entry}
-                    onCollapse={() => onToggleExpand(entry.id)}
-                  />
+                  <ExpandedEntryContent entry={entry} />
                 </td>
               </tr>
             )}

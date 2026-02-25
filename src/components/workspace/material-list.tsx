@@ -48,7 +48,7 @@ function ScoreChip({
   const color =
     score >= 80
       ? "bg-status-pre-approved-bg text-status-pre-approved"
-      : score >= 60
+      : score >= 40
         ? "bg-status-review-required-bg text-status-review-required"
         : "bg-status-action-mandatory-bg text-status-action-mandatory";
 

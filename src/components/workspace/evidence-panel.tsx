@@ -676,13 +676,13 @@ export function EvidencePanel({
   const barColor =
     score >= 80
       ? "bg-status-pre-approved"
-      : score >= 60
+      : score >= 40
         ? "bg-status-review-required"
         : "bg-status-action-mandatory";
   const scoreColor =
     score >= 80
       ? "text-status-pre-approved"
-      : score >= 60
+      : score >= 40
         ? "text-status-review-required"
         : "text-status-action-mandatory";
 
@@ -716,6 +716,10 @@ export function EvidencePanel({
                 onValueChange={(value) => {
                   if (value === "approved" || value === "revisit") {
                     onDecide(value as DecisionStatus);
+                  } else {
+                    // AI statuses selected → reset decision to pending so
+                    // the left list reverts to showing the AI status badge
+                    onDecide("pending" as DecisionStatus);
                   }
                 }}
               >

@@ -1,4 +1,4 @@
-import type { ValidationResult, ValidationCategory } from "./types";
+import type { ValidationResult, ValidationCategory, ValidationStatus } from "./types";
 
 export const mockValidations: ValidationResult[] = [
   {
@@ -1196,10 +1196,44 @@ export function getValidationByDocumentAndCategory(
   return undefined;
 }
 
+/**
+ * Derives a PA or PI sub-validation from the overall validation when explicit
+ * mock data doesn't exist. Uses a deterministic offset so scores are stable
+ * across re-renders (no Math.random).
+ */
+function deriveSubValidation(
+  overall: ValidationResult,
+  category: "project_assets" | "performance_index"
+): ValidationResult {
+  const docNum = parseInt(overall.documentId.replace("doc-", ""), 10);
+  const isPA = category === "project_assets";
+  const seed = docNum * (isPA ? 13 : 17);
+  const offset = (seed % 15) - 7; // deterministic range: -7 to +7
+  const score = Math.min(100, Math.max(0, overall.confidenceScore + offset));
+  const status: ValidationStatus =
+    score >= 80 ? "pre_approved" : score >= 40 ? "review_required" : "action_mandatory";
+
+  return {
+    ...overall,
+    id: `${isPA ? "pa" : "pi"}-${overall.id}`,
+    category,
+    confidenceScore: score,
+    status,
+  };
+}
+
 export function getPAValidationByDocument(documentId: string): ValidationResult | undefined {
-  return paValidations.find((v) => v.documentId === documentId);
+  const explicit = paValidations.find((v) => v.documentId === documentId);
+  if (explicit) return explicit;
+  // Fall back to a derived PA entry from the overall validation
+  const overall = mockValidations.find((v) => v.documentId === documentId);
+  return overall ? deriveSubValidation(overall, "project_assets") : undefined;
 }
 
 export function getPIValidationByDocument(documentId: string): ValidationResult | undefined {
-  return piValidations.find((v) => v.documentId === documentId);
+  const explicit = piValidations.find((v) => v.documentId === documentId);
+  if (explicit) return explicit;
+  // Fall back to a derived PI entry from the overall validation
+  const overall = mockValidations.find((v) => v.documentId === documentId);
+  return overall ? deriveSubValidation(overall, "performance_index") : undefined;
 }

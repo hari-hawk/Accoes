@@ -12,6 +12,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-2",
     specSection: "05 29 00",
     specSectionTitle: "Electro-Galv Interior & SS or HDG Exterior",
+    indexCategory: "Finishes",
+    systemCategory: "All Systems",
   },
   {
     id: "doc-29",
@@ -23,6 +25,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-2",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Clevis B3100 & B3100F",
+    indexCategory: "Hangers & Supports",
+    systemCategory: "All Systems",
   },
   {
     id: "doc-30",
@@ -34,6 +38,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-2",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Riser B3373, F & CT",
+    indexCategory: "Hangers & Supports",
+    systemCategory: "All Systems",
   },
   {
     id: "doc-31",
@@ -45,6 +51,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-2",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Strap B2400",
+    indexCategory: "Hangers & Supports",
+    systemCategory: "All Systems",
   },
   {
     id: "doc-32",
@@ -56,6 +64,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-2",
     specSection: "05 29 00",
     specSectionTitle: "ATR",
+    indexCategory: "Hangers & Supports",
+    systemCategory: "All Systems",
   },
   {
     id: "doc-33",
@@ -67,6 +77,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-4",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Rod Cup B655 & B656",
+    indexCategory: "Hangers & Supports",
+    systemCategory: "Chilled Water",
   },
   {
     id: "doc-34",
@@ -78,6 +90,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-2",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Nuts HN (Hex Nut)",
+    indexCategory: "Hangers & Supports",
+    systemCategory: "All Systems",
   },
   {
     id: "doc-35",
@@ -89,6 +103,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-2",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Washers FW & FFW",
+    indexCategory: "Hangers & Supports",
+    systemCategory: "All Systems",
   },
   {
     id: "doc-36",
@@ -100,6 +116,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-4",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Washers B200 & B3234 SW",
+    indexCategory: "Hangers & Supports",
+    systemCategory: "Condenser Water",
   },
   {
     id: "doc-37",
@@ -111,6 +129,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-2",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Lag Bolt B3228",
+    indexCategory: "Hangers & Supports",
+    systemCategory: "All Systems",
   },
   {
     id: "doc-38",
@@ -122,6 +142,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-2",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Channel Strut (All 12 Gauge)",
+    indexCategory: "Hangers & Supports",
+    systemCategory: "All Systems",
   },
   {
     id: "doc-39",
@@ -133,6 +155,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-4",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Channel Nuts",
+    indexCategory: "Hangers & Supports",
+    systemCategory: "All Systems",
   },
   {
     id: "doc-40",
@@ -144,6 +168,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-2",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Cap Screws HHCS",
+    indexCategory: "Anchors",
+    systemCategory: "All Systems",
   },
   {
     id: "doc-41",
@@ -155,6 +181,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-2",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Channel Fittings",
+    indexCategory: "Fittings",
+    systemCategory: "Chilled Water",
   },
   {
     id: "doc-42",
@@ -166,6 +194,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-4",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Channel Bracket",
+    indexCategory: "Fittings",
+    systemCategory: "All Systems",
   },
   {
     id: "doc-43",
@@ -177,6 +207,8 @@ export const mockDocuments: Document[] = [
     uploadedBy: "user-2",
     specSection: "05 29 00",
     specSectionTitle: "B-Line - Clamp B2000",
+    indexCategory: "Hangers & Supports",
+    systemCategory: "All Systems",
   },
 ];
 

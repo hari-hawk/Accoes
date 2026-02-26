@@ -137,6 +137,8 @@ export interface Document {
   uploadedBy: string;
   specSection: string;
   specSectionTitle: string;
+  indexCategory?: string;   // L1 group: "Hangers & Supports", "Fittings", etc.
+  systemCategory?: string;  // System: "All Systems", "Chilled Water", etc.
   previewUrl?: string;
 }
 

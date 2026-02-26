@@ -56,6 +56,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { useWorkspace } from "@/providers/workspace-provider";
 import { FullScreenPdfViewer } from "@/components/documents/full-screen-pdf-viewer";
 import { FileUploadCard } from "@/components/projects/file-upload-card";
@@ -741,8 +747,8 @@ export default function VersionOverviewPage() {
   // PDF preview state for Project Specifications
   const [previewSpec, setPreviewSpec] = useState<typeof mockProjectSpecs[number] | null>(null);
 
-  // Inline edit state for Project Details
-  const [detailEditing, setDetailEditing] = useState(false);
+  // Edit Sheet state for Project Details
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [editName, setEditName] = useState("");
   const [editClient, setEditClient] = useState("");
   const [editJobId, setEditJobId] = useState("");
@@ -771,16 +777,16 @@ export default function VersionOverviewPage() {
     setEditRevisedDate(project.revisedDate ?? "");
     setEditRevisionNumber(project.revisionNumber ?? "");
     setEditCustomerId(project.customerId ?? "");
-    setDetailEditing(true);
+    setEditSheetOpen(true);
   };
 
   const saveDetailEdit = () => {
     // Mock save — in production this would call an API
-    setDetailEditing(false);
+    setEditSheetOpen(false);
   };
 
   const cancelDetailEdit = () => {
-    setDetailEditing(false);
+    setEditSheetOpen(false);
   };
 
   const statusOptions: { value: ProjectStatus; label: string }[] = [
@@ -869,124 +875,24 @@ export default function VersionOverviewPage() {
 
         {/* Right column — Project Details + Activity (sticky sidebar) */}
         <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-          {/* Project Details Card — view / edit mode */}
+          {/* Project Details Card — view only, edit via Sheet */}
           <div className="rounded-xl border bg-card shadow-card p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-sm flex items-center gap-2">
                 <Shield className="h-4 w-4 text-primary" aria-hidden="true" />
                 Project Details
               </h3>
-              {!detailEditing && (
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={startDetailEdit}>
-                  <Pencil className="h-3 w-3" />
-                  Edit
-                </Button>
-              )}
+              <button
+                type="button"
+                onClick={startDetailEdit}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md px-2 py-1.5 transition-all cursor-pointer group"
+                aria-label="Edit project details"
+              >
+                <Pencil className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+                <span className="font-medium">Edit</span>
+              </button>
             </div>
 
-            {detailEditing ? (
-              /* ── Edit Mode ─────────────────────────────── */
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Project Name</label>
-                  <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="h-9" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Client</label>
-                  <Input value={editClient} onChange={(e) => setEditClient(e.target.value)} className="h-9" />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Job ID</label>
-                    <Input value={editJobId} onChange={(e) => setEditJobId(e.target.value)} className="h-9" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Location</label>
-                    <Input value={editLocation} onChange={(e) => setEditLocation(e.target.value)} className="h-9" />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Status</label>
-                  <Select value={editStatus} onValueChange={(v) => setEditStatus(v as ProjectStatus)}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Project Manager</label>
-                  <Select
-                    value={editProjectManager}
-                    onValueChange={(v) => {
-                      setEditProjectManager(v);
-                      if (v !== "__custom__") setEditProjectManagerCustom("");
-                    }}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Select PM" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mockUsers.map((u) => (
-                        <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                      ))}
-                      <SelectItem value="__custom__">Custom (External PM)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {editProjectManager === "__custom__" && (
-                    <Input
-                      placeholder="Enter PM name"
-                      value={editProjectManagerCustom}
-                      onChange={(e) => setEditProjectManagerCustom(e.target.value)}
-                      className="h-9 mt-1"
-                    />
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Owner</label>
-                    <Input value={editOwner} onChange={(e) => setEditOwner(e.target.value)} placeholder="Owner name" className="h-9" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Architect</label>
-                    <Input value={editArchitect} onChange={(e) => setEditArchitect(e.target.value)} placeholder="Architect name" className="h-9" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Engineer</label>
-                    <Input value={editEngineer} onChange={(e) => setEditEngineer(e.target.value)} placeholder="Engineer name" className="h-9" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Customer ID</label>
-                    <Input value={editCustomerId} onChange={(e) => setEditCustomerId(e.target.value)} placeholder="Manual entry" className="h-9" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Revised Date</label>
-                    <Input type="date" value={editRevisedDate} onChange={(e) => setEditRevisedDate(e.target.value)} className="h-9" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Revision #</label>
-                    <Input value={editRevisionNumber} onChange={(e) => setEditRevisionNumber(e.target.value)} placeholder="e.g. 3" className="h-9" />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 pt-1">
-                  <Button size="sm" onClick={saveDetailEdit} className="h-8 text-xs gap-1">
-                    <Save className="h-3 w-3" />
-                    Save
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={cancelDetailEdit} className="h-8 text-xs gap-1">
-                    <X className="h-3 w-3" />
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              /* ── View Mode ─────────────────────────────── */
               <div className="space-y-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground flex items-center gap-1.5">
@@ -1104,7 +1010,6 @@ export default function VersionOverviewPage() {
                   </div>
                 )}
               </div>
-            )}
           </div>
 
           {/* Recent Activity */}
@@ -1284,6 +1189,122 @@ export default function VersionOverviewPage() {
         subtitle="Project Specification"
         totalPages={previewSpec?.totalPages ?? 100}
       />
+
+      {/* ------------------------------------------------------------------ */}
+      {/*  Edit Project Details — Right-side Sheet                            */}
+      {/* ------------------------------------------------------------------ */}
+      <Sheet open={editSheetOpen} onOpenChange={setEditSheetOpen}>
+        <SheetContent side="right" className="w-[420px] sm:w-[460px] flex flex-col p-0">
+          <SheetHeader className="px-6 py-4 border-b shrink-0">
+            <SheetTitle className="text-base">Edit Project Details</SheetTitle>
+          </SheetHeader>
+
+          <ScrollArea className="flex-1 px-6 py-5">
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Project Name</label>
+                <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="h-9" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Client</label>
+                <Input value={editClient} onChange={(e) => setEditClient(e.target.value)} className="h-9" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Job ID</label>
+                  <Input value={editJobId} onChange={(e) => setEditJobId(e.target.value)} className="h-9" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Location</label>
+                  <Input value={editLocation} onChange={(e) => setEditLocation(e.target.value)} className="h-9" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Status</label>
+                <Select value={editStatus} onValueChange={(v) => setEditStatus(v as ProjectStatus)}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Project Manager</label>
+                <Select
+                  value={editProjectManager}
+                  onValueChange={(v) => {
+                    setEditProjectManager(v);
+                    if (v !== "__custom__") setEditProjectManagerCustom("");
+                  }}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Select PM" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mockUsers.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                    ))}
+                    <SelectItem value="__custom__">Custom (External PM)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {editProjectManager === "__custom__" && (
+                  <Input
+                    placeholder="Enter PM name"
+                    value={editProjectManagerCustom}
+                    onChange={(e) => setEditProjectManagerCustom(e.target.value)}
+                    className="h-9 mt-1.5"
+                  />
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Owner</label>
+                  <Input value={editOwner} onChange={(e) => setEditOwner(e.target.value)} placeholder="Owner name" className="h-9" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Architect</label>
+                  <Input value={editArchitect} onChange={(e) => setEditArchitect(e.target.value)} placeholder="Architect name" className="h-9" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Engineer</label>
+                  <Input value={editEngineer} onChange={(e) => setEditEngineer(e.target.value)} placeholder="Engineer name" className="h-9" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Customer ID</label>
+                  <Input value={editCustomerId} onChange={(e) => setEditCustomerId(e.target.value)} placeholder="Manual entry" className="h-9" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Revised Date</label>
+                  <Input type="date" value={editRevisedDate} onChange={(e) => setEditRevisedDate(e.target.value)} className="h-9" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Revision #</label>
+                  <Input value={editRevisionNumber} onChange={(e) => setEditRevisionNumber(e.target.value)} placeholder="e.g. 3" className="h-9" />
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+
+          {/* Sticky footer */}
+          <div className="border-t px-6 py-4 flex items-center gap-2 shrink-0 bg-background">
+            <Button size="sm" onClick={saveDetailEdit} className="gap-1.5">
+              <Save className="h-3.5 w-3.5" />
+              Save Changes
+            </Button>
+            <Button variant="ghost" size="sm" onClick={cancelDetailEdit}>
+              Cancel
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
     </main>
     </div>

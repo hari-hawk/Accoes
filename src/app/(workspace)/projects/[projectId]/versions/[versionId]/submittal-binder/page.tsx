@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   BookOpen,
@@ -16,7 +17,7 @@ import { useWorkspace } from "@/providers/workspace-provider";
 /*  Constants                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const TOTAL_PAGES = 13;
+const TOTAL_PAGES = 14;
 const LOADING_DURATION_MS = 2500;
 
 /* -------------------------------------------------------------------------- */
@@ -247,11 +248,10 @@ function Page3TableOfContents() {
     { section: "5", title: "Material Conformance Matrix (continued)", page: "6" },
     { section: "6", title: "Specification Cross-Reference", page: "7" },
     { section: "7", title: "Specification Cross-Reference (continued)", page: "8" },
-    { section: "8", title: "Product Data — Pipe Markers & Labels", page: "9" },
-    { section: "9", title: "Product Data — Valve Tags & Identification", page: "10" },
-    { section: "10", title: "Product Data — Underground Piping Markers", page: "11" },
-    { section: "11", title: "Supporting Documentation", page: "12" },
-    { section: "12", title: "Appendix — AI Reasoning Log", page: "13" },
+    { section: "8", title: "Vendor Catalog — ANSI/ASME Pipe Identification Standard", page: "9-10" },
+    { section: "9", title: "Vendor Catalog — Pipe Clamps (KWIK-CLIP Series)", page: "11-12" },
+    { section: "10", title: "Supporting Documentation", page: "13" },
+    { section: "11", title: "Appendix — AI Reasoning Log", page: "14" },
   ];
 
   return (
@@ -305,30 +305,23 @@ function SpecCrossRefPage({ pageLabel, rows }: { pageLabel: string; rows: string
   );
 }
 
-function ProductDataPage({ title, subtitle, items }: { title: string; subtitle: string; items: { name: string; mfr: string; partNo: string; desc: string }[] }) {
+function VendorCatalogPage({ title, subtitle, imageSrc }: { title: string; subtitle: string; imageSrc: string }) {
   return (
     <div className="space-y-4">
       <div>
         <h2 className="text-lg font-bold" style={{ color: "#003366" }}>{title}</h2>
         <p className="text-xs text-gray-500">{subtitle}</p>
       </div>
-      {items.map((item, i) => (
-        <div key={i} className="border border-gray-200 rounded-lg p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-800">{item.name}</h3>
-            <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Conforming</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div><span className="text-gray-500">Manufacturer:</span> <span className="text-gray-800">{item.mfr}</span></div>
-            <div><span className="text-gray-500">Part No:</span> <span className="text-gray-800">{item.partNo}</span></div>
-          </div>
-          <p className="text-xs text-gray-600">{item.desc}</p>
-          {/* Simulated cut sheet thumbnail */}
-          <div className="h-20 rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-            <p className="text-[10px] text-gray-400">Cut Sheet Preview — {item.partNo}</p>
-          </div>
-        </div>
-      ))}
+      <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+        <Image
+          src={imageSrc}
+          alt={title}
+          width={720}
+          height={936}
+          className="w-full h-auto"
+          unoptimized
+        />
+      </div>
     </div>
   );
 }
@@ -633,55 +626,56 @@ export default function SubmittalBinderPage() {
             </PaperPage>
           </div>
 
-          {/* Pages 9-11: Product Data Sheets */}
+          {/* Pages 9-10: Vendor Catalog — ANSI/ASME Pipe Identification */}
           <div ref={(el) => setPageRef(9, el)}>
             <PaperPage pageNumber={9} id="page-9">
-              <ProductDataPage
-                title="Product Data — Pipe Markers & Labels"
-                subtitle="Self-adhesive vinyl pipe identification"
-                items={[
-                  { name: "Brady B-946 Self-Adhesive Pipe Markers", mfr: "Brady Corporation", partNo: "B-946-HWS-YL", desc: "Self-adhesive vinyl pipe markers with pre-printed legend. Rated for -40°F to 180°F. UV and moisture resistant. Meets ASME A13.1 color coding standard." },
-                  { name: "Brady Snap-On Pipe Markers", mfr: "Brady Corporation", partNo: "B-915-CW-GN", desc: "Snap-on plastic pipe markers for 1/2\" to 8\" OD pipes. Color-coded per ASME A13.1. Durable polypropylene construction." },
-                ]}
+              <VendorCatalogPage
+                title="Vendor Catalog — ANSI/ASME Pipe Identification"
+                subtitle="MSI ANSI/ASME A13.1-2020 Pipe Marking Guide — Page 1 of 2"
+                imageSrc="/vendor-catalogs/pipe-identification-page-1.jpg"
               />
             </PaperPage>
           </div>
           <div ref={(el) => setPageRef(10, el)}>
             <PaperPage pageNumber={10} id="page-10">
-              <ProductDataPage
-                title="Product Data — Valve Tags & Identification"
-                subtitle="Brass and stainless steel valve identification"
-                items={[
-                  { name: "Brady 23210 Brass Valve Tags", mfr: "Brady Corporation", partNo: "23210-1.5-BR", desc: "1-1/2\" round brass valve tags with stamped numbering. Chain attachment included. Corrosion resistant for indoor/outdoor use." },
-                  { name: "Brady 23223 Stainless Steel Valve Tags", mfr: "Brady Corporation", partNo: "23223-2.0-SS", desc: "2\" round stainless steel valve tags for corrosive environments. Laser-engraved numbering. 316L grade stainless." },
-                  { name: "Brady Valve Schedule Chart", mfr: "Brady Corporation", partNo: "VSC-LAM-24x36", desc: "Laminated 24\"x36\" wall-mount valve schedule chart. Custom printed with project valve data. UV-resistant lamination." },
-                ]}
-              />
-            </PaperPage>
-          </div>
-          <div ref={(el) => setPageRef(11, el)}>
-            <PaperPage pageNumber={11} id="page-11">
-              <ProductDataPage
-                title="Product Data — Underground Piping Markers"
-                subtitle="Detectable underground warning tape and markers"
-                items={[
-                  { name: "Proline XT Detectable Warning Tape", mfr: "Proline Safety Products", partNo: "XT-DT-W-6-1000", desc: "6\" wide detectable underground warning tape. Aluminum foil core for metal detection. Printed legend: 'CAUTION: WATER LINE BURIED BELOW'. 1000 ft. roll." },
-                  { name: "Proline XT Detectable Warning Tape — Sewer", mfr: "Proline Safety Products", partNo: "XT-DT-S-6-1000", desc: "6\" wide detectable underground warning tape for sewer lines. Green color per APWA standard. Aluminum foil core. 1000 ft. roll." },
-                ]}
+              <VendorCatalogPage
+                title="Vendor Catalog — ANSI/ASME Pipe Identification"
+                subtitle="MSI ANSI/ASME A13.1-2020 Pipe Marking Guide — Page 2 of 2"
+                imageSrc="/vendor-catalogs/pipe-identification-page-2.jpg"
               />
             </PaperPage>
           </div>
 
-          {/* Page 12: Supporting Documentation */}
+          {/* Pages 11-12: Vendor Catalog — Pipe Clamps (KWIK-CLIP Series) */}
+          <div ref={(el) => setPageRef(11, el)}>
+            <PaperPage pageNumber={11} id="page-11">
+              <VendorCatalogPage
+                title="Vendor Catalog — Pipe Clamps (KWIK-CLIP Series)"
+                subtitle="BPRC Series — Rod Mount Clips — Page 1 of 2"
+                imageSrc="/vendor-catalogs/pipe-clamps-page-1.jpg"
+              />
+            </PaperPage>
+          </div>
           <div ref={(el) => setPageRef(12, el)}>
             <PaperPage pageNumber={12} id="page-12">
+              <VendorCatalogPage
+                title="Vendor Catalog — Pipe Clamps (KWIK-CLIP Series)"
+                subtitle="BPSC & BPIC Series — Channel Mount Clips — Page 2 of 2"
+                imageSrc="/vendor-catalogs/pipe-clamps-page-2.jpg"
+              />
+            </PaperPage>
+          </div>
+
+          {/* Page 13: Supporting Documentation */}
+          <div ref={(el) => setPageRef(13, el)}>
+            <PaperPage pageNumber={13} id="page-13">
               <SupportingDocsPage />
             </PaperPage>
           </div>
 
-          {/* Page 13: Appendix — AI Reasoning Log */}
-          <div ref={(el) => setPageRef(13, el)}>
-            <PaperPage pageNumber={13} id="page-13">
+          {/* Page 14: Appendix — AI Reasoning Log */}
+          <div ref={(el) => setPageRef(14, el)}>
+            <PaperPage pageNumber={14} id="page-14">
               <AppendixAILog />
             </PaperPage>
           </div>

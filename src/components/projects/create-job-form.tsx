@@ -14,6 +14,8 @@ import {
   Users,
   Building2,
   Layers,
+  ChevronDown,
+  User,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -224,6 +226,20 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
     initialDraft?.priority ?? "high"
   );
   const [projectType, setProjectType] = useState<ProjectType>("dr");
+  const [projectManager, setProjectManager] = useState("");
+  const [projectManagerCustom, setProjectManagerCustom] = useState("");
+
+  // Additional details (optional — collapsible)
+  const [additionalOpen, setAdditionalOpen] = useState(false);
+  const [owner, setOwner] = useState("");
+  const [ownerCompany, setOwnerCompany] = useState("");
+  const [architect, setArchitect] = useState("");
+  const [architectCompany, setArchitectCompany] = useState("");
+  const [engineer, setEngineer] = useState("");
+  const [engineerCompany, setEngineerCompany] = useState("");
+  const [revisedDate, setRevisedDate] = useState("");
+  const [revisionNumber, setRevisionNumber] = useState("");
+  const [customerId, setCustomerId] = useState("");
 
   // Access control
   const [members, setMembers] = useState<MemberEntry[]>(
@@ -253,7 +269,9 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
     files.length > 0 &&
     jobId.trim() !== "" &&
     projectName.trim() !== "" &&
-    companyClient.trim() !== "";
+    companyClient.trim() !== "" &&
+    location.trim() !== "" &&
+    (projectManager !== "" && (projectManager !== "__custom__" || projectManagerCustom.trim() !== ""));
 
   // Group files by category
   const filesByCategory = files.reduce(
@@ -612,13 +630,14 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
               className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
             >
               <MapPin className="h-3 w-3" aria-hidden="true" />
-              Location
+              Location <span className="text-destructive">*</span>
             </label>
             <Input
               id="location"
               placeholder="City, State"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
+              aria-required="true"
               className="h-10"
             />
           </div>
@@ -655,7 +674,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
               className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
             >
               <Layers className="h-3 w-3" aria-hidden="true" />
-              Project Type
+              Project Type <span className="text-destructive">*</span>
             </label>
             <Select
               value={projectType}
@@ -670,6 +689,175 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="project-manager"
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+            >
+              <User className="h-3 w-3" aria-hidden="true" />
+              Project Manager <span className="text-destructive">*</span>
+            </label>
+            <Select
+              value={projectManager}
+              onValueChange={(v) => {
+                setProjectManager(v);
+                if (v !== "__custom__") setProjectManagerCustom("");
+              }}
+            >
+              <SelectTrigger id="project-manager" className="h-10 w-full">
+                <SelectValue placeholder="Select project manager" />
+              </SelectTrigger>
+              <SelectContent>
+                {mockUsers.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.name}
+                  </SelectItem>
+                ))}
+                <SelectItem value="__custom__">Custom (External PM)</SelectItem>
+              </SelectContent>
+            </Select>
+            {projectManager === "__custom__" && (
+              <Input
+                placeholder="Enter PM name"
+                value={projectManagerCustom}
+                onChange={(e) => setProjectManagerCustom(e.target.value)}
+                className="h-10 mt-2"
+                aria-label="Custom project manager name"
+                aria-required="true"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Collapsible Additional Details */}
+        <div className="mt-5 border-t pt-4">
+          <button
+            type="button"
+            className="flex items-center gap-2 w-full text-left group"
+            onClick={() => setAdditionalOpen(!additionalOpen)}
+            aria-expanded={additionalOpen}
+          >
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                !additionalOpen && "-rotate-90"
+              )}
+              aria-hidden="true"
+            />
+            <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+              Additional Details
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              (Optional)
+            </span>
+          </button>
+
+          {additionalOpen && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-5 gap-y-5 mt-4 animate-accordion-down">
+              {/* Owner — stacked name + company */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <Building2 className="h-3 w-3" aria-hidden="true" />
+                  Owner
+                </label>
+                <Input
+                  placeholder="Owner name"
+                  value={owner}
+                  onChange={(e) => setOwner(e.target.value)}
+                  className="h-10"
+                />
+                <Input
+                  placeholder="Company / Organization"
+                  value={ownerCompany}
+                  onChange={(e) => setOwnerCompany(e.target.value)}
+                  className="h-9 text-xs"
+                />
+              </div>
+
+              {/* Architect — stacked name + firm */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <Building2 className="h-3 w-3" aria-hidden="true" />
+                  Architect
+                </label>
+                <Input
+                  placeholder="Architect name"
+                  value={architect}
+                  onChange={(e) => setArchitect(e.target.value)}
+                  className="h-10"
+                />
+                <Input
+                  placeholder="Firm name"
+                  value={architectCompany}
+                  onChange={(e) => setArchitectCompany(e.target.value)}
+                  className="h-9 text-xs"
+                />
+              </div>
+
+              {/* Engineer — stacked name + firm */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <Building2 className="h-3 w-3" aria-hidden="true" />
+                  Engineer
+                </label>
+                <Input
+                  placeholder="Engineer name"
+                  value={engineer}
+                  onChange={(e) => setEngineer(e.target.value)}
+                  className="h-10"
+                />
+                <Input
+                  placeholder="Firm name"
+                  value={engineerCompany}
+                  onChange={(e) => setEngineerCompany(e.target.value)}
+                  className="h-9 text-xs"
+                />
+              </div>
+
+              {/* Revised Date */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <Calendar className="h-3 w-3" aria-hidden="true" />
+                  Revised Date
+                </label>
+                <Input
+                  type="date"
+                  value={revisedDate}
+                  onChange={(e) => setRevisedDate(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+
+              {/* Revision # */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <Hash className="h-3 w-3" aria-hidden="true" />
+                  Revision #
+                </label>
+                <Input
+                  placeholder="e.g. 3 or Rev A"
+                  value={revisionNumber}
+                  onChange={(e) => setRevisionNumber(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+
+              {/* Customer ID */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <Hash className="h-3 w-3" aria-hidden="true" />
+                  Customer ID
+                </label>
+                <Input
+                  placeholder="Manual entry"
+                  value={customerId}
+                  onChange={(e) => setCustomerId(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+            </div>
+          )}
         </div>
       </SectionCard>
 

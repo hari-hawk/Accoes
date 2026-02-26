@@ -183,6 +183,22 @@ function MaterialListItem({
             )}
           </div>
         </div>
+
+        {/* Category pills */}
+        {(item.document.indexCategory || item.document.systemCategory) && (
+          <div className="flex items-center gap-1.5 mt-1.5">
+            {item.document.indexCategory && (
+              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200">
+                {item.document.indexCategory}
+              </span>
+            )}
+            {item.document.systemCategory && (
+              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200">
+                {item.document.systemCategory}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

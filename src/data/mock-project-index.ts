@@ -38,6 +38,11 @@ export interface HydroMatrixEntry {
   sizes: string;
   indexDescription: string;
   indexSubcategory: string;
+  fromMatrix: boolean;
+  nonDefault: boolean;
+  manualEntry: boolean;
+  nonMatrixDescOrFtgMfrEdited: boolean;
+  nonMatrixSizeEdited: boolean;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -75,6 +80,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "ALL",
     indexDescription: "Hydrostatic pressure test at 150 psi or 1.5 times the system operating pressure, whichever is greater. Test duration minimum 2 hours. All joints and connections shall be visually inspected during test. System shall show no pressure drop.",
     indexSubcategory: "Testing",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-002",
@@ -88,6 +94,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "ALL",
     indexDescription: "Condenser water system pressure test per the same requirements as chilled water. All piping and fittings shall be tested before insulation is applied. Document test results with certified gauge readings.",
     indexSubcategory: "Testing",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-003",
@@ -101,6 +108,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "ALL",
     indexDescription: "Pneumatic pressure test at 50 psi for 24 hours minimum for gas piping systems. Apply soapy water solution to all joints during test. No leaks permitted. Follow all safety protocols for compressed air testing.",
     indexSubcategory: "Testing",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
 
   // ── Pipe (6) ──────────────────────────────────────────────────────────────
@@ -116,6 +124,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "Thru 2\"",
     indexDescription: "Carbon steel Schedule 40 Electric Resistance Welded nipples conforming to ASTM A-53 Grade B for chilled water branch connections and equipment hookups. Used for threaded connections on terminal units and accessories.",
     indexSubcategory: "Pipe (Nipples)",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-005",
@@ -129,6 +138,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "2.5|3|4|6|8|10",
     indexDescription: "Carbon steel Schedule 40 Electric Resistance Welded pipe conforming to ASTM A-53 Grade B for chilled water mains and risers. Suitable for welded and grooved connections. Mill test reports required.",
     indexSubcategory: "Pipe",
+    fromMatrix: true, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-006",
@@ -142,6 +152,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "12|14|16|18",
     indexDescription: "Carbon steel Standard Weight Electric Resistance Welded pipe for large diameter chilled water mains. ASTM A-53 Grade B. Ends beveled for butt welding. Hydrostatic test required before insulation.",
     indexSubcategory: "Pipe",
+    fromMatrix: true, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-007",
@@ -155,6 +166,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "0.5|0.75|1|1.25|1.5|2|2.5|3",
     indexDescription: "Type L hard-drawn copper tube per ASTM B-88 for chilled water distribution piping where copper is specified. Joined with wrought copper solder-joint fittings per ASME B16.22. Lead-free solder required.",
     indexSubcategory: "Copper Pipe",
+    fromMatrix: true, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-008",
@@ -168,6 +180,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "2.5|3|4|6|8|10",
     indexDescription: "Carbon steel Schedule 40 ERW pipe for condenser water supply and return mains. Same specification as chilled water piping. Verify chemical treatment compatibility with water treatment specialist.",
     indexSubcategory: "Pipe",
+    fromMatrix: true, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-009",
@@ -181,6 +194,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "12|14|16|18",
     indexDescription: "Standard Weight carbon steel pipe for large diameter condenser water mains. Ends beveled for butt welding per ASME B16.25. Coordinate pipe routing with structural for adequate support spacing.",
     indexSubcategory: "Pipe",
+    fromMatrix: true, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
 
   // ── Fittings (5) ──────────────────────────────────────────────────────────
@@ -196,6 +210,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "Thru 2\"",
     indexDescription: "Black malleable iron threaded fittings rated at 150 psi per ASTM A-197 and ASME B16.3. For use with threaded carbon steel pipe on chilled water branch connections. Includes elbows, tees, couplings, and unions.",
     indexSubcategory: "Fittings",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-011",
@@ -209,6 +224,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "2.5\" & Over",
     indexDescription: "Butt weld seamless carbon steel fittings per ASME B16.9 and ASTM A234 Grade WPB. Standard weight wall thickness. For welded connections on chilled water mains 2-1/2 inch and larger. Includes long-radius elbows, tees, and reducers.",
     indexSubcategory: "Fittings",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-012",
@@ -222,6 +238,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "Thru 2\"",
     indexDescription: "Bronze 125# threaded fittings per ASTM B-62 for copper-to-threaded transitions and equipment connections. Used where dielectric separation is required between copper and steel piping systems.",
     indexSubcategory: "Fittings",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-013",
@@ -235,6 +252,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "Thru 2\"",
     indexDescription: "Same specification as chilled water malleable iron fittings. Applied to condenser water threaded branch connections. Verify compatibility with condenser water chemical treatment program.",
     indexSubcategory: "Fittings",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-014",
@@ -248,6 +266,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "2.5|3|4|6|8|10|12",
     indexDescription: "Victaulic Style 77 rigid and Style 07 flexible grooved couplings and fittings for chilled water piping. EPDM gaskets standard. Provide grooved adapters for transition to flanged equipment connections.",
     indexSubcategory: "Grooved Fittings",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
 
   // ── Joining/Branch Methods (3) ────────────────────────────────────────────
@@ -263,6 +282,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "0.5|0.75|1|1.25|1.5|2|2.5|3",
     indexDescription: "Standard tee and tee-pull branch connections for chilled water distribution. Use reducing tees where branch size differs from main. Tee-pulls acceptable for equal-size branches up to 3 inches.",
     indexSubcategory: "Branch Line",
+    fromMatrix: true, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-016",
@@ -276,6 +296,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "Varies",
     indexDescription: "Rectorseal #5 pipe thread sealant for all threaded piping connections on chilled water systems. Apply to male threads only. PTFE tape not acceptable as sole thread sealant. Compliant with NSF/ANSI 61.",
     indexSubcategory: "Thread Sealant",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-017",
@@ -289,6 +310,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "4|6|8|10|12|14|16|18",
     indexDescription: "Bolted mechanical branch connection for large diameter chilled water mains. Self-reinforcing design eliminates need for saddle reinforcement. Rated for full system pressure. O-ring seal standard.",
     indexSubcategory: "Bolted Branch Connection",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
 
   // ── Valves (4) ────────────────────────────────────────────────────────────
@@ -304,6 +326,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "14|16|18",
     indexDescription: "Nibco lug-style butterfly valve model LD-1000/LD-1100 with gear operator for chilled water isolation. EPDM disc seat. Ductile iron body and disc. For dead-end service. 250 psi cold working pressure rating.",
     indexSubcategory: "Valves",
+    fromMatrix: true, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-019",
@@ -317,6 +340,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "0.5|0.75|1|1.25|1.5|2",
     indexDescription: "Nibco two-piece ball valve model T&S 585-70 with NPT or solder ends for chilled water shutoff. Full-port design. Chrome-plated brass ball and stem. PTFE seats and seals. 600 WOG rating.",
     indexSubcategory: "Valves",
+    fromMatrix: true, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-020",
@@ -330,6 +354,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "2.5|3|4|6|8|10|12",
     indexDescription: "Nibco lug-style butterfly valve model LD-2000 with gear operator (8 inch and above) for condenser water isolation. EPDM liner. Suitable for bi-directional dead-end service.",
     indexSubcategory: "Valves",
+    fromMatrix: true, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-021",
@@ -343,6 +368,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "0.5|0.75|1|1.25|1.5|2|2.5|3",
     indexDescription: "Bell & Gossett circuit balancing valve for chilled water flow regulation. Memory stop feature for field balancing. Includes test ports for differential pressure measurement. Calibrated nameplate included.",
     indexSubcategory: "Balancing Valves",
+    fromMatrix: true, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
 
   // ── Specialties (3) ──────────────────────────────────────────────────────
@@ -358,6 +384,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "3/4\" MIP",
     indexDescription: "Bell & Gossett Hoffman Model #78 automatic air vent for chilled water system high points. Brass body with stainless steel float mechanism. Install at all system high points and equipment connections. Include manual isolation valve below each AAV.",
     indexSubcategory: "Automatic Air Vents",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-023",
@@ -371,6 +398,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "3/4\"",
     indexDescription: "Bell & Gossett pressure reducing valve model B7-12 for chilled water makeup water connection. Factory set at 12 psi, adjustable 10-25 psi range. Bronze body. Install with bypass and strainer.",
     indexSubcategory: "Pressure Reducing",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-024",
@@ -384,6 +412,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "Varies",
     indexDescription: "ACCO engineered roof penetration assembly for chilled water piping through roof membrane. Includes flashing, counter-flashing, and pitch pocket. Coordinate with roofing contractor for warranty compliance.",
     indexSubcategory: "Roof Penetrations",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
 
   // ── Insulation (3) ───────────────────────────────────────────────────────
@@ -399,6 +428,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "Thru 3/4\"",
     indexDescription: "1-inch thick closed-cell elastomeric pipe insulation per 2022 Title 24 requirements for glycol chilled water systems below 39°F. Joints sealed with manufacturer-approved adhesive. Vapor barrier integrity maintained at all seams.",
     indexSubcategory: "2022 Title 24- Glycol Chilled Water (< 39F)",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-026",
@@ -412,6 +442,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "Thru 1-1/4\"",
     indexDescription: "1-1/2 inch thick fiberglass pipe insulation with ASJ jacket per 2022 Title 24 for heating hot water systems above 141°F. All-service jacket with self-sealing lap. Additional vapor retarder not required on HHW systems.",
     indexSubcategory: "2022 Title 24- Heating Hot Water (> 141- 200F)",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-027",
@@ -425,6 +456,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "ALL",
     indexDescription: "Minimum 1/2 inch insulation thickness or per equipment manufacturer recommendations for DX refrigeration lines. Use closed-cell elastomeric insulation with vapor barrier. Protect from UV exposure where installed outdoors.",
     indexSubcategory: "2022 Title 24- Refrigeration (DX)",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
 
   // ── Identification (2) ───────────────────────────────────────────────────
@@ -440,6 +472,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "8.5\" x 11\"",
     indexDescription: "Valve identification chart — laminated 8.5x11 chart posted in each mechanical room. Lists all valve tag numbers, locations, system served, normally open/closed position, and service description. Update chart with each system modification.",
     indexSubcategory: "Valve Tag",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-029",
@@ -453,6 +486,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "Varies",
     indexDescription: "Pipe identification labels per ANSI/ASME A13.1-2020 standard. Color-coded by hazard classification. Include flow direction arrows. Label all piping at maximum 25-foot intervals, at each valve, at wall/floor penetrations, and at branch connections.",
     indexSubcategory: "Guide",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
 
   // ── Hangers/Supports (3) ─────────────────────────────────────────────────
@@ -468,6 +502,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "2.5|3|4|6|8|10|12|14|16|18",
     indexDescription: "Clevis pipe hangers (Type 1) per MSS SP-58 for horizontal chilled water piping support. Carbon steel with galvanized or epoxy finish. Size hanger rod per MSS SP-69 guidelines. Maximum hanger spacing per B31.9.",
     indexSubcategory: "Hangers",
+    fromMatrix: true, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-031",
@@ -481,6 +516,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "2.5|3",
     indexDescription: "J-type pipe hangers for horizontal chilled water piping in accessible ceiling spaces. For pipes 2-1/2 to 3 inch diameter. Include insulation protection shield at hanger location to prevent insulation compression.",
     indexSubcategory: "Hangers",
+    fromMatrix: true, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-032",
@@ -494,6 +530,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "Varies",
     indexDescription: "Steel channel strut (Unistrut P1000 or equivalent) for pipe support assemblies, trapeze hangers, and equipment mounting. Hot-dip galvanized finish. Include spring nuts, beam clamps, and all required hardware per MSS SP-58.",
     indexSubcategory: "Channel Strut",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
 
   // ── Anchors (3) ──────────────────────────────────────────────────────────
@@ -509,6 +546,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "Varies",
     indexDescription: "DeWalt Powers SD1 screw-in concrete anchors for pipe hanger and support attachment to concrete structure. Carbon steel zinc-plated. Size per load requirements with minimum 2x safety factor. ICC-ES evaluation report required.",
     indexSubcategory: "Drilled Expansion Anchors (Concrete)",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-034",
@@ -522,6 +560,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "Varies",
     indexDescription: "Hilti HDI-P torque-controlled drop-in anchors for overhead and vertical concrete applications. For use in post-tension concrete slabs with minimum embedment depth per Hilti technical data. Pre-drill to specified diameter.",
     indexSubcategory: "Drilled Expansion Anchors (Post Tension Concrete)",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
   {
     id: "hm-035",
@@ -535,6 +574,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
     sizes: "Varies",
     indexDescription: "Sammys threaded rod anchor points for attachment to steel deck and structural members. Self-drilling design eliminates need for pre-drilled holes. Minimum pullout and shear values per manufacturer load tables. Use for non-seismic support attachment.",
     indexSubcategory: "Fasteners (Steel Deck)",
+    fromMatrix: false, nonDefault: false, manualEntry: false, nonMatrixDescOrFtgMfrEdited: false, nonMatrixSizeEdited: false,
   },
 ];
 

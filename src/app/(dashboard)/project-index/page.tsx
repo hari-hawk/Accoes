@@ -274,14 +274,9 @@ function ExpandedEntryContent({
 }) {
   return (
     <div className="animate-accordion-down overflow-hidden">
-      <div className="bg-muted/40 border-t border-l-2 border-l-nav-accent/40 px-4 py-3">
-        {/* Index Description */}
-        <p className="text-sm leading-relaxed text-ds-neutral-900 mb-3">
-          {entry.indexDescription}
-        </p>
-
-        {/* Specification Details — compact label:value grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2">
+      <div className="bg-muted/40 border-t border-l-2 border-l-nav-accent/40 px-4 py-3 space-y-3">
+        {/* Row 1–2: Core specification fields — 3 columns */}
+        <div className="grid grid-cols-3 gap-x-6 gap-y-2">
           <div>
             <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Index ID</span>
             <p className="text-xs font-mono text-ds-neutral-900">{entry.indexIdFull}</p>
@@ -305,6 +300,30 @@ function ExpandedEntryContent({
           <div>
             <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Material</span>
             <p className="text-xs text-ds-neutral-900">{entry.materialCategory}</p>
+          </div>
+        </div>
+
+        {/* Row 3: Matrix boolean fields — 5 columns */}
+        <div className="grid grid-cols-5 gap-x-6 gap-y-2 pt-1 border-t border-border/30">
+          <div>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">From Matrix</span>
+            <p className="text-xs text-ds-neutral-900">{String(entry.fromMatrix).toUpperCase()}</p>
+          </div>
+          <div>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Non Default</span>
+            <p className="text-xs text-ds-neutral-900">{String(entry.nonDefault).toUpperCase()}</p>
+          </div>
+          <div>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Manual Entry</span>
+            <p className="text-xs text-ds-neutral-900">{String(entry.manualEntry).toUpperCase()}</p>
+          </div>
+          <div>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Non Matrix Description or Ftg Mfr</span>
+            <p className="text-xs text-ds-neutral-900">{String(entry.nonMatrixDescOrFtgMfrEdited).toUpperCase()}</p>
+          </div>
+          <div>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Non Matrix Size Edited</span>
+            <p className="text-xs text-ds-neutral-900">{String(entry.nonMatrixSizeEdited).toUpperCase()}</p>
           </div>
         </div>
       </div>
@@ -752,6 +771,11 @@ export default function ProjectIndexPage() {
         "Sizes",
         "Index Description",
         "Index Subcategory",
+        "From Matrix",
+        "Non Default",
+        "Manual Entry",
+        "Non Matrix Description or Ftg Mfr Edited",
+        "Non Matrix Size Edited",
       ];
       const rows = entries.map((e) =>
         [
@@ -765,6 +789,11 @@ export default function ProjectIndexPage() {
           e.sizes,
           e.indexDescription,
           e.indexSubcategory,
+          String(e.fromMatrix),
+          String(e.nonDefault),
+          String(e.manualEntry),
+          String(e.nonMatrixDescOrFtgMfrEdited),
+          String(e.nonMatrixSizeEdited),
         ]
           .map((v) => `"${v.replace(/"/g, '""')}"`)
           .join(",")

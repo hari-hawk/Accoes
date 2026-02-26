@@ -24,6 +24,8 @@ import {
   Upload,
   CheckCircle2,
   X,
+  ChevronsUpDown,
+  Check,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -58,6 +60,19 @@ import {
 } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from "@/components/ui/command";
 
 // ─── Types ──────────────────────────────────────────
 
@@ -265,6 +280,7 @@ export default function UserManagementPage() {
   const [addEmail, setAddEmail] = useState("");
   const [addRole, setAddRole] = useState<UserRoleLabel>("Submitter");
   const [addProjectIds, setAddProjectIds] = useState<string[]>([]);
+  const [addProjectOpen, setAddProjectOpen] = useState(false);
 
   // Access panel edit state
   const [accessProjectIds, setAccessProjectIds] = useState<string[]>([]);
@@ -664,84 +680,147 @@ export default function UserManagementPage() {
               </SheetHeader>
               <form
                 onSubmit={(e) => { e.preventDefault(); handleAddUser(); }}
-                className="flex-1 overflow-y-auto p-5 space-y-5"
+                className="flex-1 overflow-y-auto p-5 flex flex-col"
               >
-                {/* Name */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="add-name" className="text-xs text-muted-foreground">Full Name</Label>
-                  <Input
-                    id="add-name"
-                    placeholder="e.g. John Doe"
-                    value={addName}
-                    onChange={(e) => setAddName(e.target.value)}
-                    autoFocus
-                  />
-                </div>
-                {/* Email */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="add-email" className="text-xs text-muted-foreground">Email Address</Label>
-                  <Input
-                    id="add-email"
-                    type="email"
-                    placeholder="e.g. john.doe@accoes.com"
-                    value={addEmail}
-                    onChange={(e) => setAddEmail(e.target.value)}
-                  />
-                </div>
-                {/* Role */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Role</Label>
-                  <Select value={addRole} onValueChange={(v) => setAddRole(v as UserRoleLabel)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Admin">Admin</SelectItem>
-                      <SelectItem value="Global Viewer">Global Viewer</SelectItem>
-                      <SelectItem value="Submitter">Submitter</SelectItem>
-                      <SelectItem value="Reviewer">Reviewer</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* Project Access */}
-                {addRole !== "Admin" && addRole !== "Global Viewer" && (
-                  <div className="space-y-3">
-                    <Label className="text-xs text-muted-foreground">Project Access</Label>
-                    <div className="rounded-lg border bg-muted/30 p-3 space-y-2.5">
-                      {AVAILABLE_PROJECTS.map((project) => (
-                        <label
-                          key={project.id}
-                          className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 rounded-md px-2 py-1.5 -mx-2 transition-colors"
-                        >
-                          <Checkbox
-                            checked={addProjectIds.includes(project.id)}
-                            onCheckedChange={() => toggleAddProject(project.id)}
-                          />
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-sm font-medium">{project.name}</span>
-                            <span className="text-[10px] text-muted-foreground font-mono">
-                              {project.abbr}
-                            </span>
-                          </div>
-                        </label>
-                      ))}
+                <div className="space-y-5 flex-1">
+                  {/* Row 1: Full Name + Email Address */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="add-name" className="text-xs text-muted-foreground">Full Name</Label>
+                      <Input
+                        id="add-name"
+                        placeholder="e.g. John Doe"
+                        value={addName}
+                        onChange={(e) => setAddName(e.target.value)}
+                        autoFocus
+                      />
                     </div>
-                    <p className="text-[11px] text-muted-foreground">
-                      {addProjectIds.length === 0
-                        ? "No projects selected"
-                        : `${addProjectIds.length} project${addProjectIds.length !== 1 ? "s" : ""} selected`}
-                    </p>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="add-email" className="text-xs text-muted-foreground">Email Address</Label>
+                      <Input
+                        id="add-email"
+                        type="email"
+                        placeholder="e.g. john@accoes.com"
+                        value={addEmail}
+                        onChange={(e) => setAddEmail(e.target.value)}
+                      />
+                    </div>
                   </div>
-                )}
-                {(addRole === "Admin" || addRole === "Global Viewer") && (
-                  <div className="rounded-lg border bg-blue-50 dark:bg-blue-900/20 p-3">
-                    <p className="text-xs text-blue-700 dark:text-blue-400">
-                      {addRole}s automatically have access to all projects.
-                    </p>
+
+                  {/* Row 2: Role + Project Access */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Role</Label>
+                      <Select value={addRole} onValueChange={(v) => setAddRole(v as UserRoleLabel)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Admin">Admin</SelectItem>
+                          <SelectItem value="Global Viewer">Global Viewer</SelectItem>
+                          <SelectItem value="Submitter">Submitter</SelectItem>
+                          <SelectItem value="Reviewer">Reviewer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Project Access</Label>
+                      {(addRole === "Admin" || addRole === "Global Viewer") ? (
+                        <div className="flex items-center h-9 rounded-md border bg-muted/30 px-3">
+                          <span className="text-xs text-muted-foreground">All projects (auto)</span>
+                        </div>
+                      ) : (
+                        <Popover open={addProjectOpen} onOpenChange={setAddProjectOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={addProjectOpen}
+                              className="w-full justify-between font-normal h-9"
+                            >
+                              <span className="truncate text-sm">
+                                {addProjectIds.length === 0
+                                  ? "Select projects..."
+                                  : `${addProjectIds.length} project${addProjectIds.length !== 1 ? "s" : ""}`}
+                              </span>
+                              <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                            <Command>
+                              <CommandInput placeholder="Search projects..." />
+                              <CommandList>
+                                <CommandEmpty>No projects found.</CommandEmpty>
+                                <CommandGroup>
+                                  {AVAILABLE_PROJECTS.map((project) => (
+                                    <CommandItem
+                                      key={project.id}
+                                      value={project.name}
+                                      onSelect={() => toggleAddProject(project.id)}
+                                    >
+                                      <Check
+                                        className={`mr-2 h-3.5 w-3.5 ${
+                                          addProjectIds.includes(project.id) ? "opacity-100" : "opacity-0"
+                                        }`}
+                                      />
+                                      <span className="flex-1">{project.name}</span>
+                                      <span className="text-[10px] text-muted-foreground font-mono">{project.abbr}</span>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                    </div>
                   </div>
-                )}
-                {/* Actions */}
-                <div className="flex justify-end gap-2 pt-2">
+
+                  {/* Auto-access notice for Admin/Global Viewer */}
+                  {(addRole === "Admin" || addRole === "Global Viewer") && (
+                    <div className="rounded-lg border bg-blue-50 dark:bg-blue-900/20 p-3">
+                      <p className="text-xs text-blue-700 dark:text-blue-400">
+                        {addRole}s automatically have access to all projects.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Selected project pills */}
+                  {addRole !== "Admin" && addRole !== "Global Viewer" && addProjectIds.length > 0 && (
+                    <div className="space-y-1.5">
+                      <p className="text-[11px] text-muted-foreground font-medium">
+                        {addProjectIds.length} project{addProjectIds.length !== 1 ? "s" : ""} selected
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {addProjectIds.map((id) => {
+                          const project = AVAILABLE_PROJECTS.find((p) => p.id === id);
+                          if (!project) return null;
+                          return (
+                            <Badge
+                              key={id}
+                              variant="secondary"
+                              className="pl-2 pr-1 py-0.5 text-xs font-medium gap-1 bg-ds-primary-100 text-ds-primary-800"
+                            >
+                              {project.name}
+                              <button
+                                type="button"
+                                className="ml-0.5 rounded-full hover:bg-ds-primary-200 p-0.5 transition-colors"
+                                onClick={() => toggleAddProject(id)}
+                                aria-label={`Remove ${project.name}`}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Add User CTA — pinned to bottom */}
+                <div className="flex justify-end gap-2 pt-4 mt-4 border-t">
                   <Button type="button" variant="outline" onClick={closePanel}>
                     Cancel
                   </Button>

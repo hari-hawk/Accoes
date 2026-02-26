@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Check, FolderKanban, Grid3X3, BookOpen, Download } from "lucide-react";
+import { Check, FolderKanban, ShieldCheck, FileText, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WorkflowStage } from "@/data/types";
 
@@ -28,24 +28,24 @@ const MILESTONES: Milestone[] = [
     unlockedAt: ["project", "upload", "process", "review", "export"],
   },
   {
-    key: "material-matrix",
-    label: "Material Matrix",
-    icon: Grid3X3,
+    key: "conformance",
+    label: "Conformance",
+    icon: ShieldCheck,
     path: "/review",
     unlockedAt: ["review", "export"],
+  },
+  {
+    key: "preview-cover-page",
+    label: "Preview Cover Page",
+    icon: FileText,
+    path: "/preview-cover",
+    unlockedAt: ["export"],
   },
   {
     key: "submittal-binder",
     label: "Submittal Binder",
     icon: BookOpen,
     path: "/submittal-binder",
-    unlockedAt: ["export"],
-  },
-  {
-    key: "download-report",
-    label: "Download Report",
-    icon: Download,
-    path: "/export",
     unlockedAt: ["export"],
   },
 ];
@@ -56,19 +56,19 @@ const MILESTONES: Milestone[] = [
 
 /** Determine which milestone is active based on the current pathname */
 function getActiveMilestone(pathname: string): string {
-  if (pathname.includes("/export")) return "download-report";
   if (pathname.includes("/submittal-binder")) return "submittal-binder";
-  if (pathname.includes("/review") || pathname.includes("/processing")) return "material-matrix";
+  if (pathname.includes("/preview-cover")) return "preview-cover-page";
+  if (pathname.includes("/review") || pathname.includes("/processing")) return "conformance";
   return "overview";
 }
 
 /** Determine the completion index — milestones up to this index are "completed" */
 function getCompletedIndex(currentStage: WorkflowStage): number {
   // Overview is always accessible (complete as soon as you enter the project)
-  // Material Matrix is accessible at "review" or "export" stage
-  // Submittal Binder + Download Report are accessible at "export" stage
-  if (currentStage === "export") return 3; // first three completed, download report is the final step
-  if (currentStage === "review") return 1; // overview completed, material matrix active
+  // Conformance is accessible at "review" or "export" stage
+  // Preview Cover Page + Submittal Binder are accessible at "export" stage
+  if (currentStage === "export") return 3; // first three completed, submittal binder is the final step
+  if (currentStage === "review") return 1; // overview completed, conformance active
   return 0; // only overview
 }
 

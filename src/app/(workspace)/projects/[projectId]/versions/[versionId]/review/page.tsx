@@ -253,12 +253,12 @@ export default function ReviewPage() {
               disabled={!allDecided}
               onClick={() =>
                 router.push(
-                  `/projects/${project.id}/versions/${version.id}/submittal-binder`
+                  `/projects/${project.id}/versions/${version.id}/preview-cover`
                 )
               }
             >
               <BookOpen className="mr-1.5 h-3.5 w-3.5" />
-              Proceed to Submittal Binder
+              Proceed to Preview Cover Page
               <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
             </Button>
           </div>

@@ -70,9 +70,10 @@ function getCompletedIndex(currentStage: WorkflowStage, pathname: string, projec
   else if (currentStage === "review") stageIndex = 1;
 
   // Path-based completion — navigating forward marks previous as complete
+  // Use index beyond last milestone so ALL prior milestones show as completed
   let pathIndex = 0;
-  if (pathname.includes("/submittal-binder")) pathIndex = 3;
-  else if (pathname.includes("/preview-cover")) pathIndex = 2;
+  if (pathname.includes("/submittal-binder")) pathIndex = 4;
+  else if (pathname.includes("/preview-cover")) pathIndex = 3;
   else if (pathname.includes("/review") || pathname.includes("/processing")) pathIndex = 1;
 
   // Persist highest-ever index per project — never regresses on back-navigation
@@ -111,7 +112,7 @@ export function MilestoneProgressBar({
       className="flex items-center justify-center px-4 py-2 border-b bg-muted/30 shrink-0"
       aria-label="Project milestones"
     >
-      <div className="flex items-center w-full max-w-2xl">
+      <div className="grid w-full max-w-3xl" style={{ gridTemplateColumns: `repeat(${MILESTONES.length}, 1fr)` }}>
         {MILESTONES.map((milestone, index) => {
           const isActive = milestone.key === activeMilestone;
           const isUnlocked = milestone.unlockedAt.includes(currentStage);
@@ -123,7 +124,7 @@ export function MilestoneProgressBar({
           return (
             <div
               key={milestone.key}
-              className={cn("flex items-center", !isLast && "flex-1")}
+              className="flex items-center"
             >
               {/* Step node */}
               {isUnlocked ? (
@@ -188,7 +189,7 @@ export function MilestoneProgressBar({
                 </div>
               )}
 
-              {/* Connector line */}
+              {/* Connector line — fills remaining column width evenly */}
               {!isLast && (
                 <div className="flex-1 mx-2.5">
                   <div

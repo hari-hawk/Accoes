@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import {
   BookOpen,
   Download,
-  ArrowLeft,
   FileText,
   Loader2,
 } from "lucide-react";
@@ -17,7 +15,7 @@ import { useWorkspace } from "@/providers/workspace-provider";
 /*  Constants                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const TOTAL_PAGES = 14;
+const TOTAL_PAGES = 13;
 const LOADING_DURATION_MS = 2500;
 
 /* -------------------------------------------------------------------------- */
@@ -251,7 +249,6 @@ function Page3TableOfContents() {
     { section: "8", title: "Vendor Catalog — ANSI/ASME Pipe Identification Standard", page: "9-10" },
     { section: "9", title: "Vendor Catalog — Pipe Clamps (KWIK-CLIP Series)", page: "11-12" },
     { section: "10", title: "Supporting Documentation", page: "13" },
-    { section: "11", title: "Appendix — AI Reasoning Log", page: "14" },
   ];
 
   return (
@@ -357,65 +354,6 @@ function SupportingDocsPage() {
   );
 }
 
-function AppendixAILog() {
-  const logEntries = [
-    { time: "14:23:01", level: "info" as const, msg: "Starting conformance analysis for Section 220553" },
-    { time: "14:23:03", level: "info" as const, msg: "Loaded 3 specification documents (620 pages total)" },
-    { time: "14:23:08", level: "info" as const, msg: "Extracted 18 material line items from Matrix Index Grid" },
-    { time: "14:23:15", level: "success" as const, msg: "Item 1: Pipe Labels (Brady B-946) — MATCH (98% confidence)" },
-    { time: "14:23:18", level: "success" as const, msg: "Item 2: Valve Tags (Brady 23210) — MATCH (96% confidence)" },
-    { time: "14:23:22", level: "success" as const, msg: "Item 3: Underground Markers (Proline XT) — MATCH (94% confidence)" },
-    { time: "14:23:25", level: "warning" as const, msg: "Item 4: Stencils — spec requires 3\" min height, submitted 2.5\" — REVIEW" },
-    { time: "14:23:29", level: "success" as const, msg: "Items 5-12: Pipe identification accessories — ALL MATCH (91-97%)" },
-    { time: "14:23:34", level: "success" as const, msg: "Items 13-16: Color coding per ASME A13.1 — MATCH (99% confidence)" },
-    { time: "14:23:38", level: "warning" as const, msg: "Item 17: Equipment labels — material grade not explicitly stated in submittal" },
-    { time: "14:23:41", level: "success" as const, msg: "Item 18: Directional flow arrows — MATCH (95% confidence)" },
-    { time: "14:23:45", level: "info" as const, msg: "Cross-referencing against 6 specification sections" },
-    { time: "14:23:52", level: "info" as const, msg: "Generating conformance summary: 16 of 18 items pre-approved" },
-    { time: "14:23:55", level: "success" as const, msg: "Analysis complete. Overall confidence: 94%. Time: 54 seconds." },
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-bold" style={{ color: "#003366" }}>Appendix — AI Reasoning Log</h2>
-        <p className="text-xs text-gray-500">Automated conformance analysis trace</p>
-      </div>
-      <div className="rounded-lg bg-gray-900 p-4 font-mono text-xs space-y-1 overflow-x-auto">
-        {logEntries.map((entry, i) => (
-          <div key={i} className="flex gap-3">
-            <span className="text-gray-500 shrink-0">[{entry.time}]</span>
-            <span className={
-              entry.level === "success" ? "text-green-400" :
-              entry.level === "warning" ? "text-yellow-400" :
-              "text-gray-400"
-            }>
-              {entry.msg}
-            </span>
-          </div>
-        ))}
-      </div>
-      <div className="border border-gray-200 rounded-lg p-4 space-y-2">
-        <p className="text-xs font-semibold text-gray-500 uppercase">Summary</p>
-        <div className="grid grid-cols-3 gap-4 text-sm">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">16</p>
-            <p className="text-[10px] text-gray-500">Pre-Approved</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-yellow-600">2</p>
-            <p className="text-[10px] text-gray-500">Review Required</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold" style={{ color: "#003366" }}>94%</p>
-            <p className="text-[10px] text-gray-500">Overall Confidence</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* -------------------------------------------------------------------------- */
 /*  Mock data for material tables                                              */
 /* -------------------------------------------------------------------------- */
@@ -515,30 +453,13 @@ export default function SubmittalBinderPage() {
 
   return (
     <div className="h-full overflow-auto">
-      {/* Fixed header — always visible */}
+      {/* Fixed header — Export only (navigation via milestone bar) */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b">
-        <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/projects/${project.id}/versions/${version.id}/preview-cover`}
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
-            >
-              <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
-              Back
-            </Link>
-            <div className="h-4 w-px bg-border" />
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-primary" />
-              <h1 className="text-sm font-semibold">Submittal Binder</h1>
-              <span className="text-xs text-muted-foreground">— {project.name}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" className="gap-1.5 h-8 gradient-action text-white border-0">
-              <Download className="h-3.5 w-3.5" />
-              Export PDF
-            </Button>
-          </div>
+        <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-end">
+          <Button size="sm" className="gap-1.5 h-8 gradient-action text-white border-0">
+            <Download className="h-3.5 w-3.5" />
+            Export PDF
+          </Button>
         </div>
       </div>
 
@@ -670,13 +591,6 @@ export default function SubmittalBinderPage() {
           <div ref={(el) => setPageRef(13, el)}>
             <PaperPage pageNumber={13} id="page-13">
               <SupportingDocsPage />
-            </PaperPage>
-          </div>
-
-          {/* Page 14: Appendix — AI Reasoning Log */}
-          <div ref={(el) => setPageRef(14, el)}>
-            <PaperPage pageNumber={14} id="page-14">
-              <AppendixAILog />
             </PaperPage>
           </div>
 

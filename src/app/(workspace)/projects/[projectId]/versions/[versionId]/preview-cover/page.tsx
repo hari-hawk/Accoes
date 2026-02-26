@@ -5,10 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   FileText,
   Download,
-  Printer,
   Pencil,
   Save,
-  X,
   ArrowRight,
   BookOpen,
 } from "lucide-react";
@@ -24,9 +22,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { useWorkspace } from "@/providers/workspace-provider";
 import { mockUsers } from "@/data/mock-users";
-import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
 /*  Helpers                                                                    */
@@ -47,7 +51,7 @@ function generateTransmittalNumber(jobId: string): string {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Read-only field — used in view mode                                        */
+/*  Read-only field — used in PDF view mode                                    */
 /* -------------------------------------------------------------------------- */
 
 function FieldDisplay({
@@ -71,38 +75,6 @@ function FieldDisplay({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Editable field — used in edit mode                                         */
-/* -------------------------------------------------------------------------- */
-
-function FieldEdit({
-  label,
-  value,
-  onChange,
-  type = "text",
-  className,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-        {label}
-      </p>
-      <Input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-8 text-sm bg-yellow-50/60 border-yellow-300 focus:border-yellow-500"
-      />
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
 /*  Main Component                                                             */
 /* -------------------------------------------------------------------------- */
 
@@ -110,8 +82,8 @@ export default function PreviewCoverPage() {
   const { project, version } = useWorkspace();
   const router = useRouter();
 
-  // Edit mode toggle
-  const [editing, setEditing] = useState(false);
+  // Sheet overlay for editing
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
 
   // Project info edit state (auto-populated from project)
   const [editName, setEditName] = useState("");
@@ -160,22 +132,17 @@ export default function PreviewCoverPage() {
     setEditCustomerId(project.customerId ?? "");
     setEditRevisedDate(project.revisedDate ?? "");
     setEditRevisionNumber(project.revisionNumber ?? "");
-    setEditing(true);
+    setEditSheetOpen(true);
   };
 
   const saveEdit = () => {
     // Mock save — in production this would call an API
-    setEditing(false);
+    setEditSheetOpen(false);
   };
 
   const cancelEdit = () => {
-    setEditing(false);
+    setEditSheetOpen(false);
   };
-
-  const editPmName =
-    editProjectManager === "__custom__"
-      ? editProjectManagerCustom
-      : mockUsers.find((u) => u.id === editProjectManager)?.name ?? "";
 
   /* ---------------------------------------------------------------------- */
   /*  Render                                                                 */
@@ -203,55 +170,27 @@ export default function PreviewCoverPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {editing ? (
-              <>
-                <Button
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={saveEdit}
-                >
-                  <Save className="h-3.5 w-3.5" />
-                  Save
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={cancelEdit}
-                >
-                  <X className="h-3.5 w-3.5" />
-                  Cancel
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={startEdit}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Edit
-                </Button>
-                <Button variant="outline" size="sm" className="gap-1.5">
-                  <Printer className="h-3.5 w-3.5" />
-                  Print
-                </Button>
-                <Button
-                  size="sm"
-                  className="gap-1.5 gradient-action text-white border-0"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  Export
-                </Button>
-              </>
-            )}
+            <button
+              type="button"
+              onClick={startEdit}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md px-2 py-1.5 transition-all cursor-pointer group"
+              aria-label="Edit project details"
+            >
+              <Pencil className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+              <span className="font-medium">Edit</span>
+            </button>
+            <Button
+              size="sm"
+              className="gap-1.5 gradient-action text-white border-0"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export
+            </Button>
           </div>
         </div>
 
         {/* ================================================================ */}
-        {/*  PAGE 1: Binder Cover                                            */}
+        {/*  PAGE 1: Binder Cover (always view mode)                         */}
         {/* ================================================================ */}
         <div className="bg-gray-100 rounded-2xl p-6">
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-3 text-center">
@@ -267,97 +206,30 @@ export default function PreviewCoverPage() {
             {/* Header with logo + project metadata */}
             <div className="px-8 pt-6 pb-4 flex justify-between items-start gap-6">
               {/* Left: project metadata */}
-              <div className="space-y-2 flex-1 min-w-0">
-                {editing ? (
-                  <div className="space-y-2">
-                    <FieldEdit label="Project Name" value={editName} onChange={setEditName} />
-                    <FieldEdit label="Project Address" value={editLocation} onChange={setEditLocation} />
-                    <div className="grid grid-cols-2 gap-2">
-                      <FieldEdit label="ACCO Project Number" value={editJobId} onChange={setEditJobId} />
-                      <div>
-                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                          Project Manager
-                        </p>
-                        <Select
-                          value={editProjectManager}
-                          onValueChange={(v) => {
-                            setEditProjectManager(v);
-                            if (v !== "__custom__") setEditProjectManagerCustom("");
-                          }}
-                        >
-                          <SelectTrigger className="h-8 text-sm bg-yellow-50/60 border-yellow-300">
-                            <SelectValue placeholder="Select PM" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {mockUsers.map((u) => (
-                              <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                            ))}
-                            <SelectItem value="__custom__">Custom</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {editProjectManager === "__custom__" && (
-                          <Input
-                            placeholder="PM name"
-                            value={editProjectManagerCustom}
-                            onChange={(e) => setEditProjectManagerCustom(e.target.value)}
-                            className="h-8 text-sm mt-1 bg-yellow-50/60 border-yellow-300"
-                          />
-                        )}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <FieldEdit
-                        label="Date"
-                        value={project.createdAt.split("T")[0]}
-                        onChange={() => {}}
-                        type="date"
-                      />
-                      <FieldEdit
-                        label="Revised Date"
-                        value={editRevisedDate}
-                        onChange={setEditRevisedDate}
-                        type="date"
-                      />
-                      <FieldEdit
-                        label="Revision #"
-                        value={editRevisionNumber}
-                        onChange={setEditRevisionNumber}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <FieldEdit label="Customer" value={editCustomerId} onChange={setEditCustomerId} />
-                      <FieldEdit label="Owner" value={editOwner} onChange={setEditOwner} />
-                      <FieldEdit label="Architect" value={editArchitect} onChange={setEditArchitect} />
-                      <FieldEdit label="Engineer" value={editEngineer} onChange={setEditEngineer} />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-1.5">
-                    <div>
-                      <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider">
-                        Project Name
-                      </p>
-                      <p className="text-lg font-bold text-gray-900">{project.name}</p>
-                    </div>
-                    <p className="text-xs text-gray-600">
-                      {project.location}
-                    </p>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs pt-1">
-                      <FieldDisplay label="ACCO Project Number" value={project.jobId} />
-                      <FieldDisplay label="Customer" value={project.customerId ?? ""} />
-                      <FieldDisplay label="Project Manager" value={pmName} />
-                      <FieldDisplay label="Owner" value={project.owner ?? ""} />
-                      <FieldDisplay label="Date" value={new Date(project.createdAt).toLocaleDateString()} />
-                      <FieldDisplay label="Architect" value={project.architect ?? ""} />
-                      <FieldDisplay
-                        label="Revised Date"
-                        value={project.revisedDate ? new Date(project.revisedDate).toLocaleDateString() : ""}
-                      />
-                      <FieldDisplay label="Engineer" value={project.engineer ?? ""} />
-                      <FieldDisplay label="Revision #" value={project.revisionNumber ?? ""} />
-                    </div>
-                  </div>
-                )}
+              <div className="space-y-1.5 flex-1 min-w-0">
+                <div>
+                  <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider">
+                    Project Name
+                  </p>
+                  <p className="text-lg font-bold text-gray-900">{project.name}</p>
+                </div>
+                <p className="text-xs text-gray-600">
+                  {project.location}
+                </p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs pt-1">
+                  <FieldDisplay label="ACCO Project Number" value={project.jobId} />
+                  <FieldDisplay label="Customer" value={project.customerId ?? ""} />
+                  <FieldDisplay label="Project Manager" value={pmName} />
+                  <FieldDisplay label="Owner" value={project.owner ?? ""} />
+                  <FieldDisplay label="Date" value={new Date(project.createdAt).toLocaleDateString()} />
+                  <FieldDisplay label="Architect" value={project.architect ?? ""} />
+                  <FieldDisplay
+                    label="Revised Date"
+                    value={project.revisedDate ? new Date(project.revisedDate).toLocaleDateString() : ""}
+                  />
+                  <FieldDisplay label="Engineer" value={project.engineer ?? ""} />
+                  <FieldDisplay label="Revision #" value={project.revisionNumber ?? ""} />
+                </div>
               </div>
 
               {/* Right: ACCO logo placeholder */}
@@ -421,7 +293,7 @@ export default function PreviewCoverPage() {
         </div>
 
         {/* ================================================================ */}
-        {/*  PAGE 2: Transmittal Form                                        */}
+        {/*  PAGE 2: Transmittal Form (always view mode)                     */}
         {/* ================================================================ */}
         <div className="bg-gray-100 rounded-2xl p-6">
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-3 text-center">
@@ -458,62 +330,22 @@ export default function PreviewCoverPage() {
             <div className="px-8 py-4 grid grid-cols-2 gap-x-8 gap-y-2 border-b">
               {/* Left column */}
               <div className="space-y-2">
-                {editing ? (
-                  <>
-                    <FieldEdit label="Project Name" value={editName} onChange={setEditName} />
-                    <FieldEdit label="Job Number" value={editJobId} onChange={setEditJobId} />
-                    <FieldEdit label="Owner" value={editOwner} onChange={setEditOwner} />
-                    <FieldEdit label="Customer" value={editCustomerId} onChange={setEditCustomerId} />
-                  </>
-                ) : (
-                  <>
-                    <FieldDisplay label="Project Name" value={project.name} />
-                    <FieldDisplay label="Job Number" value={project.jobId} />
-                    <FieldDisplay label="Owner" value={project.owner ?? ""} />
-                    <FieldDisplay label="Customer" value={project.customerId ?? ""} />
-                  </>
-                )}
+                <FieldDisplay label="Project Name" value={project.name} />
+                <FieldDisplay label="Job Number" value={project.jobId} />
+                <FieldDisplay label="Owner" value={project.owner ?? ""} />
+                <FieldDisplay label="Customer" value={project.customerId ?? ""} />
               </div>
 
               {/* Right column */}
               <div className="space-y-2">
                 <FieldDisplay label="ACCO Transmittal #" value={accoTransmittalNumber} />
-                {editing ? (
-                  <>
-                    <FieldEdit
-                      label="Transmittal Date"
-                      value={transmittalDate}
-                      onChange={setTransmittalDate}
-                      type="date"
-                    />
-                    <FieldEdit
-                      label="Revision #"
-                      value={editRevisionNumber}
-                      onChange={setEditRevisionNumber}
-                    />
-                    <FieldEdit
-                      label="Revision Date"
-                      value={editRevisedDate}
-                      onChange={setEditRevisedDate}
-                      type="date"
-                    />
-                    <FieldEdit
-                      label="Submitted By"
-                      value={submittedBy}
-                      onChange={setSubmittedBy}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <FieldDisplay label="Transmittal Date" value={new Date(transmittalDate).toLocaleDateString()} />
-                    <FieldDisplay label="Revision #" value={project.revisionNumber ?? ""} />
-                    <FieldDisplay
-                      label="Revision Date"
-                      value={project.revisedDate ? new Date(project.revisedDate).toLocaleDateString() : ""}
-                    />
-                    <FieldDisplay label="Submitted By" value={submittedBy || pmName} />
-                  </>
-                )}
+                <FieldDisplay label="Transmittal Date" value={new Date(transmittalDate).toLocaleDateString()} />
+                <FieldDisplay label="Revision #" value={project.revisionNumber ?? ""} />
+                <FieldDisplay
+                  label="Revision Date"
+                  value={project.revisedDate ? new Date(project.revisedDate).toLocaleDateString() : ""}
+                />
+                <FieldDisplay label="Submitted By" value={submittedBy || pmName} />
               </div>
             </div>
 
@@ -522,18 +354,9 @@ export default function PreviewCoverPage() {
               <p className="text-[10px] font-bold text-[#003366] uppercase tracking-wider mb-2">
                 Description
               </p>
-              {editing ? (
-                <Textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter submittal description..."
-                  className="min-h-[80px] text-sm bg-yellow-50/60 border-yellow-300"
-                />
-              ) : (
-                <div className="min-h-[60px] border rounded-md p-3 text-sm text-gray-700 bg-gray-50">
-                  {description || <span className="text-gray-400 italic">No description provided</span>}
-                </div>
-              )}
+              <div className="min-h-[60px] border rounded-md p-3 text-sm text-gray-700 bg-gray-50">
+                {description || <span className="text-gray-400 italic">No description provided</span>}
+              </div>
             </div>
 
             {/* Submitted For + Known Substitutions */}
@@ -546,7 +369,7 @@ export default function PreviewCoverPage() {
                   <RadioGroup
                     value={submittedFor}
                     onValueChange={setSubmittedFor}
-                    disabled={!editing}
+                    disabled
                     className="space-y-1.5"
                   >
                     {[
@@ -571,7 +394,7 @@ export default function PreviewCoverPage() {
                   <RadioGroup
                     value={knownSubstitutions}
                     onValueChange={setKnownSubstitutions}
-                    disabled={!editing}
+                    disabled
                     className="flex items-center gap-4"
                   >
                     <div className="flex items-center gap-2">
@@ -592,18 +415,9 @@ export default function PreviewCoverPage() {
               <p className="text-[10px] font-bold text-[#003366] uppercase tracking-wider mb-2">
                 Notes
               </p>
-              {editing ? (
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Enter notes..."
-                  className="min-h-[80px] text-sm bg-yellow-50/60 border-yellow-300"
-                />
-              ) : (
-                <div className="min-h-[60px] border rounded-md p-3 text-sm text-gray-700 bg-gray-50">
-                  {notes || <span className="text-gray-400 italic">No notes</span>}
-                </div>
-              )}
+              <div className="min-h-[60px] border rounded-md p-3 text-sm text-gray-700 bg-gray-50">
+                {notes || <span className="text-gray-400 italic">No notes</span>}
+              </div>
             </div>
 
             {/* Review Status */}
@@ -613,7 +427,7 @@ export default function PreviewCoverPage() {
                   <RadioGroup
                     value={reviewStatus}
                     onValueChange={setReviewStatus}
-                    disabled={!editing}
+                    disabled
                     className="flex items-center gap-4"
                   >
                     {[
@@ -632,34 +446,17 @@ export default function PreviewCoverPage() {
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4 mt-3">
-                {editing ? (
-                  <>
-                    <FieldEdit label="Reviewed By" value={reviewedBy} onChange={setReviewedBy} />
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                        Signature
-                      </p>
-                      <div className="h-8 border border-dashed border-gray-300 rounded bg-gray-50 flex items-center justify-center">
-                        <span className="text-[10px] text-gray-400">Digital signature</span>
-                      </div>
-                    </div>
-                    <FieldEdit label="Date" value={reviewDate} onChange={setReviewDate} type="date" />
-                  </>
-                ) : (
-                  <>
-                    <FieldDisplay label="Reviewed By" value={reviewedBy} />
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">
-                        Signature
-                      </p>
-                      <div className="h-8 border border-dashed border-gray-300 rounded bg-gray-50" />
-                    </div>
-                    <FieldDisplay
-                      label="Date"
-                      value={reviewDate ? new Date(reviewDate).toLocaleDateString() : ""}
-                    />
-                  </>
-                )}
+                <FieldDisplay label="Reviewed By" value={reviewedBy} />
+                <div>
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">
+                    Signature
+                  </p>
+                  <div className="h-8 border border-dashed border-gray-300 rounded bg-gray-50" />
+                </div>
+                <FieldDisplay
+                  label="Date"
+                  value={reviewDate ? new Date(reviewDate).toLocaleDateString() : ""}
+                />
               </div>
             </div>
 
@@ -675,11 +472,7 @@ export default function PreviewCoverPage() {
                       {role}
                     </p>
                     <div className="h-20 border-2 border-gray-300 rounded-md bg-gray-50 flex items-center justify-center">
-                      {editing ? (
-                        <span className="text-[10px] text-gray-400">Click to add stamp</span>
-                      ) : (
-                        <span className="text-[10px] text-gray-300">—</span>
-                      )}
+                      <span className="text-[10px] text-gray-300">&mdash;</span>
                     </div>
                   </div>
                 ))}
@@ -715,6 +508,207 @@ export default function PreviewCoverPage() {
           </Button>
         </div>
       </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/*  Edit Project Details — Right-side Sheet                            */}
+      {/* ------------------------------------------------------------------ */}
+      <Sheet open={editSheetOpen} onOpenChange={setEditSheetOpen}>
+        <SheetContent side="right" className="w-[420px] sm:w-[460px] flex flex-col p-0">
+          <SheetHeader className="px-6 py-4 border-b shrink-0">
+            <SheetTitle className="text-base">Edit Project Details</SheetTitle>
+          </SheetHeader>
+
+          <ScrollArea className="flex-1 px-6 py-5">
+            <div className="space-y-6">
+              {/* Section: Project Information */}
+              <div className="space-y-4">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Project Information</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Project Name</label>
+                    <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Location</label>
+                    <Input value={editLocation} onChange={(e) => setEditLocation(e.target.value)} className="h-9" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Job ID</label>
+                    <Input value={editJobId} onChange={(e) => setEditJobId(e.target.value)} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Project Manager</label>
+                    <Select
+                      value={editProjectManager}
+                      onValueChange={(v) => {
+                        setEditProjectManager(v);
+                        if (v !== "__custom__") setEditProjectManagerCustom("");
+                      }}
+                    >
+                      <SelectTrigger className="h-9 w-full">
+                        <SelectValue placeholder="Select PM" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {mockUsers.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                        ))}
+                        <SelectItem value="__custom__">Custom (External PM)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {editProjectManager === "__custom__" && (
+                      <Input
+                        placeholder="Enter PM name"
+                        value={editProjectManagerCustom}
+                        onChange={(e) => setEditProjectManagerCustom(e.target.value)}
+                        className="h-9 mt-1.5"
+                      />
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Owner</label>
+                    <Input value={editOwner} onChange={(e) => setEditOwner(e.target.value)} placeholder="Owner name" className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Architect</label>
+                    <Input value={editArchitect} onChange={(e) => setEditArchitect(e.target.value)} placeholder="Architect name" className="h-9" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Engineer</label>
+                    <Input value={editEngineer} onChange={(e) => setEditEngineer(e.target.value)} placeholder="Engineer name" className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Customer ID</label>
+                    <Input value={editCustomerId} onChange={(e) => setEditCustomerId(e.target.value)} placeholder="Manual entry" className="h-9" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Revised Date</label>
+                    <Input type="date" value={editRevisedDate} onChange={(e) => setEditRevisedDate(e.target.value)} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Revision #</label>
+                    <Input value={editRevisionNumber} onChange={(e) => setEditRevisionNumber(e.target.value)} placeholder="e.g. 3" className="h-9" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-border/50" />
+
+              {/* Section: Transmittal Details */}
+              <div className="space-y-4">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Transmittal Details</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Transmittal Date</label>
+                    <Input type="date" value={transmittalDate} onChange={(e) => setTransmittalDate(e.target.value)} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Submitted By</label>
+                    <Input value={submittedBy} onChange={(e) => setSubmittedBy(e.target.value)} placeholder="Name" className="h-9" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Description</label>
+                  <Textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Enter submittal description..."
+                    className="min-h-[80px] text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Notes</label>
+                  <Textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Enter notes..."
+                    className="min-h-[80px] text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-border/50" />
+
+              {/* Section: Review */}
+              <div className="space-y-4">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Review</p>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Submitted For</label>
+                  <Select value={submittedFor} onValueChange={setSubmittedFor}>
+                    <SelectTrigger className="h-9 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="review_approval">Review & Approval</SelectItem>
+                      <SelectItem value="information">Information</SelectItem>
+                      <SelectItem value="review_comment">Review & Comment</SelectItem>
+                      <SelectItem value="record_only">Record Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Known Substitutions</label>
+                  <Select value={knownSubstitutions} onValueChange={setKnownSubstitutions}>
+                    <SelectTrigger className="h-9 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="no">No</SelectItem>
+                      <SelectItem value="yes">Yes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Review Status</label>
+                    <Select value={reviewStatus} onValueChange={setReviewStatus}>
+                      <SelectTrigger className="h-9 w-full">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="approved_as_noted">Approved as Noted</SelectItem>
+                        <SelectItem value="not_approved">Not Approved</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Reviewed By</label>
+                    <Input value={reviewedBy} onChange={(e) => setReviewedBy(e.target.value)} placeholder="Reviewer name" className="h-9" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Review Date</label>
+                    <Input type="date" value={reviewDate} onChange={(e) => setReviewDate(e.target.value)} className="h-9" />
+                  </div>
+                  <div />
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+
+          {/* Sticky footer */}
+          <div className="border-t px-6 py-4 flex items-center gap-2 shrink-0 bg-background">
+            <Button size="sm" onClick={saveEdit} className="gap-1.5">
+              <Save className="h-3.5 w-3.5" />
+              Save Changes
+            </Button>
+            <Button variant="ghost" size="sm" onClick={cancelEdit}>
+              Cancel
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

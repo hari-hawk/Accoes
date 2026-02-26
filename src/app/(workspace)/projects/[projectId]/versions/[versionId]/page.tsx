@@ -1243,13 +1243,15 @@ export default function VersionOverviewPage() {
               {/* Section: Project Information */}
               <div className="space-y-4">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Project Information</p>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Project Name</label>
-                  <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="h-9" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Company / Client</label>
-                  <Input value={editClient} onChange={(e) => setEditClient(e.target.value)} className="h-9" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Project Name</label>
+                    <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Company / Client</label>
+                    <Input value={editClient} onChange={(e) => setEditClient(e.target.value)} className="h-9" />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
@@ -1265,7 +1267,7 @@ export default function VersionOverviewPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground">Status</label>
                     <Select value={editStatus} onValueChange={(v) => setEditStatus(v as ProjectStatus)}>
-                      <SelectTrigger className="h-9">
+                      <SelectTrigger className="h-9 w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1278,7 +1280,7 @@ export default function VersionOverviewPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground">Priority</label>
                     <Select value={editPriority} onValueChange={(v) => setEditPriority(v as "high" | "medium" | "low")}>
-                      <SelectTrigger className="h-9">
+                      <SelectTrigger className="h-9 w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1293,7 +1295,7 @@ export default function VersionOverviewPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground">Project Type</label>
                     <Select value={editProjectType} onValueChange={(v) => setEditProjectType(v as ProjectType)}>
-                      <SelectTrigger className="h-9">
+                      <SelectTrigger className="h-9 w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1311,7 +1313,7 @@ export default function VersionOverviewPage() {
                         if (v !== "__custom__") setEditProjectManagerCustom("");
                       }}
                     >
-                      <SelectTrigger className="h-9">
+                      <SelectTrigger className="h-9 w-full">
                         <SelectValue placeholder="Select PM" />
                       </SelectTrigger>
                       <SelectContent>

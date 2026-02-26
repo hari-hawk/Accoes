@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   BookOpen,
   Download,
-  Printer,
   ArrowLeft,
   FileText,
   Loader2,
@@ -542,10 +541,6 @@ export default function SubmittalBinderPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-1.5 h-8">
-              <Printer className="h-3.5 w-3.5" />
-              Print
-            </Button>
             <Button size="sm" className="gap-1.5 h-8 gradient-action text-white border-0">
               <Download className="h-3.5 w-3.5" />
               Export PDF

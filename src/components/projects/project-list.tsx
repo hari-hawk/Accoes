@@ -335,14 +335,6 @@ function ProjectListRow({
 }) {
   const router = useRouter();
   const confidence = project.confidenceSummary.overallConfidence;
-  const confidenceColor =
-    confidence >= 80
-      ? "text-status-pre-approved"
-      : confidence >= 60
-        ? "text-status-review-required"
-        : confidence > 0
-          ? "text-status-action-mandatory"
-          : "text-muted-foreground";
 
   const hasVersions = !!project.latestVersionId;
   const overviewHref = `/projects/${project.id}/versions/${project.latestVersionId}`;
@@ -398,7 +390,7 @@ function ProjectListRow({
 
       {/* Confidence */}
       <div className="shrink-0 w-16 text-right">
-        <span className={`text-sm font-medium ${confidenceColor}`} aria-label={confidence > 0 ? `${confidence}% confidence` : "Pending"}>
+        <span className={`text-sm font-medium ${confidence > 0 ? "text-foreground" : "text-muted-foreground"}`} aria-label={confidence > 0 ? `${confidence}% confidence` : "Pending"}>
           {confidence > 0 ? `${confidence}%` : "—"}
         </span>
       </div>
@@ -461,17 +453,11 @@ function ProjectListRow({
 /*  Download Report Sheet (Right-side panel)                                   */
 /* -------------------------------------------------------------------------- */
 
-/** Score chip for report items — displays "PS: 98%" or "PI: 74%" with color coding */
+/** Score chip for report items — displays "PS: 98%" or "PI: 74%" in neutral style */
 function ReportScoreChip({ label, score }: { label: string; score: number | undefined }) {
   if (score === undefined) return null;
-  const color =
-    score >= 80
-      ? "bg-status-pre-approved-bg text-status-pre-approved"
-      : score >= 60
-        ? "bg-status-review-required-bg text-status-review-required"
-        : "bg-status-action-mandatory-bg text-status-action-mandatory";
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-bold tabular-nums", color)}>
+    <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-muted-foreground">
       {label}: {score}%
     </span>
   );

@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   Download,
   Loader2,
-  MapPin,
   TrendingUp,
   CheckCircle2,
   AlertTriangle,
@@ -45,23 +44,6 @@ export function ProjectCard({
   onDownloadReport?: (project: Project) => void;
 }) {
   const { overallConfidence: confidence, preApproved, reviewRequired, actionMandatory, total } = project.confidenceSummary;
-  const confidenceColor =
-    confidence >= 80
-      ? "text-status-pre-approved"
-      : confidence >= 60
-        ? "text-status-review-required"
-        : confidence > 0
-          ? "text-status-action-mandatory"
-          : "text-muted-foreground";
-
-  const barColor =
-    confidence >= 80
-      ? "bg-status-pre-approved"
-      : confidence >= 60
-        ? "bg-status-review-required"
-        : confidence > 0
-          ? "bg-status-action-mandatory"
-          : "bg-muted";
 
   const hasVersions = !!project.latestVersionId;
 
@@ -130,89 +112,53 @@ export function ProjectCard({
           </div>
         </div>
 
-        {/* Row 2: Confidence + Stacked Segment Bar */}
+        {/* Row 2: Confidence + Progress Bar */}
         <div className="mt-2.5" aria-label={`Confidence: ${confidence > 0 ? `${confidence}%` : "Pending"}`}>
           <div className="flex items-center justify-between text-xs mb-1.5">
             <span className="text-muted-foreground font-medium flex items-center gap-1">
               <TrendingUp className="h-3 w-3" aria-hidden="true" />
               Confidence
             </span>
-            <span className={cn("font-bold text-xs", isExtracting ? "text-amber-600 dark:text-amber-400" : confidenceColor)}>
+            <span className={cn("font-bold text-xs", isExtracting ? "text-amber-600 dark:text-amber-400" : "text-foreground")}>
               {isExtracting ? "Extracting..." : confidence > 0 ? `${confidence}%` : "Pending"}
             </span>
           </div>
-          {/* Stacked segment bar — shows pre-approved / review / action breakdown */}
-          <div className="h-2.5 rounded-full bg-muted overflow-hidden flex" role="progressbar" aria-valuenow={confidence} aria-valuemin={0} aria-valuemax={100}>
+          {/* Single-fill progress bar */}
+          <div className="h-2.5 rounded-full bg-muted overflow-hidden" role="progressbar" aria-valuenow={confidence} aria-valuemin={0} aria-valuemax={100}>
             {isExtracting ? (
               <div className="h-full w-1/3 bg-amber-400 dark:bg-amber-500 rounded-full animate-indeterminate" />
-            ) : total > 0 ? (
-              <>
-                {preApproved > 0 && (
-                  <div
-                    className={cn(
-                      "h-full bg-status-pre-approved transition-all duration-500",
-                      reviewRequired === 0 && actionMandatory === 0 && "rounded-r-full"
-                    )}
-                    style={{ width: `${(preApproved / total) * 100}%` }}
-                    title={`${preApproved} Pre-Approved`}
-                  />
-                )}
-                {reviewRequired > 0 && (
-                  <div
-                    className={cn(
-                      "h-full bg-status-review-required transition-all duration-500",
-                      preApproved === 0 && "rounded-l-full",
-                      actionMandatory === 0 && "rounded-r-full"
-                    )}
-                    style={{ width: `${(reviewRequired / total) * 100}%` }}
-                    title={`${reviewRequired} Review Required`}
-                  />
-                )}
-                {actionMandatory > 0 && (
-                  <div
-                    className={cn(
-                      "h-full bg-status-action-mandatory transition-all duration-500",
-                      preApproved === 0 && reviewRequired === 0 && "rounded-l-full",
-                      "rounded-r-full"
-                    )}
-                    style={{ width: `${(actionMandatory / total) * 100}%` }}
-                    title={`${actionMandatory} Action Mandatory`}
-                  />
-                )}
-              </>
+            ) : confidence > 0 ? (
+              <div
+                className="h-full bg-nav-accent rounded-full transition-all duration-500"
+                style={{ width: `${confidence}%` }}
+                title={`${confidence}% overall confidence`}
+              />
             ) : null}
           </div>
         </div>
 
-        {/* Row 3: Colored pill badges + Avatar stack */}
+        {/* Row 3: Status counts + Avatar stack */}
         <div className="mt-2.5 flex items-center justify-between">
           <div className="flex items-center gap-1.5 flex-wrap" aria-label="Validation breakdown">
             {isExtracting ? (
               <span className="text-xs text-muted-foreground italic">Processing documents…</span>
-            ) : (
+            ) : total > 0 ? (
               <>
-                {preApproved > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-status-pre-approved-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-pre-approved" aria-label={`${preApproved} pre-approved`}>
-                    <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
-                    {preApproved}
-                  </span>
-                )}
-                {reviewRequired > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-status-review-required-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-review-required" aria-label={`${reviewRequired} review required`}>
-                    <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
-                    {reviewRequired}
-                  </span>
-                )}
-                {actionMandatory > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-status-action-mandatory-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-action-mandatory" aria-label={`${actionMandatory} action mandatory`}>
-                    <XCircle className="h-2.5 w-2.5" aria-hidden="true" />
-                    {actionMandatory}
-                  </span>
-                )}
-                {total === 0 && (
-                  <span className="text-[10px] text-muted-foreground italic">No documents</span>
-                )}
+                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground" aria-label={`${preApproved} pre-approved`}>
+                  <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
+                  {preApproved}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground" aria-label={`${reviewRequired} review required`}>
+                  <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
+                  {reviewRequired}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground" aria-label={`${actionMandatory} action mandatory`}>
+                  <XCircle className="h-2.5 w-2.5" aria-hidden="true" />
+                  {actionMandatory}
+                </span>
               </>
+            ) : (
+              <span className="text-[10px] text-muted-foreground italic">No documents</span>
             )}
           </div>
           <AvatarGroup>

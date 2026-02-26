@@ -274,9 +274,8 @@ function ExpandedEntryContent({
 }) {
   return (
     <div className="animate-accordion-down overflow-hidden">
-      <div className="bg-muted/40 border-t border-l-2 border-l-nav-accent/40 px-4 py-3 space-y-3">
-        {/* Row 1–2: Core specification fields — 3 columns */}
-        <div className="grid grid-cols-3 gap-x-6 gap-y-2">
+      <div className="bg-muted/40 border-t border-l-2 border-l-nav-accent/40 px-4 py-3">
+        <div className="grid grid-cols-4 gap-x-6 gap-y-2">
           <div>
             <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Index ID</span>
             <p className="text-xs font-mono text-ds-neutral-900">{entry.indexIdFull}</p>
@@ -301,10 +300,6 @@ function ExpandedEntryContent({
             <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Material</span>
             <p className="text-xs text-ds-neutral-900">{entry.materialCategory}</p>
           </div>
-        </div>
-
-        {/* Row 3: Matrix boolean fields — 5 columns */}
-        <div className="grid grid-cols-5 gap-x-6 gap-y-2 pt-1 border-t border-border/30">
           <div>
             <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">From Matrix</span>
             <p className="text-xs text-ds-neutral-900">{String(entry.fromMatrix).toUpperCase()}</p>
@@ -318,7 +313,7 @@ function ExpandedEntryContent({
             <p className="text-xs text-ds-neutral-900">{String(entry.manualEntry).toUpperCase()}</p>
           </div>
           <div>
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Non Matrix Description or Ftg Mfr</span>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Non Matrix Desc/Ftg Mfr</span>
             <p className="text-xs text-ds-neutral-900">{String(entry.nonMatrixDescOrFtgMfrEdited).toUpperCase()}</p>
           </div>
           <div>

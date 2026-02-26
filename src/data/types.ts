@@ -81,6 +81,19 @@ export interface Project {
   confidenceSummary: ConfidenceSummary;
   stage: ProjectStage;
   projectType: ProjectType;
+  // Project stakeholders
+  projectManager: string;          // User ID or "__custom__" for external PM
+  projectManagerCustom?: string;   // Custom name when projectManager === "__custom__"
+  owner?: string;                  // Building/project owner name
+  ownerCompany?: string;           // Owner's company/organization
+  architect?: string;              // Architect name
+  architectCompany?: string;       // Architect's firm
+  engineer?: string;               // Engineer name
+  engineerCompany?: string;        // Engineer's firm
+  // Additional metadata
+  revisedDate?: string;            // ISO date string
+  revisionNumber?: string;         // e.g. "3", "Rev A"
+  customerId?: string;             // Manual entry customer reference ID
 }
 
 export interface ProcessingLogEntry {

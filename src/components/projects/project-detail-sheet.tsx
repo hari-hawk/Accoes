@@ -23,6 +23,8 @@ import {
   Crown,
   ArrowRightLeft,
   Layers,
+  User,
+  Hash,
   BookOpen,
   Eye,
   Download,
@@ -414,6 +416,17 @@ export function ProjectDetailSheet({
   const [editJobId, setEditJobId] = useState("");
   const [editLocation, setEditLocation] = useState("");
   const [editStatus, setEditStatus] = useState<ProjectStatus>("in_progress");
+  const [editProjectManager, setEditProjectManager] = useState("");
+  const [editProjectManagerCustom, setEditProjectManagerCustom] = useState("");
+  const [editOwner, setEditOwner] = useState("");
+  const [editOwnerCompany, setEditOwnerCompany] = useState("");
+  const [editArchitect, setEditArchitect] = useState("");
+  const [editArchitectCompany, setEditArchitectCompany] = useState("");
+  const [editEngineer, setEditEngineer] = useState("");
+  const [editEngineerCompany, setEditEngineerCompany] = useState("");
+  const [editRevisedDate, setEditRevisedDate] = useState("");
+  const [editRevisionNumber, setEditRevisionNumber] = useState("");
+  const [editCustomerId, setEditCustomerId] = useState("");
   const [activityFilter, setActivityFilter] = useState("3d");
   const [previewSpec, setPreviewSpec] = useState<typeof mockSpecFiles[number] | null>(null);
   const [selectedMatrixIds, setSelectedMatrixIds] = useState<Set<string>>(new Set());
@@ -445,6 +458,17 @@ export function ProjectDetailSheet({
     setEditJobId(project.jobId);
     setEditLocation(project.location);
     setEditStatus(project.status);
+    setEditProjectManager(project.projectManager);
+    setEditProjectManagerCustom(project.projectManagerCustom ?? "");
+    setEditOwner(project.owner ?? "");
+    setEditOwnerCompany(project.ownerCompany ?? "");
+    setEditArchitect(project.architect ?? "");
+    setEditArchitectCompany(project.architectCompany ?? "");
+    setEditEngineer(project.engineer ?? "");
+    setEditEngineerCompany(project.engineerCompany ?? "");
+    setEditRevisedDate(project.revisedDate ?? "");
+    setEditRevisionNumber(project.revisionNumber ?? "");
+    setEditCustomerId(project.customerId ?? "");
     setEditing(true);
     setShowShare(false);
   };
@@ -619,6 +643,72 @@ export function ProjectDetailSheet({
                       </Select>
                     </div>
                   </div>
+                  {/* Project Manager */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Project Manager
+                    </label>
+                    <Select
+                      value={editProjectManager}
+                      onValueChange={(v) => {
+                        setEditProjectManager(v);
+                        if (v !== "__custom__") setEditProjectManagerCustom("");
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select PM" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {mockUsers.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.name}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="__custom__">Custom (External PM)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {editProjectManager === "__custom__" && (
+                      <Input
+                        placeholder="Enter PM name"
+                        value={editProjectManagerCustom}
+                        onChange={(e) => setEditProjectManagerCustom(e.target.value)}
+                        className="mt-1"
+                      />
+                    )}
+                  </div>
+                  {/* Stakeholder contacts — 2-col grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Owner</label>
+                      <Input value={editOwner} onChange={(e) => setEditOwner(e.target.value)} placeholder="Owner name" />
+                      <Input value={editOwnerCompany} onChange={(e) => setEditOwnerCompany(e.target.value)} placeholder="Company" className="text-xs h-8" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Architect</label>
+                      <Input value={editArchitect} onChange={(e) => setEditArchitect(e.target.value)} placeholder="Architect name" />
+                      <Input value={editArchitectCompany} onChange={(e) => setEditArchitectCompany(e.target.value)} placeholder="Firm" className="text-xs h-8" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Engineer</label>
+                      <Input value={editEngineer} onChange={(e) => setEditEngineer(e.target.value)} placeholder="Engineer name" />
+                      <Input value={editEngineerCompany} onChange={(e) => setEditEngineerCompany(e.target.value)} placeholder="Firm" className="text-xs h-8" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Customer ID</label>
+                      <Input value={editCustomerId} onChange={(e) => setEditCustomerId(e.target.value)} placeholder="Manual entry" />
+                    </div>
+                  </div>
+                  {/* Dates */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Revised Date</label>
+                      <Input type="date" value={editRevisedDate} onChange={(e) => setEditRevisedDate(e.target.value)} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Revision #</label>
+                      <Input value={editRevisionNumber} onChange={(e) => setEditRevisionNumber(e.target.value)} placeholder="e.g. 3" />
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2 pt-2">
                     <Button size="sm" onClick={saveEdit} className="gap-1.5">
                       <Save className="h-3.5 w-3.5" />
@@ -669,23 +759,71 @@ export function ProjectDetailSheet({
                       <span>{members.length} members</span>
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <span
-                        className={cn(
-                          "font-bold",
-                          project.confidenceSummary.overallConfidence >= 80
-                            ? "text-status-pre-approved"
-                            : project.confidenceSummary.overallConfidence >= 60
-                              ? "text-status-review-required"
-                              : project.confidenceSummary.overallConfidence > 0
-                                ? "text-status-action-mandatory"
-                                : "text-muted-foreground"
-                        )}
-                      >
+                      <span className="font-bold text-foreground">
                         {project.confidenceSummary.overallConfidence > 0
                           ? `${project.confidenceSummary.overallConfidence}% confidence`
                           : "Pending"}
                       </span>
                     </div>
+                    {/* Project Manager */}
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <User className="h-3.5 w-3.5" />
+                      <span>
+                        PM:{" "}
+                        {project.projectManager === "__custom__"
+                          ? project.projectManagerCustom ?? "—"
+                          : mockUsers.find((u) => u.id === project.projectManager)?.name ?? "—"}
+                      </span>
+                    </div>
+                    {/* Owner */}
+                    {project.owner && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Building2 className="h-3.5 w-3.5" />
+                        <span className="truncate">
+                          Owner: {project.owner}
+                          {project.ownerCompany ? ` (${project.ownerCompany})` : ""}
+                        </span>
+                      </div>
+                    )}
+                    {/* Architect */}
+                    {project.architect && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Building2 className="h-3.5 w-3.5" />
+                        <span className="truncate">
+                          Architect: {project.architect}
+                          {project.architectCompany ? ` (${project.architectCompany})` : ""}
+                        </span>
+                      </div>
+                    )}
+                    {/* Engineer */}
+                    {project.engineer && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Building2 className="h-3.5 w-3.5" />
+                        <span className="truncate">
+                          Engineer: {project.engineer}
+                          {project.engineerCompany ? ` (${project.engineerCompany})` : ""}
+                        </span>
+                      </div>
+                    )}
+                    {/* Revised Date + Revision # */}
+                    {(project.revisedDate || project.revisionNumber) && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>
+                          {project.revisedDate
+                            ? `Revised ${new Date(project.revisedDate).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}`
+                            : ""}
+                          {project.revisionNumber ? ` (Rev ${project.revisionNumber})` : ""}
+                        </span>
+                      </div>
+                    )}
+                    {/* Customer ID */}
+                    {project.customerId && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Hash className="h-3.5 w-3.5" />
+                        <span>Customer: {project.customerId}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

@@ -756,7 +756,6 @@ export default function VersionOverviewPage() {
   const [editLocation, setEditLocation] = useState("");
   const [editStatus, setEditStatus] = useState<ProjectStatus>("in_progress");
   const [editProjectManager, setEditProjectManager] = useState("");
-  const [editProjectManagerCustom, setEditProjectManagerCustom] = useState("");
   const [editOwner, setEditOwner] = useState("");
   const [editArchitect, setEditArchitect] = useState("");
   const [editEngineer, setEditEngineer] = useState("");
@@ -777,8 +776,11 @@ export default function VersionOverviewPage() {
     setEditStatus(project.status);
     setEditPriority(project.priority);
     setEditProjectType(project.projectType);
-    setEditProjectManager(project.projectManager);
-    setEditProjectManagerCustom(project.projectManagerCustom ?? "");
+    setEditProjectManager(
+      project.projectManager === "__custom__"
+        ? project.projectManagerCustom ?? ""
+        : mockUsers.find((u) => u.id === project.projectManager)?.name ?? ""
+    );
     setEditOwner(project.owner ?? "");
     setEditArchitect(project.architect ?? "");
     setEditEngineer(project.engineer ?? "");
@@ -1306,31 +1308,12 @@ export default function VersionOverviewPage() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground">Project Manager</label>
-                    <Select
+                    <Input
                       value={editProjectManager}
-                      onValueChange={(v) => {
-                        setEditProjectManager(v);
-                        if (v !== "__custom__") setEditProjectManagerCustom("");
-                      }}
-                    >
-                      <SelectTrigger className="h-9 w-full">
-                        <SelectValue placeholder="Select PM" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockUsers.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                        ))}
-                        <SelectItem value="__custom__">Custom (External PM)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {editProjectManager === "__custom__" && (
-                      <Input
-                        placeholder="Enter PM name"
-                        value={editProjectManagerCustom}
-                        onChange={(e) => setEditProjectManagerCustom(e.target.value)}
-                        className="h-9 mt-1.5"
-                      />
-                    )}
+                      onChange={(e) => setEditProjectManager(e.target.value)}
+                      placeholder="Enter project manager name"
+                      className="h-9"
+                    />
                   </div>
                 </div>
               </div>

@@ -63,13 +63,20 @@ function getActiveMilestone(pathname: string): string {
 }
 
 /** Determine the completion index — milestones up to this index are "completed" */
-function getCompletedIndex(currentStage: WorkflowStage): number {
-  // Overview is always accessible (complete as soon as you enter the project)
-  // Conformance is accessible at "review" or "export" stage
-  // Preview Cover Page + Submittal Binder are accessible at "export" stage
-  if (currentStage === "export") return 3; // first three completed, submittal binder is the final step
-  if (currentStage === "review") return 1; // overview completed, conformance active
-  return 0; // only overview
+function getCompletedIndex(currentStage: WorkflowStage, pathname: string): number {
+  // Stage-based completion (from backend workflow state)
+  let stageIndex = 0;
+  if (currentStage === "export") stageIndex = 3;
+  else if (currentStage === "review") stageIndex = 1;
+
+  // Path-based completion — navigating forward marks previous as complete
+  let pathIndex = 0;
+  if (pathname.includes("/submittal-binder")) pathIndex = 3;
+  else if (pathname.includes("/preview-cover")) pathIndex = 2;
+  else if (pathname.includes("/review") || pathname.includes("/processing")) pathIndex = 1;
+
+  // Whichever is higher wins — ensures the bar never regresses
+  return Math.max(stageIndex, pathIndex);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -88,7 +95,7 @@ export function MilestoneProgressBar({
   const pathname = usePathname();
   const base = `/projects/${projectId}/versions/${versionId}`;
   const activeMilestone = getActiveMilestone(pathname);
-  const completedUpTo = getCompletedIndex(currentStage);
+  const completedUpTo = getCompletedIndex(currentStage, pathname);
 
   return (
     <nav

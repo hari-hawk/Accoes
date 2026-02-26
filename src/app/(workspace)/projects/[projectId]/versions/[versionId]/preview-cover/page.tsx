@@ -81,15 +81,7 @@ export default function PreviewCoverPage() {
                     <p className="text-muted-foreground text-xs mb-0.5">
                       Owner
                     </p>
-                    <p className="font-medium">
-                      {project.owner}
-                      {project.ownerCompany && (
-                        <span className="text-muted-foreground font-normal">
-                          {" "}
-                          — {project.ownerCompany}
-                        </span>
-                      )}
-                    </p>
+                    <p className="font-medium">{project.owner}</p>
                   </div>
                 )}
                 {project.architect && (
@@ -97,15 +89,7 @@ export default function PreviewCoverPage() {
                     <p className="text-muted-foreground text-xs mb-0.5">
                       Architect
                     </p>
-                    <p className="font-medium">
-                      {project.architect}
-                      {project.architectCompany && (
-                        <span className="text-muted-foreground font-normal">
-                          {" "}
-                          — {project.architectCompany}
-                        </span>
-                      )}
-                    </p>
+                    <p className="font-medium">{project.architect}</p>
                   </div>
                 )}
                 {project.engineer && (
@@ -113,15 +97,7 @@ export default function PreviewCoverPage() {
                     <p className="text-muted-foreground text-xs mb-0.5">
                       Engineer
                     </p>
-                    <p className="font-medium">
-                      {project.engineer}
-                      {project.engineerCompany && (
-                        <span className="text-muted-foreground font-normal">
-                          {" "}
-                          — {project.engineerCompany}
-                        </span>
-                      )}
-                    </p>
+                    <p className="font-medium">{project.engineer}</p>
                   </div>
                 )}
                 {project.customerId && (

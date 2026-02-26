@@ -28,10 +28,25 @@ import {
   Eye,
   History,
   Lock,
+  Pencil,
+  Save,
+  Building2,
+  MapPin,
+  Briefcase,
+  User,
+  Hash,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -44,8 +59,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWorkspace } from "@/providers/workspace-provider";
 import { FullScreenPdfViewer } from "@/components/documents/full-screen-pdf-viewer";
 import { FileUploadCard } from "@/components/projects/file-upload-card";
+import { mockUsers } from "@/data/mock-users";
 import { formatPercentage } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import type { ProjectStatus } from "@/data/types";
 
 /* -------------------------------------------------------------------------- */
 /*  Constants                                                                   */
@@ -724,6 +741,54 @@ export default function VersionOverviewPage() {
   // PDF preview state for Project Specifications
   const [previewSpec, setPreviewSpec] = useState<typeof mockProjectSpecs[number] | null>(null);
 
+  // Inline edit state for Project Details
+  const [detailEditing, setDetailEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editClient, setEditClient] = useState("");
+  const [editJobId, setEditJobId] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editStatus, setEditStatus] = useState<ProjectStatus>("in_progress");
+  const [editProjectManager, setEditProjectManager] = useState("");
+  const [editProjectManagerCustom, setEditProjectManagerCustom] = useState("");
+  const [editOwner, setEditOwner] = useState("");
+  const [editArchitect, setEditArchitect] = useState("");
+  const [editEngineer, setEditEngineer] = useState("");
+  const [editRevisedDate, setEditRevisedDate] = useState("");
+  const [editRevisionNumber, setEditRevisionNumber] = useState("");
+  const [editCustomerId, setEditCustomerId] = useState("");
+
+  const startDetailEdit = () => {
+    setEditName(project.name);
+    setEditClient(project.client);
+    setEditJobId(project.jobId);
+    setEditLocation(project.location);
+    setEditStatus(project.status);
+    setEditProjectManager(project.projectManager);
+    setEditProjectManagerCustom(project.projectManagerCustom ?? "");
+    setEditOwner(project.owner ?? "");
+    setEditArchitect(project.architect ?? "");
+    setEditEngineer(project.engineer ?? "");
+    setEditRevisedDate(project.revisedDate ?? "");
+    setEditRevisionNumber(project.revisionNumber ?? "");
+    setEditCustomerId(project.customerId ?? "");
+    setDetailEditing(true);
+  };
+
+  const saveDetailEdit = () => {
+    // Mock save — in production this would call an API
+    setDetailEditing(false);
+  };
+
+  const cancelDetailEdit = () => {
+    setDetailEditing(false);
+  };
+
+  const statusOptions: { value: ProjectStatus; label: string }[] = [
+    { value: "in_progress", label: "In Progress" },
+    { value: "active", label: "Active" },
+    { value: "on_hold", label: "On Hold" },
+    { value: "completed", label: "Completed" },
+  ];
 
   const confidence = confidenceSummary.overallConfidence;
   const confidenceColor =
@@ -804,48 +869,242 @@ export default function VersionOverviewPage() {
 
         {/* Right column — Project Details + Activity (sticky sidebar) */}
         <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-          {/* Version Info Card */}
+          {/* Project Details Card — view / edit mode */}
           <div className="rounded-xl border bg-card shadow-card p-5">
-            <h3 className="font-semibold text-sm flex items-center gap-2 mb-4">
-              <Shield className="h-4 w-4 text-primary" aria-hidden="true" />
-              Project Details
-            </h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
-                  Created
-                </span>
-                <time className="font-medium" dateTime={version.createdAt}>
-                  {new Date(version.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
-                </time>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                  Last Updated
-                </span>
-                <time className="font-medium" dateTime={version.updatedAt}>
-                  {new Date(version.updatedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
-                </time>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Users className="h-3.5 w-3.5" aria-hidden="true" />
-                  Team Members
-                </span>
-                <span className="font-medium">{project.memberIds.length}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" />
-                  Overall Score
-                </span>
-                <span className={cn("font-bold", confidenceColor)}>
-                  {confidence > 0 ? formatPercentage(confidence) : "Pending"}
-                </span>
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" aria-hidden="true" />
+                Project Details
+              </h3>
+              {!detailEditing && (
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={startDetailEdit}>
+                  <Pencil className="h-3 w-3" />
+                  Edit
+                </Button>
+              )}
             </div>
+
+            {detailEditing ? (
+              /* ── Edit Mode ─────────────────────────────── */
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Project Name</label>
+                  <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="h-9" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Client</label>
+                  <Input value={editClient} onChange={(e) => setEditClient(e.target.value)} className="h-9" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Job ID</label>
+                    <Input value={editJobId} onChange={(e) => setEditJobId(e.target.value)} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Location</label>
+                    <Input value={editLocation} onChange={(e) => setEditLocation(e.target.value)} className="h-9" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Status</label>
+                  <Select value={editStatus} onValueChange={(v) => setEditStatus(v as ProjectStatus)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Project Manager</label>
+                  <Select
+                    value={editProjectManager}
+                    onValueChange={(v) => {
+                      setEditProjectManager(v);
+                      if (v !== "__custom__") setEditProjectManagerCustom("");
+                    }}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Select PM" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {mockUsers.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                      ))}
+                      <SelectItem value="__custom__">Custom (External PM)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {editProjectManager === "__custom__" && (
+                    <Input
+                      placeholder="Enter PM name"
+                      value={editProjectManagerCustom}
+                      onChange={(e) => setEditProjectManagerCustom(e.target.value)}
+                      className="h-9 mt-1"
+                    />
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Owner</label>
+                    <Input value={editOwner} onChange={(e) => setEditOwner(e.target.value)} placeholder="Owner name" className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Architect</label>
+                    <Input value={editArchitect} onChange={(e) => setEditArchitect(e.target.value)} placeholder="Architect name" className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Engineer</label>
+                    <Input value={editEngineer} onChange={(e) => setEditEngineer(e.target.value)} placeholder="Engineer name" className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Customer ID</label>
+                    <Input value={editCustomerId} onChange={(e) => setEditCustomerId(e.target.value)} placeholder="Manual entry" className="h-9" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Revised Date</label>
+                    <Input type="date" value={editRevisedDate} onChange={(e) => setEditRevisedDate(e.target.value)} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Revision #</label>
+                    <Input value={editRevisionNumber} onChange={(e) => setEditRevisionNumber(e.target.value)} placeholder="e.g. 3" className="h-9" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <Button size="sm" onClick={saveDetailEdit} className="h-8 text-xs gap-1">
+                    <Save className="h-3 w-3" />
+                    Save
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={cancelDetailEdit} className="h-8 text-xs gap-1">
+                    <X className="h-3 w-3" />
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* ── View Mode ─────────────────────────────── */
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Briefcase className="h-3.5 w-3.5" aria-hidden="true" />
+                    Job ID
+                  </span>
+                  <span className="font-medium">{project.jobId}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                    Location
+                  </span>
+                  <span className="font-medium">{project.location}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                    Created
+                  </span>
+                  <time className="font-medium" dateTime={version.createdAt}>
+                    {new Date(version.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                  </time>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                    Last Updated
+                  </span>
+                  <time className="font-medium" dateTime={version.updatedAt}>
+                    {new Date(version.updatedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                  </time>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5" aria-hidden="true" />
+                    Team Members
+                  </span>
+                  <span className="font-medium">{project.memberIds.length}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Overall Score
+                  </span>
+                  <span className={cn("font-bold", confidenceColor)}>
+                    {confidence > 0 ? formatPercentage(confidence) : "Pending"}
+                  </span>
+                </div>
+                {/* Project Manager */}
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5" aria-hidden="true" />
+                    Project Manager
+                  </span>
+                  <span className="font-medium">
+                    {project.projectManager === "__custom__"
+                      ? project.projectManagerCustom ?? "—"
+                      : mockUsers.find((u) => u.id === project.projectManager)?.name ?? "—"}
+                  </span>
+                </div>
+                {/* Owner */}
+                {project.owner && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      Owner
+                    </span>
+                    <span className="font-medium">{project.owner}</span>
+                  </div>
+                )}
+                {/* Architect */}
+                {project.architect && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      Architect
+                    </span>
+                    <span className="font-medium">{project.architect}</span>
+                  </div>
+                )}
+                {/* Engineer */}
+                {project.engineer && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      Engineer
+                    </span>
+                    <span className="font-medium">{project.engineer}</span>
+                  </div>
+                )}
+                {/* Revised Date + Revision # */}
+                {(project.revisedDate || project.revisionNumber) && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                      Revision
+                    </span>
+                    <span className="font-medium">
+                      {project.revisedDate
+                        ? new Date(project.revisedDate).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })
+                        : ""}
+                      {project.revisionNumber ? ` (Rev ${project.revisionNumber})` : ""}
+                    </span>
+                  </div>
+                )}
+                {/* Customer ID */}
+                {project.customerId && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Hash className="h-3.5 w-3.5" aria-hidden="true" />
+                      Customer ID
+                    </span>
+                    <span className="font-medium">{project.customerId}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Recent Activity */}

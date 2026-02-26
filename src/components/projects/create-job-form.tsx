@@ -232,11 +232,8 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
   // Additional details (optional — collapsible)
   const [additionalOpen, setAdditionalOpen] = useState(false);
   const [owner, setOwner] = useState("");
-  const [ownerCompany, setOwnerCompany] = useState("");
   const [architect, setArchitect] = useState("");
-  const [architectCompany, setArchitectCompany] = useState("");
   const [engineer, setEngineer] = useState("");
-  const [engineerCompany, setEngineerCompany] = useState("");
   const [revisedDate, setRevisedDate] = useState("");
   const [revisionNumber, setRevisionNumber] = useState("");
   const [customerId, setCustomerId] = useState("");
@@ -755,7 +752,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
 
           {additionalOpen && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-5 gap-y-5 mt-4 animate-accordion-down">
-              {/* Owner — stacked name + company */}
+              {/* Owner */}
               <div className="space-y-2">
                 <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                   <Building2 className="h-3 w-3" aria-hidden="true" />
@@ -767,15 +764,9 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
                   onChange={(e) => setOwner(e.target.value)}
                   className="h-10"
                 />
-                <Input
-                  placeholder="Company / Organization"
-                  value={ownerCompany}
-                  onChange={(e) => setOwnerCompany(e.target.value)}
-                  className="h-9 text-xs"
-                />
               </div>
 
-              {/* Architect — stacked name + firm */}
+              {/* Architect */}
               <div className="space-y-2">
                 <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                   <Building2 className="h-3 w-3" aria-hidden="true" />
@@ -787,15 +778,9 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
                   onChange={(e) => setArchitect(e.target.value)}
                   className="h-10"
                 />
-                <Input
-                  placeholder="Firm name"
-                  value={architectCompany}
-                  onChange={(e) => setArchitectCompany(e.target.value)}
-                  className="h-9 text-xs"
-                />
               </div>
 
-              {/* Engineer — stacked name + firm */}
+              {/* Engineer */}
               <div className="space-y-2">
                 <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                   <Building2 className="h-3 w-3" aria-hidden="true" />
@@ -806,12 +791,6 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
                   value={engineer}
                   onChange={(e) => setEngineer(e.target.value)}
                   className="h-10"
-                />
-                <Input
-                  placeholder="Firm name"
-                  value={engineerCompany}
-                  onChange={(e) => setEngineerCompany(e.target.value)}
-                  className="h-9 text-xs"
                 />
               </div>
 

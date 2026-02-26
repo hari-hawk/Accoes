@@ -419,11 +419,8 @@ export function ProjectDetailSheet({
   const [editProjectManager, setEditProjectManager] = useState("");
   const [editProjectManagerCustom, setEditProjectManagerCustom] = useState("");
   const [editOwner, setEditOwner] = useState("");
-  const [editOwnerCompany, setEditOwnerCompany] = useState("");
   const [editArchitect, setEditArchitect] = useState("");
-  const [editArchitectCompany, setEditArchitectCompany] = useState("");
   const [editEngineer, setEditEngineer] = useState("");
-  const [editEngineerCompany, setEditEngineerCompany] = useState("");
   const [editRevisedDate, setEditRevisedDate] = useState("");
   const [editRevisionNumber, setEditRevisionNumber] = useState("");
   const [editCustomerId, setEditCustomerId] = useState("");
@@ -461,11 +458,8 @@ export function ProjectDetailSheet({
     setEditProjectManager(project.projectManager);
     setEditProjectManagerCustom(project.projectManagerCustom ?? "");
     setEditOwner(project.owner ?? "");
-    setEditOwnerCompany(project.ownerCompany ?? "");
     setEditArchitect(project.architect ?? "");
-    setEditArchitectCompany(project.architectCompany ?? "");
     setEditEngineer(project.engineer ?? "");
-    setEditEngineerCompany(project.engineerCompany ?? "");
     setEditRevisedDate(project.revisedDate ?? "");
     setEditRevisionNumber(project.revisionNumber ?? "");
     setEditCustomerId(project.customerId ?? "");
@@ -681,17 +675,14 @@ export function ProjectDetailSheet({
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Owner</label>
                       <Input value={editOwner} onChange={(e) => setEditOwner(e.target.value)} placeholder="Owner name" />
-                      <Input value={editOwnerCompany} onChange={(e) => setEditOwnerCompany(e.target.value)} placeholder="Company" className="text-xs h-8" />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Architect</label>
                       <Input value={editArchitect} onChange={(e) => setEditArchitect(e.target.value)} placeholder="Architect name" />
-                      <Input value={editArchitectCompany} onChange={(e) => setEditArchitectCompany(e.target.value)} placeholder="Firm" className="text-xs h-8" />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Engineer</label>
                       <Input value={editEngineer} onChange={(e) => setEditEngineer(e.target.value)} placeholder="Engineer name" />
-                      <Input value={editEngineerCompany} onChange={(e) => setEditEngineerCompany(e.target.value)} placeholder="Firm" className="text-xs h-8" />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Customer ID</label>
@@ -779,30 +770,21 @@ export function ProjectDetailSheet({
                     {project.owner && (
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Building2 className="h-3.5 w-3.5" />
-                        <span className="truncate">
-                          Owner: {project.owner}
-                          {project.ownerCompany ? ` (${project.ownerCompany})` : ""}
-                        </span>
+                        <span className="truncate">Owner: {project.owner}</span>
                       </div>
                     )}
                     {/* Architect */}
                     {project.architect && (
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Building2 className="h-3.5 w-3.5" />
-                        <span className="truncate">
-                          Architect: {project.architect}
-                          {project.architectCompany ? ` (${project.architectCompany})` : ""}
-                        </span>
+                        <span className="truncate">Architect: {project.architect}</span>
                       </div>
                     )}
                     {/* Engineer */}
                     {project.engineer && (
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Building2 className="h-3.5 w-3.5" />
-                        <span className="truncate">
-                          Engineer: {project.engineer}
-                          {project.engineerCompany ? ` (${project.engineerCompany})` : ""}
-                        </span>
+                        <span className="truncate">Engineer: {project.engineer}</span>
                       </div>
                     )}
                     {/* Revised Date + Revision # */}

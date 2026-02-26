@@ -112,7 +112,7 @@ export function MilestoneProgressBar({
       className="flex items-center justify-center px-4 py-2 border-b bg-muted/30 shrink-0"
       aria-label="Project milestones"
     >
-      <div className="grid w-full max-w-3xl" style={{ gridTemplateColumns: `repeat(${MILESTONES.length}, 1fr)` }}>
+      <div className="grid w-full max-w-4xl" style={{ gridTemplateColumns: `repeat(${MILESTONES.length}, 1fr)` }}>
         {MILESTONES.map((milestone, index) => {
           const isActive = milestone.key === activeMilestone;
           const isUnlocked = milestone.unlockedAt.includes(currentStage);
@@ -138,14 +138,16 @@ export function MilestoneProgressBar({
                   <div
                     className={cn(
                       "relative h-6 w-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 border-[1.5px]",
-                      isActive
-                        ? "gradient-accent border-transparent shadow-sm"
-                        : isCompleted
-                          ? "bg-status-pre-approved border-status-pre-approved"
+                      isCompleted
+                        ? isActive
+                          ? "bg-status-pre-approved border-status-pre-approved ring-2 ring-status-pre-approved/30 ring-offset-1"
+                          : "bg-status-pre-approved border-status-pre-approved"
+                        : isActive
+                          ? "gradient-accent border-transparent shadow-sm"
                           : "bg-background border-border hover:border-muted-foreground"
                     )}
                   >
-                    {isCompleted && !isActive ? (
+                    {isCompleted ? (
                       <Check className="h-3 w-3 text-white" strokeWidth={3} />
                     ) : (
                       <Icon
@@ -163,10 +165,10 @@ export function MilestoneProgressBar({
                   <span
                     className={cn(
                       "text-xs font-medium whitespace-nowrap transition-colors",
-                      isActive
-                        ? "text-foreground font-semibold"
-                        : isCompleted
-                          ? "text-status-pre-approved font-semibold"
+                      isCompleted
+                        ? "text-status-pre-approved font-semibold"
+                        : isActive
+                          ? "text-foreground font-semibold"
                           : "text-muted-foreground group-hover:text-foreground"
                     )}
                   >

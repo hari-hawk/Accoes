@@ -25,6 +25,7 @@ import {
   BookOpen,
   ChevronRight,
   ChevronDown,
+  ChevronUp,
   Eye,
   History,
   Lock,
@@ -68,7 +69,7 @@ import { FileUploadCard } from "@/components/projects/file-upload-card";
 import { mockUsers } from "@/data/mock-users";
 import { formatPercentage } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { ProjectStatus } from "@/data/types";
+import type { ProjectStatus, ProjectType } from "@/data/types";
 
 /* -------------------------------------------------------------------------- */
 /*  Constants                                                                   */
@@ -762,6 +763,11 @@ export default function VersionOverviewPage() {
   const [editRevisedDate, setEditRevisedDate] = useState("");
   const [editRevisionNumber, setEditRevisionNumber] = useState("");
   const [editCustomerId, setEditCustomerId] = useState("");
+  const [editPriority, setEditPriority] = useState<"high" | "medium" | "low">("high");
+  const [editProjectType, setEditProjectType] = useState<ProjectType>("dr");
+
+  // View More/Less toggle for Project Details card
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
 
   const startDetailEdit = () => {
     setEditName(project.name);
@@ -769,6 +775,8 @@ export default function VersionOverviewPage() {
     setEditJobId(project.jobId);
     setEditLocation(project.location);
     setEditStatus(project.status);
+    setEditPriority(project.priority);
+    setEditProjectType(project.projectType);
     setEditProjectManager(project.projectManager);
     setEditProjectManagerCustom(project.projectManagerCustom ?? "");
     setEditOwner(project.owner ?? "");
@@ -893,21 +901,62 @@ export default function VersionOverviewPage() {
               </button>
             </div>
 
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1.5">
-                    <Briefcase className="h-3.5 w-3.5" aria-hidden="true" />
-                    Job ID
-                  </span>
-                  <span className="font-medium">{project.jobId}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-                    Location
-                  </span>
-                  <span className="font-medium">{project.location}</span>
-                </div>
+            {/* General Information — always visible */}
+            <div className="space-y-2.5 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <Briefcase className="h-3.5 w-3.5" aria-hidden="true" />
+                  Job ID
+                </span>
+                <span className="font-medium">{project.jobId}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                  Location
+                </span>
+                <span className="font-medium">{project.location}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <Layers className="h-3.5 w-3.5" aria-hidden="true" />
+                  Project Type
+                </span>
+                <span className="font-medium">{project.projectType === "dr" ? "Discrepancy Report" : "Design Job"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5" aria-hidden="true" />
+                  Project Manager
+                </span>
+                <span className="font-medium">
+                  {project.projectManager === "__custom__"
+                    ? project.projectManagerCustom ?? "—"
+                    : mockUsers.find((u) => u.id === project.projectManager)?.name ?? "—"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" />
+                  Overall Score
+                </span>
+                <span className={cn("font-bold", confidenceColor)}>
+                  {confidence > 0 ? formatPercentage(confidence) : "Pending"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <Users className="h-3.5 w-3.5" aria-hidden="true" />
+                  Team Members
+                </span>
+                <span className="font-medium">{project.memberIds.length}</span>
+              </div>
+            </div>
+
+            {/* Expanded: Additional Details */}
+            {detailsExpanded && (
+              <div className="space-y-2.5 text-sm mt-4 pt-4 border-t border-border/50">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Additional Details</p>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
@@ -928,88 +977,78 @@ export default function VersionOverviewPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5" aria-hidden="true" />
-                    Team Members
+                    <Briefcase className="h-3.5 w-3.5" aria-hidden="true" />
+                    Priority
                   </span>
-                  <span className="font-medium">{project.memberIds.length}</span>
+                  <span className="font-medium capitalize">{project.priority}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground flex items-center gap-1.5">
-                    <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" />
-                    Overall Score
+                    <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Owner
                   </span>
-                  <span className={cn("font-bold", confidenceColor)}>
-                    {confidence > 0 ? formatPercentage(confidence) : "Pending"}
-                  </span>
+                  <span className="font-medium">{project.owner || "—"}</span>
                 </div>
-                {/* Project Manager */}
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5" aria-hidden="true" />
-                    Project Manager
+                    <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Architect
+                  </span>
+                  <span className="font-medium">{project.architect || "—"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Engineer
+                  </span>
+                  <span className="font-medium">{project.engineer || "—"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                    Revised Date
                   </span>
                   <span className="font-medium">
-                    {project.projectManager === "__custom__"
-                      ? project.projectManagerCustom ?? "—"
-                      : mockUsers.find((u) => u.id === project.projectManager)?.name ?? "—"}
+                    {project.revisedDate
+                      ? new Date(project.revisedDate).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })
+                      : "—"}
                   </span>
                 </div>
-                {/* Owner */}
-                {project.owner && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
-                      <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      Owner
-                    </span>
-                    <span className="font-medium">{project.owner}</span>
-                  </div>
-                )}
-                {/* Architect */}
-                {project.architect && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
-                      <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      Architect
-                    </span>
-                    <span className="font-medium">{project.architect}</span>
-                  </div>
-                )}
-                {/* Engineer */}
-                {project.engineer && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
-                      <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      Engineer
-                    </span>
-                    <span className="font-medium">{project.engineer}</span>
-                  </div>
-                )}
-                {/* Revised Date + Revision # */}
-                {(project.revisedDate || project.revisionNumber) && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
-                      Revision
-                    </span>
-                    <span className="font-medium">
-                      {project.revisedDate
-                        ? new Date(project.revisedDate).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })
-                        : ""}
-                      {project.revisionNumber ? ` (Rev ${project.revisionNumber})` : ""}
-                    </span>
-                  </div>
-                )}
-                {/* Customer ID */}
-                {project.customerId && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
-                      <Hash className="h-3.5 w-3.5" aria-hidden="true" />
-                      Customer ID
-                    </span>
-                    <span className="font-medium">{project.customerId}</span>
-                  </div>
-                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Hash className="h-3.5 w-3.5" aria-hidden="true" />
+                    Revision #
+                  </span>
+                  <span className="font-medium">{project.revisionNumber || "—"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Hash className="h-3.5 w-3.5" aria-hidden="true" />
+                    Customer ID
+                  </span>
+                  <span className="font-medium">{project.customerId || "—"}</span>
+                </div>
               </div>
+            )}
+
+            {/* View More / View Less toggle */}
+            <button
+              type="button"
+              onClick={() => setDetailsExpanded(!detailsExpanded)}
+              className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground mt-4 pt-3 border-t cursor-pointer transition-colors"
+            >
+              {detailsExpanded ? (
+                <>
+                  <ChevronUp className="h-3.5 w-3.5" />
+                  View Less
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-3.5 w-3.5" />
+                  View More
+                </>
+              )}
+            </button>
           </div>
 
           {/* Recent Activity */}
@@ -1200,94 +1239,135 @@ export default function VersionOverviewPage() {
           </SheetHeader>
 
           <ScrollArea className="flex-1 px-6 py-5">
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Project Name</label>
-                <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="h-9" />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Client</label>
-                <Input value={editClient} onChange={(e) => setEditClient(e.target.value)} className="h-9" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-6">
+              {/* Section: Project Information */}
+              <div className="space-y-4">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Project Information</p>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Job ID</label>
-                  <Input value={editJobId} onChange={(e) => setEditJobId(e.target.value)} className="h-9" />
+                  <label className="text-xs font-medium text-muted-foreground">Project Name</label>
+                  <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="h-9" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Location</label>
-                  <Input value={editLocation} onChange={(e) => setEditLocation(e.target.value)} className="h-9" />
+                  <label className="text-xs font-medium text-muted-foreground">Company / Client</label>
+                  <Input value={editClient} onChange={(e) => setEditClient(e.target.value)} className="h-9" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Job ID</label>
+                    <Input value={editJobId} onChange={(e) => setEditJobId(e.target.value)} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Location</label>
+                    <Input value={editLocation} onChange={(e) => setEditLocation(e.target.value)} className="h-9" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Status</label>
+                    <Select value={editStatus} onValueChange={(v) => setEditStatus(v as ProjectStatus)}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statusOptions.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Priority</label>
+                    <Select value={editPriority} onValueChange={(v) => setEditPriority(v as "high" | "medium" | "low")}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Project Type</label>
+                    <Select value={editProjectType} onValueChange={(v) => setEditProjectType(v as ProjectType)}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dr">Discrepancy Report</SelectItem>
+                        <SelectItem value="design_job">Design Job</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Project Manager</label>
+                    <Select
+                      value={editProjectManager}
+                      onValueChange={(v) => {
+                        setEditProjectManager(v);
+                        if (v !== "__custom__") setEditProjectManagerCustom("");
+                      }}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Select PM" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {mockUsers.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                        ))}
+                        <SelectItem value="__custom__">Custom (External PM)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {editProjectManager === "__custom__" && (
+                      <Input
+                        placeholder="Enter PM name"
+                        value={editProjectManagerCustom}
+                        onChange={(e) => setEditProjectManagerCustom(e.target.value)}
+                        className="h-9 mt-1.5"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Status</label>
-                <Select value={editStatus} onValueChange={(v) => setEditStatus(v as ProjectStatus)}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Project Manager</label>
-                <Select
-                  value={editProjectManager}
-                  onValueChange={(v) => {
-                    setEditProjectManager(v);
-                    if (v !== "__custom__") setEditProjectManagerCustom("");
-                  }}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Select PM" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mockUsers.map((u) => (
-                      <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                    ))}
-                    <SelectItem value="__custom__">Custom (External PM)</SelectItem>
-                  </SelectContent>
-                </Select>
-                {editProjectManager === "__custom__" && (
-                  <Input
-                    placeholder="Enter PM name"
-                    value={editProjectManagerCustom}
-                    onChange={(e) => setEditProjectManagerCustom(e.target.value)}
-                    className="h-9 mt-1.5"
-                  />
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Owner</label>
-                  <Input value={editOwner} onChange={(e) => setEditOwner(e.target.value)} placeholder="Owner name" className="h-9" />
+
+              {/* Divider */}
+              <div className="border-t border-border/50" />
+
+              {/* Section: Additional Details */}
+              <div className="space-y-4">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Additional Details</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Owner</label>
+                    <Input value={editOwner} onChange={(e) => setEditOwner(e.target.value)} placeholder="Owner name" className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Architect</label>
+                    <Input value={editArchitect} onChange={(e) => setEditArchitect(e.target.value)} placeholder="Architect name" className="h-9" />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Architect</label>
-                  <Input value={editArchitect} onChange={(e) => setEditArchitect(e.target.value)} placeholder="Architect name" className="h-9" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Engineer</label>
+                    <Input value={editEngineer} onChange={(e) => setEditEngineer(e.target.value)} placeholder="Engineer name" className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Customer ID</label>
+                    <Input value={editCustomerId} onChange={(e) => setEditCustomerId(e.target.value)} placeholder="Manual entry" className="h-9" />
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Engineer</label>
-                  <Input value={editEngineer} onChange={(e) => setEditEngineer(e.target.value)} placeholder="Engineer name" className="h-9" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Customer ID</label>
-                  <Input value={editCustomerId} onChange={(e) => setEditCustomerId(e.target.value)} placeholder="Manual entry" className="h-9" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Revised Date</label>
-                  <Input type="date" value={editRevisedDate} onChange={(e) => setEditRevisedDate(e.target.value)} className="h-9" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Revision #</label>
-                  <Input value={editRevisionNumber} onChange={(e) => setEditRevisionNumber(e.target.value)} placeholder="e.g. 3" className="h-9" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Revised Date</label>
+                    <Input type="date" value={editRevisedDate} onChange={(e) => setEditRevisedDate(e.target.value)} className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Revision #</label>
+                    <Input value={editRevisionNumber} onChange={(e) => setEditRevisionNumber(e.target.value)} placeholder="e.g. 3" className="h-9" />
+                  </div>
                 </div>
               </div>
             </div>

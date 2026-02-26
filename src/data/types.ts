@@ -81,6 +81,7 @@ export interface Project {
   confidenceSummary: ConfidenceSummary;
   stage: ProjectStage;
   projectType: ProjectType;
+  priority: "high" | "medium" | "low";
   // Project stakeholders
   projectManager: string;          // User ID or "__custom__" for external PM
   projectManagerCustom?: string;   // Custom name when projectManager === "__custom__"

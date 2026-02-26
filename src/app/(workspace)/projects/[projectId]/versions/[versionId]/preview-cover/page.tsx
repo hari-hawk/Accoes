@@ -182,8 +182,9 @@ export default function PreviewCoverPage() {
   /* ---------------------------------------------------------------------- */
 
   return (
-    <div className="h-full overflow-auto">
-      <div className="max-w-5xl mx-auto px-6 py-8 space-y-6 animate-fade-up">
+    <div className="h-full flex flex-col">
+      <div className="flex-1 overflow-auto">
+      <div className="max-w-[1400px] mx-auto px-6 py-8 space-y-6 animate-fade-up">
         {/* ================================================================ */}
         {/*  Page Header                                                     */}
         {/* ================================================================ */}
@@ -693,10 +694,12 @@ export default function PreviewCoverPage() {
           </div>
         </div>
 
-        {/* ================================================================ */}
-        {/*  Proceed to Submittal Binder                                     */}
-        {/* ================================================================ */}
-        <div className="flex justify-end pt-2 pb-6">
+      </div>
+      </div>
+
+      {/* Sticky CTA bar at the bottom */}
+      <div className="shrink-0 border-t bg-background/95 backdrop-blur-sm">
+        <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-end">
           <Button
             size="lg"
             className="gradient-accent text-white border-0 gap-2 font-semibold px-8"

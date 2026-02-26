@@ -63,7 +63,7 @@ function getActiveMilestone(pathname: string): string {
 }
 
 /** Determine the completion index — milestones up to this index are "completed" */
-function getCompletedIndex(currentStage: WorkflowStage, pathname: string): number {
+function getCompletedIndex(currentStage: WorkflowStage, pathname: string, projectId: string): number {
   // Stage-based completion (from backend workflow state)
   let stageIndex = 0;
   if (currentStage === "export") stageIndex = 3;
@@ -75,8 +75,17 @@ function getCompletedIndex(currentStage: WorkflowStage, pathname: string): numbe
   else if (pathname.includes("/preview-cover")) pathIndex = 2;
   else if (pathname.includes("/review") || pathname.includes("/processing")) pathIndex = 1;
 
-  // Whichever is higher wins — ensures the bar never regresses
-  return Math.max(stageIndex, pathIndex);
+  // Persist highest-ever index per project — never regresses on back-navigation
+  const storageKey = `milestone-highest-${projectId}`;
+  const stored = typeof window !== "undefined"
+    ? parseInt(localStorage.getItem(storageKey) ?? "0", 10)
+    : 0;
+  const highest = Math.max(stageIndex, pathIndex, stored);
+  if (typeof window !== "undefined" && highest > stored) {
+    localStorage.setItem(storageKey, String(highest));
+  }
+
+  return highest;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -95,7 +104,7 @@ export function MilestoneProgressBar({
   const pathname = usePathname();
   const base = `/projects/${projectId}/versions/${versionId}`;
   const activeMilestone = getActiveMilestone(pathname);
-  const completedUpTo = getCompletedIndex(currentStage, pathname);
+  const completedUpTo = getCompletedIndex(currentStage, pathname, projectId);
 
   return (
     <nav

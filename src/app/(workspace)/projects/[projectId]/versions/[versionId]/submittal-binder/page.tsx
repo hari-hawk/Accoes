@@ -525,7 +525,7 @@ export default function SubmittalBinderPage() {
     <div className="h-full overflow-auto">
       {/* Fixed header — always visible */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b">
-        <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
               href={`/projects/${project.id}/versions/${version.id}/preview-cover`}
@@ -582,7 +582,7 @@ export default function SubmittalBinderPage() {
 
       {/* Stacked PDF pages */}
       {!loading && (
-        <div className="max-w-5xl mx-auto px-6 py-8 space-y-8 animate-fade-up">
+        <div className="max-w-[1400px] mx-auto px-6 py-8 space-y-8 animate-fade-up">
           {/* Page 1: Binder Cover */}
           <div ref={(el) => setPageRef(1, el)}>
             <PaperPage pageNumber={1} id="page-1">

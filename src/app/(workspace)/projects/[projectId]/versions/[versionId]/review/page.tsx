@@ -62,11 +62,15 @@ export default function ReviewPage() {
     activeCategory,
     setActiveCategory,
     indexCategoryFilter,
-    setIndexCategoryFilter,
+    toggleIndexCategoryFilter,
+    clearIndexCategoryFilter,
     systemCategoryFilter,
-    setSystemCategoryFilter,
+    toggleSystemCategoryFilter,
+    clearSystemCategoryFilter,
     indexCategories,
     systemCategories,
+    sortBy,
+    setSortBy,
   } = useMaterials(version.id);
 
   // ── Review progress tracking ──
@@ -202,13 +206,17 @@ export default function ReviewPage() {
             systemCategoryFilter={systemCategoryFilter}
             indexCategories={indexCategories}
             systemCategories={systemCategories}
+            sortBy={sortBy}
             onSelect={setSelectedId}
             onToggleCheck={toggleCheck}
             onSearchChange={setSearch}
             onToggleStatusFilter={toggleStatusFilter}
             onClearStatusFilter={clearStatusFilter}
-            onIndexCategoryChange={setIndexCategoryFilter}
-            onSystemCategoryChange={setSystemCategoryFilter}
+            onIndexCategoryToggle={toggleIndexCategoryFilter}
+            onIndexCategoryClear={clearIndexCategoryFilter}
+            onSystemCategoryToggle={toggleSystemCategoryFilter}
+            onSystemCategoryClear={clearSystemCategoryFilter}
+            onSortChange={setSortBy}
           />
         </ResizablePanel>
         <ResizableHandle withHandle />

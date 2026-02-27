@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import {
   FileText,
@@ -31,6 +31,8 @@ import {
 } from "@/components/ui/sheet";
 import { useWorkspace } from "@/providers/workspace-provider";
 import { mockUsers } from "@/data/mock-users";
+import { productIndexSections } from "@/data/mock-product-index";
+import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
 /*  Helpers                                                                    */
@@ -482,6 +484,93 @@ export default function PreviewCoverPage() {
             </div>
 
             {/* Bottom accent bar */}
+            <div className="flex">
+              <div className="flex-1 bg-[#003366] h-2" />
+              <div className="w-1/4 bg-[#FFD100] h-2" />
+            </div>
+          </div>
+        </div>
+
+        {/* ================================================================ */}
+        {/*  PAGE 3: Product Index (read-only table)                        */}
+        {/* ================================================================ */}
+        <div className="bg-gray-100 rounded-2xl p-6">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-3 text-center">
+            Page 3 — Product Index
+          </p>
+          <div
+            className="mx-auto bg-white shadow-lg overflow-hidden"
+            style={{ maxWidth: 680 }}
+          >
+            {/* Top accent */}
+            <div className="bg-[#003366] h-2" />
+
+            {/* Header */}
+            <div className="px-8 pt-6 pb-4 border-b-2 border-[#003366]">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-[#003366]">{project.name}</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">Plan & Specification Project</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-semibold text-[#003366]">ACCO Job# {project.jobId}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-[10px] font-medium text-gray-500">Material Index</span>
+                <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold bg-yellow-100 text-yellow-800 ring-1 ring-yellow-300">
+                  Yellow = Alternate/Equal
+                </span>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-[10px]">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr className="border-b">
+                    <th className="px-2 py-1.5 text-left font-bold text-[#003366] w-[60px]">CATEGORY</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#003366] w-[36px]">ITEM</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#003366]">DESCRIPTION</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#003366]">ITEM DESCRIPTION</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#003366] w-[80px]">SIZE</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#003366] w-[120px]">SPECIFICATION</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#003366] w-[60px]">SPEC LOC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productIndexSections.map((section) => (
+                    <Fragment key={section.code}>
+                      {/* Section header row */}
+                      <tr className="bg-gray-100">
+                        <td className="px-2 py-1.5 font-bold text-[#003366]">{section.code}</td>
+                        <td className="px-2 py-1.5 font-bold text-[#003366]" colSpan={6}>{section.title}</td>
+                      </tr>
+                      {/* Section items */}
+                      {section.items.map((item) => (
+                        <tr
+                          key={`${section.code}-${item.itemNumber}`}
+                          className={cn(
+                            "border-b border-gray-100 hover:bg-gray-50/50",
+                            item.isAlternate && "bg-yellow-50"
+                          )}
+                        >
+                          <td className="px-2 py-1 text-gray-600">{item.category}</td>
+                          <td className="px-2 py-1 text-gray-600">{item.itemNumber}</td>
+                          <td className="px-2 py-1 text-gray-700">{item.description}</td>
+                          <td className="px-2 py-1 text-gray-700">{item.itemDetail}</td>
+                          <td className="px-2 py-1 text-gray-600">{item.size}</td>
+                          <td className="px-2 py-1 font-mono text-gray-500">{item.specification}</td>
+                          <td className="px-2 py-1 text-gray-500">{item.specLocation}</td>
+                        </tr>
+                      ))}
+                    </Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footer */}
             <div className="flex">
               <div className="flex-1 bg-[#003366] h-2" />
               <div className="w-1/4 bg-[#FFD100] h-2" />

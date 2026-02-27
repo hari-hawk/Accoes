@@ -22,8 +22,9 @@ export function useMaterials(versionId: string) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [decisions, setDecisions] = useState<Record<string, DecisionStatus>>({});
-  const [indexCategoryFilter, setIndexCategoryFilter] = useState<string>("all");
-  const [systemCategoryFilter, setSystemCategoryFilter] = useState<string>("all");
+  const [indexCategoryFilter, setIndexCategoryFilter] = useState<Set<string>>(new Set());
+  const [systemCategoryFilter, setSystemCategoryFilter] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<"name-asc" | "name-desc" | "index-category">("name-asc");
   const [activeCategory, setActiveCategory] = useState<ValidationCategory>("overall");
 
   const materials: MaterialItem[] = useMemo(() => {
@@ -60,20 +61,40 @@ export function useMaterials(versionId: string) {
       });
     }
 
-    if (indexCategoryFilter !== "all") {
+    if (indexCategoryFilter.size > 0) {
       result = result.filter(
-        (m) => m.document.indexCategory === indexCategoryFilter
+        (m) => m.document.indexCategory != null && indexCategoryFilter.has(m.document.indexCategory)
       );
     }
 
-    if (systemCategoryFilter !== "all") {
+    if (systemCategoryFilter.size > 0) {
       result = result.filter(
-        (m) => m.document.systemCategory === systemCategoryFilter
+        (m) => m.document.systemCategory != null && systemCategoryFilter.has(m.document.systemCategory)
       );
+    }
+
+    // Sort
+    result = [...result];
+    switch (sortBy) {
+      case "name-asc":
+        result.sort((a, b) => a.document.fileName.localeCompare(b.document.fileName));
+        break;
+      case "name-desc":
+        result.sort((a, b) => b.document.fileName.localeCompare(a.document.fileName));
+        break;
+      case "index-category":
+        result.sort((a, b) => {
+          const catA = a.document.indexCategory ?? "";
+          const catB = b.document.indexCategory ?? "";
+          const catCmp = catA.localeCompare(catB);
+          if (catCmp !== 0) return catCmp;
+          return a.document.fileName.localeCompare(b.document.fileName);
+        });
+        break;
     }
 
     return result;
-  }, [materials, search, statusFilter, decisions, indexCategoryFilter, systemCategoryFilter]);
+  }, [materials, search, statusFilter, decisions, indexCategoryFilter, systemCategoryFilter, sortBy]);
 
   const indexCategories = useMemo(
     () => [...new Set(materials.map((m) => m.document.indexCategory).filter(Boolean))] as string[],
@@ -152,6 +173,28 @@ export function useMaterials(versionId: string) {
 
   const clearStatusFilter = useCallback(() => setStatusFilter(new Set()), []);
 
+  const toggleIndexCategoryFilter = useCallback((cat: string) => {
+    setIndexCategoryFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  }, []);
+
+  const clearIndexCategoryFilter = useCallback(() => setIndexCategoryFilter(new Set()), []);
+
+  const toggleSystemCategoryFilter = useCallback((sys: string) => {
+    setSystemCategoryFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(sys)) next.delete(sys);
+      else next.add(sys);
+      return next;
+    });
+  }, []);
+
+  const clearSystemCategoryFilter = useCallback(() => setSystemCategoryFilter(new Set()), []);
+
   return {
     materials: filteredMaterials,
     allMaterials: materials,
@@ -175,9 +218,13 @@ export function useMaterials(versionId: string) {
     setActiveCategory,
     getValidationForCategory,
     indexCategoryFilter,
-    setIndexCategoryFilter,
+    toggleIndexCategoryFilter,
+    clearIndexCategoryFilter,
     systemCategoryFilter,
-    setSystemCategoryFilter,
+    toggleSystemCategoryFilter,
+    clearSystemCategoryFilter,
+    sortBy,
+    setSortBy,
     indexCategories,
     systemCategories,
   };

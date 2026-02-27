@@ -7,7 +7,7 @@ import {
   BookOpen,
   AlertTriangle,
   CheckCircle2,
-  FileText,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -148,17 +148,15 @@ function PSTabContent({
             <p className="text-xs text-ds-neutral-700 italic leading-relaxed">
               &ldquo;{ev.excerpt}&rdquo;
             </p>
-            {ev.pageNumber && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs gap-1.5"
-                onClick={() => onOpenPdf(ev.excerpt, ev.pageNumber!)}
-              >
-                <FileText className="h-3 w-3" />
-                Page {ev.pageNumber}
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs gap-1.5"
+              onClick={() => onOpenPdf(ev.excerpt, ev.pageNumber ?? 1)}
+            >
+              <Eye className="h-3 w-3" />
+              Preview
+            </Button>
           </div>
         ))}
 
@@ -226,9 +224,11 @@ function getDisplayMatches(validation: ValidationResult): IndexMatch[] {
 
 function PITabContent({
   validation,
+  onOpenPdf,
 }: {
   validation: ValidationResult;
   projectId?: string;
+  onOpenPdf: (highlightText: string, page: number) => void;
 }) {
   const displayMatches = getDisplayMatches(validation);
   const matchCount = displayMatches.length;
@@ -289,10 +289,20 @@ function PITabContent({
                   <p className="text-[13px] italic text-ds-neutral-800">
                     &ldquo;{ev.excerpt}&rdquo;
                   </p>
-                  <p className="text-xs text-ds-neutral-600 mt-1">
-                    {ev.sourceFileName}
-                    {ev.pageNumber && ` — p. ${ev.pageNumber}`}
-                  </p>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs text-ds-neutral-600">
+                      {ev.sourceFileName}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-[11px] gap-1 px-2 text-ds-neutral-600 hover:text-primary"
+                      onClick={() => onOpenPdf(ev.excerpt, ev.pageNumber ?? 1)}
+                    >
+                      <Eye className="h-3 w-3" />
+                      Preview
+                    </Button>
+                  </div>
                 </div>
               ))}
           </div>
@@ -657,11 +667,10 @@ export function EvidencePanel({
 
   // Build citations for PDF viewer from evidence items
   const citations: Citation[] = (activeValidation?.evidenceItems ?? [])
-    .filter((ev) => ev.pageNumber)
     .map((ev, i) => ({
       id: ev.id,
       label: `Match ${i + 1}`,
-      page: ev.pageNumber!,
+      page: ev.pageNumber ?? 1,
       excerpt: ev.excerpt,
     }));
 
@@ -803,7 +812,7 @@ export function EvidencePanel({
             <div className="p-5">
             {activeValidation ? (
               activeCategory === "performance_index" ? (
-                <PITabContent validation={activeValidation} projectId={projectId} />
+                <PITabContent validation={activeValidation} projectId={projectId} onOpenPdf={handleOpenPdf} />
               ) : (
                 <PSTabContent
                   validation={activeValidation}

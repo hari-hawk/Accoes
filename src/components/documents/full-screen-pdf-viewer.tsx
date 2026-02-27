@@ -205,8 +205,8 @@ export function FullScreenPdfViewer({
                         <Badge className="bg-status-pre-approved-bg text-status-pre-approved border-0 text-[11px]">
                           {citation.label}
                         </Badge>
-                        <span className="text-[11px] text-muted-foreground">
-                          Page {citation.page}
+                        <span className="text-[11px] text-primary font-medium">
+                          View
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-3">

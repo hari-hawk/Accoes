@@ -228,11 +228,17 @@ export function MaterialList({
   decisions,
   search,
   statusFilter,
+  indexCategoryFilter,
+  systemCategoryFilter,
+  indexCategories,
+  systemCategories,
   onSelect,
   onToggleCheck,
   onSearchChange,
   onToggleStatusFilter,
   onClearStatusFilter,
+  onIndexCategoryChange,
+  onSystemCategoryChange,
 }: {
   materials: MaterialItem[];
   selectedId: string | null;
@@ -240,11 +246,17 @@ export function MaterialList({
   decisions: Record<string, DecisionStatus>;
   search: string;
   statusFilter: Set<string>;
+  indexCategoryFilter: string;
+  systemCategoryFilter: string;
+  indexCategories: string[];
+  systemCategories: string[];
   onSelect: (id: string) => void;
   onToggleCheck: (id: string) => void;
   onSearchChange: (value: string) => void;
   onToggleStatusFilter: (status: string) => void;
   onClearStatusFilter: () => void;
+  onIndexCategoryChange: (value: string) => void;
+  onSystemCategoryChange: (value: string) => void;
 }) {
   const [statusPopoverOpen, setStatusPopoverOpen] = useState(false);
 
@@ -369,6 +381,33 @@ export function MaterialList({
               </div>
             </PopoverContent>
           </Popover>
+        </div>
+
+        {/* Row 3: Category filter dropdowns */}
+        <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
+          <Select value={indexCategoryFilter} onValueChange={onIndexCategoryChange}>
+            <SelectTrigger className="h-8 text-xs w-full">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {indexCategories.map((cat) => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={systemCategoryFilter} onValueChange={onSystemCategoryChange}>
+            <SelectTrigger className="h-8 text-xs w-full">
+              <SelectValue placeholder="All Systems" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Systems</SelectItem>
+              {systemCategories.map((sys) => (
+                <SelectItem key={sys} value={sys}>{sys}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Active filter chips — show when any status filter is active */}

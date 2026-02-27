@@ -22,6 +22,8 @@ export function useMaterials(versionId: string) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [decisions, setDecisions] = useState<Record<string, DecisionStatus>>({});
+  const [indexCategoryFilter, setIndexCategoryFilter] = useState<string>("all");
+  const [systemCategoryFilter, setSystemCategoryFilter] = useState<string>("all");
   const [activeCategory, setActiveCategory] = useState<ValidationCategory>("overall");
 
   const materials: MaterialItem[] = useMemo(() => {
@@ -58,8 +60,30 @@ export function useMaterials(versionId: string) {
       });
     }
 
+    if (indexCategoryFilter !== "all") {
+      result = result.filter(
+        (m) => m.document.indexCategory === indexCategoryFilter
+      );
+    }
+
+    if (systemCategoryFilter !== "all") {
+      result = result.filter(
+        (m) => m.document.systemCategory === systemCategoryFilter
+      );
+    }
+
     return result;
-  }, [materials, search, statusFilter, decisions]);
+  }, [materials, search, statusFilter, decisions, indexCategoryFilter, systemCategoryFilter]);
+
+  const indexCategories = useMemo(
+    () => [...new Set(materials.map((m) => m.document.indexCategory).filter(Boolean))] as string[],
+    [materials]
+  );
+
+  const systemCategories = useMemo(
+    () => [...new Set(materials.map((m) => m.document.systemCategory).filter(Boolean))] as string[],
+    [materials]
+  );
 
   const selectedMaterial = useMemo(
     () => materials.find((m) => m.document.id === selectedId) ?? null,
@@ -150,5 +174,11 @@ export function useMaterials(versionId: string) {
     activeCategory,
     setActiveCategory,
     getValidationForCategory,
+    indexCategoryFilter,
+    setIndexCategoryFilter,
+    systemCategoryFilter,
+    setSystemCategoryFilter,
+    indexCategories,
+    systemCategories,
   };
 }

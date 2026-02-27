@@ -61,6 +61,12 @@ export default function ReviewPage() {
     batchRevisit,
     activeCategory,
     setActiveCategory,
+    indexCategoryFilter,
+    setIndexCategoryFilter,
+    systemCategoryFilter,
+    setSystemCategoryFilter,
+    indexCategories,
+    systemCategories,
   } = useMaterials(version.id);
 
   // ── Review progress tracking ──
@@ -192,11 +198,17 @@ export default function ReviewPage() {
             decisions={decisions}
             search={search}
             statusFilter={statusFilter}
+            indexCategoryFilter={indexCategoryFilter}
+            systemCategoryFilter={systemCategoryFilter}
+            indexCategories={indexCategories}
+            systemCategories={systemCategories}
             onSelect={setSelectedId}
             onToggleCheck={toggleCheck}
             onSearchChange={setSearch}
             onToggleStatusFilter={toggleStatusFilter}
             onClearStatusFilter={clearStatusFilter}
+            onIndexCategoryChange={setIndexCategoryFilter}
+            onSystemCategoryChange={setSystemCategoryFilter}
           />
         </ResizablePanel>
         <ResizableHandle withHandle />

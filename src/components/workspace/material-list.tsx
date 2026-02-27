@@ -8,6 +8,7 @@ import {
   ChevronDown,
   X,
   RotateCcw,
+  ArrowUpDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -232,13 +233,17 @@ export function MaterialList({
   systemCategoryFilter,
   indexCategories,
   systemCategories,
+  sortBy,
   onSelect,
   onToggleCheck,
   onSearchChange,
   onToggleStatusFilter,
   onClearStatusFilter,
-  onIndexCategoryChange,
-  onSystemCategoryChange,
+  onIndexCategoryToggle,
+  onIndexCategoryClear,
+  onSystemCategoryToggle,
+  onSystemCategoryClear,
+  onSortChange,
 }: {
   materials: MaterialItem[];
   selectedId: string | null;
@@ -246,19 +251,26 @@ export function MaterialList({
   decisions: Record<string, DecisionStatus>;
   search: string;
   statusFilter: Set<string>;
-  indexCategoryFilter: string;
-  systemCategoryFilter: string;
+  indexCategoryFilter: Set<string>;
+  systemCategoryFilter: Set<string>;
   indexCategories: string[];
   systemCategories: string[];
+  sortBy: "name-asc" | "name-desc" | "index-category";
   onSelect: (id: string) => void;
   onToggleCheck: (id: string) => void;
   onSearchChange: (value: string) => void;
   onToggleStatusFilter: (status: string) => void;
   onClearStatusFilter: () => void;
-  onIndexCategoryChange: (value: string) => void;
-  onSystemCategoryChange: (value: string) => void;
+  onIndexCategoryToggle: (cat: string) => void;
+  onIndexCategoryClear: () => void;
+  onSystemCategoryToggle: (sys: string) => void;
+  onSystemCategoryClear: () => void;
+  onSortChange: (sort: "name-asc" | "name-desc" | "index-category") => void;
 }) {
   const [statusPopoverOpen, setStatusPopoverOpen] = useState(false);
+  const [indexCatPopoverOpen, setIndexCatPopoverOpen] = useState(false);
+  const [systemCatPopoverOpen, setSystemCatPopoverOpen] = useState(false);
+  const [sortPopoverOpen, setSortPopoverOpen] = useState(false);
 
   // Count by validation status
   const preApprovedCount = materials.filter(
@@ -290,19 +302,62 @@ export function MaterialList({
     materials.length > 0 &&
     materials.every((m) => checkedIds.has(m.document.id));
 
-  const activeFilterCount = statusFilter.size;
+  const activeStatusCount = statusFilter.size;
+  const activeIndexCatCount = indexCategoryFilter.size;
+  const activeSystemCatCount = systemCategoryFilter.size;
+  const totalActiveFilters = activeStatusCount + activeIndexCatCount + activeSystemCatCount;
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background" role="region" aria-label="Material list panel">
       {/* Filter header */}
       <div className="border-b p-3 space-y-2 shrink-0 bg-background" role="search" aria-label="Filter materials">
-        {/* Row 1: Search — full width */}
-        <SearchInput
-          placeholder="Search materials..."
-          value={search}
-          onChange={onSearchChange}
-          className="[&_input]:h-8"
-        />
+        {/* Row 1: Search + Sort */}
+        <div className="flex items-center gap-2">
+          <SearchInput
+            placeholder="Search materials..."
+            value={search}
+            onChange={onSearchChange}
+            className="[&_input]:h-8 flex-1"
+          />
+          <Popover open={sortPopoverOpen} onOpenChange={setSortPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className={cn(
+                  "h-8 w-8 shrink-0",
+                  sortBy !== "name-asc" && "border-primary/40 bg-primary/5"
+                )}
+                aria-label="Sort materials"
+              >
+                <ArrowUpDown className="h-3.5 w-3.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-2" align="end">
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-muted-foreground px-2 py-1">Sort by</span>
+                <div className="h-px bg-border" />
+                {([
+                  { key: "name-asc" as const, label: "Name A → Z" },
+                  { key: "name-desc" as const, label: "Name Z → A" },
+                  { key: "index-category" as const, label: "Index Category" },
+                ]).map((opt) => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    className={cn(
+                      "flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs font-medium transition-colors text-left",
+                      sortBy === opt.key ? "bg-primary/10 text-primary" : "hover:bg-muted/50"
+                    )}
+                    onClick={() => { onSortChange(opt.key); setSortPopoverOpen(false); }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
 
         {/* Row 2: Document dropdown + Status filter — two columns */}
         <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
@@ -326,16 +381,16 @@ export function MaterialList({
                 size="sm"
                 className={cn(
                   "h-8 w-full text-xs justify-between font-normal px-3",
-                  activeFilterCount > 0 && "border-primary/40 bg-primary/5"
+                  activeStatusCount > 0 && "border-primary/40 bg-primary/5"
                 )}
-                aria-label={`Filter by status${activeFilterCount > 0 ? ` — ${activeFilterCount} selected` : ""}`}
+                aria-label={`Filter by status${activeStatusCount > 0 ? ` — ${activeStatusCount} selected` : ""}`}
               >
                 <span className="truncate">
-                  {activeFilterCount === 0
+                  {activeStatusCount === 0
                     ? "All Status"
-                    : activeFilterCount === 1
+                    : activeStatusCount === 1
                       ? STATUS_OPTIONS.find((s) => statusFilter.has(s.key))?.label ?? "1 Status"
-                      : `${activeFilterCount} Status`}
+                      : `${activeStatusCount} Status`}
                 </span>
                 <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden="true" />
               </Button>
@@ -344,7 +399,7 @@ export function MaterialList({
               <div className="space-y-1">
                 <div className="flex items-center justify-between px-2 py-1">
                   <span className="text-xs font-semibold text-muted-foreground">Filter by Status</span>
-                  {activeFilterCount > 0 && (
+                  {activeStatusCount > 0 && (
                     <button
                       type="button"
                       className="text-[11px] text-primary hover:underline font-medium"
@@ -383,52 +438,128 @@ export function MaterialList({
           </Popover>
         </div>
 
-        {/* Row 3: Category filter dropdowns */}
+        {/* Row 3: Category multi-select popovers */}
         <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
-          <Select value={indexCategoryFilter} onValueChange={onIndexCategoryChange}>
-            <SelectTrigger className="h-8 text-xs w-full">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {indexCategories.map((cat) => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Index Category multi-select */}
+          <Popover open={indexCatPopoverOpen} onOpenChange={setIndexCatPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-8 w-full text-xs justify-between font-normal px-3",
+                  activeIndexCatCount > 0 && "border-primary/40 bg-primary/5"
+                )}
+              >
+                <span className="truncate">
+                  {activeIndexCatCount === 0
+                    ? "All Categories"
+                    : activeIndexCatCount === 1
+                      ? [...indexCategoryFilter][0]
+                      : `${activeIndexCatCount} Categories`}
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2" align="start">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between px-2 py-1">
+                  <span className="text-xs font-semibold text-muted-foreground">Index Category</span>
+                  {activeIndexCatCount > 0 && (
+                    <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={onIndexCategoryClear}>
+                      Clear all
+                    </button>
+                  )}
+                </div>
+                <div className="h-px bg-border" />
+                {indexCategories.map((cat) => {
+                  const isActive = indexCategoryFilter.has(cat);
+                  return (
+                    <label key={cat} className={cn("flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors", isActive ? "bg-primary/5" : "hover:bg-muted/50")}>
+                      <Checkbox checked={isActive} onCheckedChange={() => onIndexCategoryToggle(cat)} className="h-3.5 w-3.5" />
+                      <span className="text-xs font-medium flex-1 truncate">{cat}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
 
-          <Select value={systemCategoryFilter} onValueChange={onSystemCategoryChange}>
-            <SelectTrigger className="h-8 text-xs w-full">
-              <SelectValue placeholder="All Systems" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Systems</SelectItem>
-              {systemCategories.map((sys) => (
-                <SelectItem key={sys} value={sys}>{sys}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* System Category multi-select */}
+          <Popover open={systemCatPopoverOpen} onOpenChange={setSystemCatPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-8 w-full text-xs justify-between font-normal px-3",
+                  activeSystemCatCount > 0 && "border-primary/40 bg-primary/5"
+                )}
+              >
+                <span className="truncate">
+                  {activeSystemCatCount === 0
+                    ? "All Systems"
+                    : activeSystemCatCount === 1
+                      ? [...systemCategoryFilter][0]
+                      : `${activeSystemCatCount} Systems`}
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2" align="start">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between px-2 py-1">
+                  <span className="text-xs font-semibold text-muted-foreground">System</span>
+                  {activeSystemCatCount > 0 && (
+                    <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={onSystemCategoryClear}>
+                      Clear all
+                    </button>
+                  )}
+                </div>
+                <div className="h-px bg-border" />
+                {systemCategories.map((sys) => {
+                  const isActive = systemCategoryFilter.has(sys);
+                  return (
+                    <label key={sys} className={cn("flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors", isActive ? "bg-primary/5" : "hover:bg-muted/50")}>
+                      <Checkbox checked={isActive} onCheckedChange={() => onSystemCategoryToggle(sys)} className="h-3.5 w-3.5" />
+                      <span className="text-xs font-medium flex-1 truncate">{sys}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
-        {/* Active filter chips — show when any status filter is active */}
-        {activeFilterCount > 0 && (
+        {/* Active filter chips — show when any filter is active */}
+        {totalActiveFilters > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Status chips */}
             {STATUS_OPTIONS.filter((s) => statusFilter.has(s.key)).map((opt) => (
               <span
                 key={opt.key}
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                  opt.bgColor,
-                  opt.color
-                )}
+                className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold", opt.bgColor, opt.color)}
               >
                 {opt.label}
-                <button
-                  type="button"
-                  className="hover:opacity-70 transition-opacity"
-                  onClick={() => onToggleStatusFilter(opt.key)}
-                  aria-label={`Remove ${opt.label} filter`}
-                >
+                <button type="button" className="hover:opacity-70 transition-opacity" onClick={() => onToggleStatusFilter(opt.key)} aria-label={`Remove ${opt.label} filter`}>
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </span>
+            ))}
+            {/* Index category chips */}
+            {[...indexCategoryFilter].map((cat) => (
+              <span key={`idx-${cat}`} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-blue-50 text-blue-700">
+                {cat}
+                <button type="button" className="hover:opacity-70 transition-opacity" onClick={() => onIndexCategoryToggle(cat)} aria-label={`Remove ${cat} filter`}>
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </span>
+            ))}
+            {/* System category chips */}
+            {[...systemCategoryFilter].map((sys) => (
+              <span key={`sys-${sys}`} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-slate-100 text-slate-600">
+                {sys}
+                <button type="button" className="hover:opacity-70 transition-opacity" onClick={() => onSystemCategoryToggle(sys)} aria-label={`Remove ${sys} filter`}>
                   <X className="h-2.5 w-2.5" />
                 </button>
               </span>
@@ -436,7 +567,7 @@ export function MaterialList({
             <button
               type="button"
               className="text-[11px] text-muted-foreground hover:text-foreground transition-colors ml-1"
-              onClick={onClearStatusFilter}
+              onClick={() => { onClearStatusFilter(); onIndexCategoryClear(); onSystemCategoryClear(); }}
             >
               Clear
             </button>

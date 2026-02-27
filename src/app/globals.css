@@ -380,7 +380,7 @@
 
   /* ---- Entrance Animations ---- */
   .animate-fade-up {
-    animation: fadeUp 0.4s ease-out both;
+    animation: fadeUp 0.4s ease-out backwards;
   }
   .delay-1 { animation-delay: 50ms; }
   .delay-2 { animation-delay: 100ms; }

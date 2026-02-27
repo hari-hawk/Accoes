@@ -2,7 +2,18 @@
 /*  Hydro Matrix Index Grid — Types & Mock Data                               */
 /* -------------------------------------------------------------------------- */
 
-export type HydroTrade = "Mechanical";
+export type HydroTrade =
+  | "Mechanical"
+  | "Electrical"
+  | "Plumbing"
+  | "Fire Protection";
+
+export const HYDRO_TRADE_ORDER: HydroTrade[] = [
+  "Mechanical",
+  "Electrical",
+  "Plumbing",
+  "Fire Protection",
+];
 
 export type HydroIndexCategory =
   | "Pipe"
@@ -419,7 +430,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
   {
     id: "hm-025",
     indexIdFull: "01_07_XX_00_001_XX",
-    trade: "Mechanical",
+    trade: "Plumbing",
     indexCategory: "Insulation",
     systemCategory: "Generic",
     materialCategory: "n/a",
@@ -463,7 +474,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
   {
     id: "hm-028",
     indexIdFull: "01_08_XX_00_001_XX",
-    trade: "Mechanical",
+    trade: "Electrical",
     indexCategory: "Identification",
     systemCategory: "Generic",
     materialCategory: "n/a",
@@ -477,7 +488,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
   {
     id: "hm-029",
     indexIdFull: "01_08_XX_00_003_XX",
-    trade: "Mechanical",
+    trade: "Plumbing",
     indexCategory: "Identification",
     systemCategory: "Generic",
     materialCategory: "n/a",
@@ -537,7 +548,7 @@ const mockHydroMatrixEntries: HydroMatrixEntry[] = [
   {
     id: "hm-033",
     indexIdFull: "01_10_XX_00_001_XX",
-    trade: "Mechanical",
+    trade: "Fire Protection",
     indexCategory: "Anchors",
     systemCategory: "Generic",
     materialCategory: "n/a",

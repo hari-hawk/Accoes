@@ -3,10 +3,12 @@
 import { useState, useMemo, useCallback } from "react";
 import {
   HYDRO_CATEGORY_ORDER,
+  HYDRO_TRADE_ORDER,
   HYDRO_GRID_VERSIONS,
   getEntriesForVersion,
 } from "@/data/mock-project-index";
 import type {
+  HydroTrade,
   HydroIndexCategory,
   HydroSystemCategory,
   HydroMaterialCategory,
@@ -18,6 +20,7 @@ const DEFAULT_VERSION_ID = HYDRO_GRID_VERSIONS[0].id;
 
 export function useHydroMatrix() {
   const [search, setSearch] = useState("");
+  const [tradeFilter, setTradeFilter] = useState<HydroTrade | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<HydroIndexCategory | "all">("all");
   const [systemFilter, setSystemFilter] = useState<HydroSystemCategory | "all">("all");
   const [materialFilter, setMaterialFilter] = useState<HydroMaterialCategory | "all">("all");
@@ -65,6 +68,9 @@ export function useHydroMatrix() {
       );
     }
 
+    if (tradeFilter !== "all") {
+      result = result.filter((e) => e.trade === tradeFilter);
+    }
     if (categoryFilter !== "all") {
       result = result.filter((e) => e.indexCategory === categoryFilter);
     }
@@ -76,7 +82,7 @@ export function useHydroMatrix() {
     }
 
     return result;
-  }, [allEntries, search, categoryFilter, systemFilter, materialFilter]);
+  }, [allEntries, search, tradeFilter, categoryFilter, systemFilter, materialFilter]);
 
   // Group by category, preserving canonical order
   const groupedEntries = useMemo(() => {
@@ -99,12 +105,14 @@ export function useHydroMatrix() {
 
   const hasActiveFilters =
     search !== "" ||
+    tradeFilter !== "all" ||
     categoryFilter !== "all" ||
     systemFilter !== "all" ||
     materialFilter !== "all";
 
   const clearFilters = () => {
     setSearch("");
+    setTradeFilter("all");
     setCategoryFilter("all");
     setSystemFilter("all");
     setMaterialFilter("all");
@@ -123,6 +131,9 @@ export function useHydroMatrix() {
     // Filters
     search,
     setSearch,
+    tradeFilter,
+    setTradeFilter,
+    trades: HYDRO_TRADE_ORDER,
     categoryFilter,
     setCategoryFilter,
     systemFilter,

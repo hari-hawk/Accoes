@@ -34,6 +34,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { useHydroMatrix } from "@/hooks/use-hydro-matrix";
 import { HYDRO_CATEGORY_ORDER } from "@/data/mock-project-index";
 import type {
+  HydroTrade,
   HydroIndexCategory,
   HydroSystemCategory,
   HydroMaterialCategory,
@@ -133,6 +134,9 @@ function FiltersBar({
   onVersionChange,
   search,
   onSearchChange,
+  tradeFilter,
+  onTradeChange,
+  trades,
   categoryFilter,
   onCategoryChange,
   systemFilter,
@@ -147,6 +151,9 @@ function FiltersBar({
   onVersionChange: (versionId: string) => void;
   search: string;
   onSearchChange: (v: string) => void;
+  tradeFilter: HydroTrade | "all";
+  onTradeChange: (v: HydroTrade | "all") => void;
+  trades: HydroTrade[];
   categoryFilter: HydroIndexCategory | "all";
   onCategoryChange: (v: HydroIndexCategory | "all") => void;
   systemFilter: HydroSystemCategory | "all";
@@ -180,7 +187,25 @@ function FiltersBar({
         )}
       </div>
 
-      {/* 2. Index Category */}
+      {/* 2. Trade */}
+      <Select
+        value={tradeFilter}
+        onValueChange={(v) => onTradeChange(v as HydroTrade | "all")}
+      >
+        <SelectTrigger className="w-[160px]" aria-label="Filter by trade">
+          <SelectValue placeholder="All Trades" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Trades</SelectItem>
+          {trades.map((t) => (
+            <SelectItem key={t} value={t}>
+              {t}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* 3. Index Category */}
       <Select
         value={categoryFilter}
         onValueChange={(v) => onCategoryChange(v as HydroIndexCategory | "all")}
@@ -198,7 +223,7 @@ function FiltersBar({
         </SelectContent>
       </Select>
 
-      {/* 3. System Category */}
+      {/* 4. System Category */}
       <Select
         value={systemFilter}
         onValueChange={(v) => onSystemChange(v as HydroSystemCategory | "all")}
@@ -214,7 +239,7 @@ function FiltersBar({
         </SelectContent>
       </Select>
 
-      {/* 4. Material Category */}
+      {/* 5. Material Category */}
       <Select
         value={materialFilter}
         onValueChange={(v) => onMaterialChange(v as HydroMaterialCategory | "all")}
@@ -244,7 +269,7 @@ function FiltersBar({
         </Button>
       )}
 
-      {/* 5. Right side — version dropdown */}
+      {/* 6. Right side — version dropdown */}
       <div className="flex items-center gap-2 ml-auto">
         <Select value={selectedVersionId} onValueChange={onVersionChange}>
           <SelectTrigger className="w-[200px]" aria-label="Select grid version">
@@ -715,6 +740,9 @@ export default function ProjectIndexPage() {
     switchVersion,
     search,
     setSearch,
+    tradeFilter,
+    setTradeFilter,
+    trades,
     categoryFilter,
     setCategoryFilter,
     systemFilter,
@@ -821,6 +849,9 @@ export default function ProjectIndexPage() {
         onVersionChange={handleVersionChange}
         search={search}
         onSearchChange={setSearch}
+        tradeFilter={tradeFilter}
+        onTradeChange={setTradeFilter}
+        trades={trades}
         categoryFilter={categoryFilter}
         onCategoryChange={setCategoryFilter}
         systemFilter={systemFilter}

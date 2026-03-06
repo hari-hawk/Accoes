@@ -3,11 +3,10 @@
 import { useState, useMemo, useCallback } from "react";
 import {
   getProjectV2Rows,
-  PROJECT_V2_STATUS_OPTIONS,
+  AI_STATUS_OPTIONS,
   type ProjectV2Row,
-  type MaterialV2Row,
 } from "@/data/mock-projects-v2";
-import type { ProjectStatus } from "@/data/types";
+import type { ValidationStatus } from "@/data/types";
 import type {
   HydroTrade,
   HydroIndexCategory,
@@ -36,7 +35,7 @@ export function useProjectsV2() {
   const [tradeFilter, setTradeFilter] = useState<HydroTrade | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<HydroIndexCategory | "all">("all");
   const [systemFilter, setSystemFilter] = useState<HydroSystemCategory | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<ProjectStatus | "all">("all");
+  const [aiStatusFilter, setAiStatusFilter] = useState<ValidationStatus | "all">("all");
   const [materialFilter, setMaterialFilter] = useState<HydroMaterialCategory | "all">("all");
 
   // Expansion (one project at a time)
@@ -47,9 +46,6 @@ export function useProjectsV2() {
 
   // L1 project checkbox selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
-  // L2 material checkbox selection
-  const [selectedMaterialIds, setSelectedMaterialIds] = useState<Set<string>>(new Set());
 
   const toggleExpand = useCallback((id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -73,42 +69,11 @@ export function useProjectsV2() {
     });
   }, []);
 
-  // L2 material selection
-  const toggleMaterialSelect = useCallback((materialId: string) => {
-    setSelectedMaterialIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(materialId)) next.delete(materialId);
-      else next.add(materialId);
-      return next;
-    });
-  }, []);
-
-  const toggleMaterialSelectAll = useCallback((materialIds: string[]) => {
-    setSelectedMaterialIds((prev) => {
-      const allSelected = materialIds.every((id) => prev.has(id));
-      if (allSelected) {
-        const next = new Set(prev);
-        materialIds.forEach((id) => next.delete(id));
-        return next;
-      }
-      const next = new Set(prev);
-      materialIds.forEach((id) => next.add(id));
-      return next;
-    });
-  }, []);
-
-  const clearMaterialSelection = useCallback(() => {
-    setSelectedMaterialIds(new Set());
-  }, []);
-
   // Filtered rows
   const filteredRows = useMemo(() => {
     let result = allRows;
 
     // L1-level filters
-    if (statusFilter !== "all") {
-      result = result.filter((r) => r.status === statusFilter);
-    }
     if (materialFilter !== "all") {
       result = result.filter((r) => r.materialCategory === materialFilter);
     }
@@ -118,7 +83,8 @@ export function useProjectsV2() {
       search ||
       tradeFilter !== "all" ||
       categoryFilter !== "all" ||
-      systemFilter !== "all"
+      systemFilter !== "all" ||
+      aiStatusFilter !== "all"
     ) {
       result = result
         .map((row) => {
@@ -145,6 +111,9 @@ export function useProjectsV2() {
           if (systemFilter !== "all") {
             materials = materials.filter((m) => m.system === systemFilter);
           }
+          if (aiStatusFilter !== "all") {
+            materials = materials.filter((m) => m.aiStatus === aiStatusFilter);
+          }
 
           return { ...row, materials };
         })
@@ -152,21 +121,7 @@ export function useProjectsV2() {
     }
 
     return result;
-  }, [allRows, search, tradeFilter, categoryFilter, systemFilter, statusFilter, materialFilter]);
-
-  // Selected materials with project name (for export)
-  const selectedMaterials = useMemo(() => {
-    if (selectedMaterialIds.size === 0) return [];
-    const result: Array<MaterialV2Row & { projectName: string }> = [];
-    for (const row of filteredRows) {
-      for (const m of row.materials) {
-        if (selectedMaterialIds.has(m.id)) {
-          result.push({ ...m, projectName: row.name });
-        }
-      }
-    }
-    return result;
-  }, [filteredRows, selectedMaterialIds]);
+  }, [allRows, search, tradeFilter, categoryFilter, systemFilter, aiStatusFilter, materialFilter]);
 
   // Executive metrics (reactive to filters)
   const metrics: Metrics = useMemo(() => {
@@ -210,7 +165,7 @@ export function useProjectsV2() {
     tradeFilter !== "all" ||
     categoryFilter !== "all" ||
     systemFilter !== "all" ||
-    statusFilter !== "all" ||
+    aiStatusFilter !== "all" ||
     materialFilter !== "all";
 
   const clearFilters = useCallback(() => {
@@ -218,7 +173,7 @@ export function useProjectsV2() {
     setTradeFilter("all");
     setCategoryFilter("all");
     setSystemFilter("all");
-    setStatusFilter("all");
+    setAiStatusFilter("all");
     setMaterialFilter("all");
   }, []);
 
@@ -239,9 +194,9 @@ export function useProjectsV2() {
     categories: HYDRO_CATEGORY_ORDER,
     systemFilter,
     setSystemFilter,
-    statusFilter,
-    setStatusFilter,
-    statusOptions: PROJECT_V2_STATUS_OPTIONS,
+    aiStatusFilter,
+    setAiStatusFilter,
+    aiStatusOptions: AI_STATUS_OPTIONS,
     materialFilter,
     setMaterialFilter,
     hasActiveFilters,
@@ -257,11 +212,5 @@ export function useProjectsV2() {
     selectedIds,
     toggleSelect,
     toggleSelectAll,
-    // L2 Material selection
-    selectedMaterialIds,
-    toggleMaterialSelect,
-    toggleMaterialSelectAll,
-    clearMaterialSelection,
-    selectedMaterials,
   };
 }

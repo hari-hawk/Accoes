@@ -7,7 +7,6 @@ import {
   ChevronDown,
   FolderKanban,
   Package,
-  Download,
   LayoutList,
   LayoutGrid,
 } from "lucide-react";
@@ -26,7 +25,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { useProjectsV2, type ViewMode, type Metrics } from "@/hooks/use-projects-v2";
 import { formatStatus } from "@/data/mock-projects-v2";
 import type { ProjectV2Row, MaterialV2Row } from "@/data/mock-projects-v2";
-import type { ProjectStatus } from "@/data/types";
+import type { ValidationStatus } from "@/data/types";
 import type {
   HydroTrade,
   HydroIndexCategory,
@@ -34,7 +33,6 @@ import type {
   HydroMaterialCategory,
 } from "@/data/mock-project-index";
 import { HYDRO_CATEGORY_ORDER } from "@/data/mock-project-index";
-import { exportMaterialsCsv } from "@/lib/export-csv";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
@@ -196,9 +194,9 @@ function FiltersBar({
   onCategoryChange,
   systemFilter,
   onSystemChange,
-  statusFilter,
-  onStatusChange,
-  statusOptions,
+  aiStatusFilter,
+  onAiStatusChange,
+  aiStatusOptions,
   materialFilter,
   onMaterialChange,
   hasActiveFilters,
@@ -213,9 +211,9 @@ function FiltersBar({
   onCategoryChange: (v: HydroIndexCategory | "all") => void;
   systemFilter: HydroSystemCategory | "all";
   onSystemChange: (v: HydroSystemCategory | "all") => void;
-  statusFilter: ProjectStatus | "all";
-  onStatusChange: (v: ProjectStatus | "all") => void;
-  statusOptions: ProjectStatus[];
+  aiStatusFilter: ValidationStatus | "all";
+  onAiStatusChange: (v: ValidationStatus | "all") => void;
+  aiStatusOptions: ValidationStatus[];
   materialFilter: HydroMaterialCategory | "all";
   onMaterialChange: (v: HydroMaterialCategory | "all") => void;
   hasActiveFilters: boolean;
@@ -280,13 +278,13 @@ function FiltersBar({
         </SelectContent>
       </Select>
 
-      <Select value={statusFilter} onValueChange={(v) => onStatusChange(v as ProjectStatus | "all")}>
-        <SelectTrigger className="w-[160px]" aria-label="Filter by status">
-          <SelectValue placeholder="All Statuses" />
+      <Select value={aiStatusFilter} onValueChange={(v) => onAiStatusChange(v as ValidationStatus | "all")}>
+        <SelectTrigger className="w-[170px]" aria-label="Filter by AI status">
+          <SelectValue placeholder="All AI Statuses" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Statuses</SelectItem>
-          {statusOptions.map((s) => (
+          <SelectItem value="all">All AI Statuses</SelectItem>
+          {aiStatusOptions.map((s) => (
             <SelectItem key={s} value={s}>{formatStatus(s)}</SelectItem>
           ))}
         </SelectContent>
@@ -315,52 +313,10 @@ function FiltersBar({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Selection Action Bar                                                       */
+/*  Material Rows (L2)                                                         */
 /* -------------------------------------------------------------------------- */
 
-function SelectionBar({
-  count,
-  onExport,
-  onClear,
-}: {
-  count: number;
-  onExport: () => void;
-  onClear: () => void;
-}) {
-  return (
-    <div className="flex items-center gap-3 bg-nav-accent/10 border border-nav-accent/20 rounded-lg px-4 py-2.5">
-      <span className="text-sm font-medium">
-        {count} material{count !== 1 ? "s" : ""} selected
-      </span>
-      <Button size="sm" className="gap-1.5" onClick={onExport}>
-        <Download className="h-4 w-4" aria-hidden="true" />
-        Export CSV
-      </Button>
-      <Button variant="ghost" size="sm" className="text-xs" onClick={onClear}>
-        Clear
-      </Button>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Material Rows (L2) — with checkboxes, sizes, confidence                    */
-/* -------------------------------------------------------------------------- */
-
-function MaterialRows({
-  materials,
-  selectedMaterialIds,
-  onToggleMaterialSelect,
-  onToggleMaterialSelectAll,
-}: {
-  materials: MaterialV2Row[];
-  selectedMaterialIds: Set<string>;
-  onToggleMaterialSelect: (id: string) => void;
-  onToggleMaterialSelectAll: (ids: string[]) => void;
-}) {
-  const allIds = materials.map((m) => m.id);
-  const allSelected = allIds.length > 0 && allIds.every((id) => selectedMaterialIds.has(id));
-
+function MaterialRows({ materials }: { materials: MaterialV2Row[] }) {
   return (
     <tr>
       <td colSpan={8} className="p-0 border-b border-border/50">
@@ -369,13 +325,6 @@ function MaterialRows({
             <table className="w-full" aria-label="Material conformance items">
               <thead>
                 <tr className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  <th scope="col" className="pb-2 w-8" onClick={(e) => e.stopPropagation()}>
-                    <Checkbox
-                      checked={allSelected}
-                      onCheckedChange={() => onToggleMaterialSelectAll(allIds)}
-                      aria-label="Select all materials in this project"
-                    />
-                  </th>
                   <th scope="col" className="pb-2 text-left pr-3">Spec Section</th>
                   <th scope="col" className="pb-2 text-left pr-3">Catalog Title</th>
                   <th scope="col" className="pb-2 text-left pr-3 hidden md:table-cell">Description</th>
@@ -384,20 +333,12 @@ function MaterialRows({
                   <th scope="col" className="pb-2 text-left pr-3">Trade</th>
                   <th scope="col" className="pb-2 text-left pr-3">AI Status</th>
                   <th scope="col" className="pb-2 text-left pr-3 hidden md:table-cell">Decision</th>
-                  <th scope="col" className="pb-2 text-left pr-3 hidden lg:table-cell">System</th>
-                  <th scope="col" className="pb-2 text-left">Confidence</th>
+                  <th scope="col" className="pb-2 text-left hidden lg:table-cell">System</th>
                 </tr>
               </thead>
               <tbody>
                 {materials.map((m) => (
                   <tr key={m.id} className="border-t border-border/30 text-xs">
-                    <td className="py-2 pr-2 w-8" onClick={(e) => e.stopPropagation()}>
-                      <Checkbox
-                        checked={selectedMaterialIds.has(m.id)}
-                        onCheckedChange={() => onToggleMaterialSelect(m.id)}
-                        aria-label={`Select ${m.catalogTitle}`}
-                      />
-                    </td>
                     <td className="py-2 pr-3">
                       <span className="font-mono text-[11px] text-muted-foreground">{m.specSection}</span>
                     </td>
@@ -433,13 +374,8 @@ function MaterialRows({
                         {formatStatus(m.decision)}
                       </Badge>
                     </td>
-                    <td className="py-2 pr-3 hidden lg:table-cell">
+                    <td className="py-2 hidden lg:table-cell">
                       <span className="text-muted-foreground">{m.system}</span>
-                    </td>
-                    <td className="py-2">
-                      <span className={cn("text-xs font-semibold tabular-nums", confidenceColor(m.confidenceScore))}>
-                        {m.confidenceScore}%
-                      </span>
                     </td>
                   </tr>
                 ))}
@@ -462,18 +398,12 @@ function ProjectRow({
   isSelected,
   onToggleExpand,
   onToggleSelect,
-  selectedMaterialIds,
-  onToggleMaterialSelect,
-  onToggleMaterialSelectAll,
 }: {
   row: ProjectV2Row;
   isExpanded: boolean;
   isSelected: boolean;
   onToggleExpand: (id: string) => void;
   onToggleSelect: (id: string) => void;
-  selectedMaterialIds: Set<string>;
-  onToggleMaterialSelect: (id: string) => void;
-  onToggleMaterialSelectAll: (ids: string[]) => void;
 }) {
   return (
     <React.Fragment>
@@ -545,14 +475,7 @@ function ProjectRow({
         </td>
       </tr>
 
-      {isExpanded && (
-        <MaterialRows
-          materials={row.materials}
-          selectedMaterialIds={selectedMaterialIds}
-          onToggleMaterialSelect={onToggleMaterialSelect}
-          onToggleMaterialSelectAll={onToggleMaterialSelectAll}
-        />
-      )}
+      {isExpanded && <MaterialRows materials={row.materials} />}
     </React.Fragment>
   );
 }
@@ -568,9 +491,6 @@ function ProjectsV2Table({
   selectedIds,
   onToggleSelect,
   onToggleSelectAll,
-  selectedMaterialIds,
-  onToggleMaterialSelect,
-  onToggleMaterialSelectAll,
 }: {
   rows: ProjectV2Row[];
   expandedId: string | null;
@@ -578,16 +498,13 @@ function ProjectsV2Table({
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onToggleSelectAll: (ids: string[]) => void;
-  selectedMaterialIds: Set<string>;
-  onToggleMaterialSelect: (id: string) => void;
-  onToggleMaterialSelectAll: (ids: string[]) => void;
 }) {
   const allIds = rows.map((r) => r.id);
   const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
 
   return (
     <div className="rounded-xl border bg-card shadow-card overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="overflow-hidden">
         <table className="w-full" aria-label="Projects v2 — cross-project material conformance">
           <thead>
             <tr className="border-b bg-muted/30">
@@ -628,9 +545,6 @@ function ProjectsV2Table({
                 isSelected={selectedIds.has(row.id)}
                 onToggleExpand={onToggleExpand}
                 onToggleSelect={onToggleSelect}
-                selectedMaterialIds={selectedMaterialIds}
-                onToggleMaterialSelect={onToggleMaterialSelect}
-                onToggleMaterialSelectAll={onToggleMaterialSelectAll}
               />
             ))}
           </tbody>
@@ -735,9 +649,9 @@ export default function ProjectsV2Page() {
     setCategoryFilter,
     systemFilter,
     setSystemFilter,
-    statusFilter,
-    setStatusFilter,
-    statusOptions,
+    aiStatusFilter,
+    setAiStatusFilter,
+    aiStatusOptions,
     materialFilter,
     setMaterialFilter,
     hasActiveFilters,
@@ -750,11 +664,6 @@ export default function ProjectsV2Page() {
     selectedIds,
     toggleSelect,
     toggleSelectAll,
-    selectedMaterialIds,
-    toggleMaterialSelect,
-    toggleMaterialSelectAll,
-    clearMaterialSelection,
-    selectedMaterials,
   } = useProjectsV2();
 
   const handleGridCardClick = useCallback(
@@ -764,10 +673,6 @@ export default function ProjectsV2Page() {
     },
     [setViewMode, setExpandedId]
   );
-
-  const handleExport = useCallback(() => {
-    exportMaterialsCsv(selectedMaterials);
-  }, [selectedMaterials]);
 
   return (
     <main className="px-6 py-6 space-y-5 max-w-[1400px] mx-auto">
@@ -793,23 +698,14 @@ export default function ProjectsV2Page() {
         onCategoryChange={setCategoryFilter}
         systemFilter={systemFilter}
         onSystemChange={setSystemFilter}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-        statusOptions={statusOptions}
+        aiStatusFilter={aiStatusFilter}
+        onAiStatusChange={setAiStatusFilter}
+        aiStatusOptions={aiStatusOptions}
         materialFilter={materialFilter}
         onMaterialChange={setMaterialFilter}
         hasActiveFilters={hasActiveFilters}
         onClearFilters={clearFilters}
       />
-
-      {/* Selection action bar */}
-      {selectedMaterials.length > 0 && (
-        <SelectionBar
-          count={selectedMaterials.length}
-          onExport={handleExport}
-          onClear={clearMaterialSelection}
-        />
-      )}
 
       {/* Content — table or grid or empty */}
       {filteredRows.length === 0 ? (
@@ -831,9 +727,6 @@ export default function ProjectsV2Page() {
           selectedIds={selectedIds}
           onToggleSelect={toggleSelect}
           onToggleSelectAll={toggleSelectAll}
-          selectedMaterialIds={selectedMaterialIds}
-          onToggleMaterialSelect={toggleMaterialSelect}
-          onToggleMaterialSelectAll={toggleMaterialSelectAll}
         />
       ) : (
         <ProjectGridView rows={filteredRows} onCardClick={handleGridCardClick} />

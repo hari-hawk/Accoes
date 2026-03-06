@@ -1,12 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import {
   Search,
   X,
   ChevronDown,
   FolderKanban,
   Package,
+  Download,
+  LayoutList,
+  LayoutGrid,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/shared/empty-state";
-import { useProjectsV2 } from "@/hooks/use-projects-v2";
+import { useProjectsV2, type ViewMode, type Metrics } from "@/hooks/use-projects-v2";
 import { formatStatus } from "@/data/mock-projects-v2";
 import type { ProjectV2Row, MaterialV2Row } from "@/data/mock-projects-v2";
 import type { ProjectStatus } from "@/data/types";
@@ -31,6 +34,7 @@ import type {
   HydroMaterialCategory,
 } from "@/data/mock-project-index";
 import { HYDRO_CATEGORY_ORDER } from "@/data/mock-project-index";
+import { exportMaterialsCsv } from "@/lib/export-csv";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
@@ -62,7 +66,7 @@ const DECISION_COLORS: Record<string, string> = {
 
 const MATERIAL_CAT_COLORS: Record<string, string> = {
   "Carbon Steel": "bg-zinc-100 text-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400",
-  "Copper": "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  Copper: "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
   "n/a": "",
 };
 
@@ -79,9 +83,13 @@ function confidenceColor(score: number): string {
 function HeroSection({
   projectCount,
   materialCount,
+  viewMode,
+  onViewModeChange,
 }: {
   projectCount: number;
   materialCount: number;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
 }) {
   return (
     <section
@@ -106,8 +114,71 @@ function HeroSection({
           <span className="font-semibold text-foreground">{materialCount}</span>
           <span>Materials</span>
         </div>
+        <div className="h-4 w-px bg-border" aria-hidden="true" />
+        {/* View toggle */}
+        <div className="flex items-center border rounded-lg overflow-hidden" role="group" aria-label="View mode">
+          <button
+            className={cn(
+              "p-2 transition-colors",
+              viewMode === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"
+            )}
+            onClick={() => onViewModeChange("list")}
+            aria-label="List view"
+            aria-pressed={viewMode === "list"}
+          >
+            <LayoutList className="h-4 w-4" />
+          </button>
+          <button
+            className={cn(
+              "p-2 transition-colors",
+              viewMode === "grid" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"
+            )}
+            onClick={() => onViewModeChange("grid")}
+            aria-label="Grid view"
+            aria-pressed={viewMode === "grid"}
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Metrics Dashboard                                                          */
+/* -------------------------------------------------------------------------- */
+
+function MetricsDashboard({ metrics }: { metrics: Metrics }) {
+  const cards: Array<{ label: string; value: string; accent: string }> = [
+    { label: "Projects", value: String(metrics.totalProjects), accent: "border-l-blue-600" },
+    { label: "Materials", value: String(metrics.totalMaterials), accent: "border-l-indigo-500" },
+    { label: "Approval Rate", value: `${metrics.approvalRate}%`, accent: "border-l-emerald-500" },
+    { label: "Pre-Approved", value: String(metrics.preApprovedCount), accent: "border-l-emerald-500" },
+    { label: "Review Required", value: String(metrics.reviewRequiredCount), accent: "border-l-amber-500" },
+    { label: "Action Mandatory", value: String(metrics.actionMandatoryCount), accent: "border-l-red-500" },
+    { label: "Avg Confidence", value: `${metrics.avgConfidence}%`, accent: "border-l-violet-500" },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3" role="group" aria-label="Executive metrics">
+      {cards.map((card) => (
+        <div
+          key={card.label}
+          className={cn(
+            "bg-card border border-border rounded-lg px-4 py-3 border-l-[3px]",
+            card.accent
+          )}
+        >
+          <p className="text-xl font-semibold text-foreground leading-tight tabular-nums">
+            {card.value}
+          </p>
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mt-1">
+            {card.label}
+          </p>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -152,7 +223,6 @@ function FiltersBar({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-3" role="search" aria-label="Filter projects and materials">
-      {/* Search */}
       <div className="relative flex-1 min-w-[200px] max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
         <Input
@@ -174,11 +244,7 @@ function FiltersBar({
         )}
       </div>
 
-      {/* Trade */}
-      <Select
-        value={tradeFilter}
-        onValueChange={(v) => onTradeChange(v as HydroTrade | "all")}
-      >
+      <Select value={tradeFilter} onValueChange={(v) => onTradeChange(v as HydroTrade | "all")}>
         <SelectTrigger className="w-[160px]" aria-label="Filter by trade">
           <SelectValue placeholder="All Trades" />
         </SelectTrigger>
@@ -190,11 +256,7 @@ function FiltersBar({
         </SelectContent>
       </Select>
 
-      {/* Category */}
-      <Select
-        value={categoryFilter}
-        onValueChange={(v) => onCategoryChange(v as HydroIndexCategory | "all")}
-      >
+      <Select value={categoryFilter} onValueChange={(v) => onCategoryChange(v as HydroIndexCategory | "all")}>
         <SelectTrigger className="w-[170px]" aria-label="Filter by category">
           <SelectValue placeholder="All Categories" />
         </SelectTrigger>
@@ -206,11 +268,7 @@ function FiltersBar({
         </SelectContent>
       </Select>
 
-      {/* System */}
-      <Select
-        value={systemFilter}
-        onValueChange={(v) => onSystemChange(v as HydroSystemCategory | "all")}
-      >
+      <Select value={systemFilter} onValueChange={(v) => onSystemChange(v as HydroSystemCategory | "all")}>
         <SelectTrigger className="w-[170px]" aria-label="Filter by system">
           <SelectValue placeholder="All Systems" />
         </SelectTrigger>
@@ -222,11 +280,7 @@ function FiltersBar({
         </SelectContent>
       </Select>
 
-      {/* Status */}
-      <Select
-        value={statusFilter}
-        onValueChange={(v) => onStatusChange(v as ProjectStatus | "all")}
-      >
+      <Select value={statusFilter} onValueChange={(v) => onStatusChange(v as ProjectStatus | "all")}>
         <SelectTrigger className="w-[160px]" aria-label="Filter by status">
           <SelectValue placeholder="All Statuses" />
         </SelectTrigger>
@@ -238,11 +292,7 @@ function FiltersBar({
         </SelectContent>
       </Select>
 
-      {/* Material */}
-      <Select
-        value={materialFilter}
-        onValueChange={(v) => onMaterialChange(v as HydroMaterialCategory | "all")}
-      >
+      <Select value={materialFilter} onValueChange={(v) => onMaterialChange(v as HydroMaterialCategory | "all")}>
         <SelectTrigger className="w-[160px]" aria-label="Filter by material">
           <SelectValue placeholder="All Materials" />
         </SelectTrigger>
@@ -254,15 +304,8 @@ function FiltersBar({
         </SelectContent>
       </Select>
 
-      {/* Clear */}
       {hasActiveFilters && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs h-8 gap-1"
-          onClick={onClearFilters}
-          aria-label="Clear all filters"
-        >
+        <Button variant="ghost" size="sm" className="text-xs h-8 gap-1" onClick={onClearFilters} aria-label="Clear all filters">
           <X className="h-3 w-3" aria-hidden="true" />
           Clear Filters
         </Button>
@@ -272,10 +315,52 @@ function FiltersBar({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Material Rows (L2)                                                         */
+/*  Selection Action Bar                                                       */
 /* -------------------------------------------------------------------------- */
 
-function MaterialRows({ materials }: { materials: MaterialV2Row[] }) {
+function SelectionBar({
+  count,
+  onExport,
+  onClear,
+}: {
+  count: number;
+  onExport: () => void;
+  onClear: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-3 bg-nav-accent/10 border border-nav-accent/20 rounded-lg px-4 py-2.5">
+      <span className="text-sm font-medium">
+        {count} material{count !== 1 ? "s" : ""} selected
+      </span>
+      <Button size="sm" className="gap-1.5" onClick={onExport}>
+        <Download className="h-4 w-4" aria-hidden="true" />
+        Export CSV
+      </Button>
+      <Button variant="ghost" size="sm" className="text-xs" onClick={onClear}>
+        Clear
+      </Button>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Material Rows (L2) — with checkboxes, sizes, confidence                    */
+/* -------------------------------------------------------------------------- */
+
+function MaterialRows({
+  materials,
+  selectedMaterialIds,
+  onToggleMaterialSelect,
+  onToggleMaterialSelectAll,
+}: {
+  materials: MaterialV2Row[];
+  selectedMaterialIds: Set<string>;
+  onToggleMaterialSelect: (id: string) => void;
+  onToggleMaterialSelectAll: (ids: string[]) => void;
+}) {
+  const allIds = materials.map((m) => m.id);
+  const allSelected = allIds.length > 0 && allIds.every((id) => selectedMaterialIds.has(id));
+
   return (
     <tr>
       <td colSpan={8} className="p-0 border-b border-border/50">
@@ -284,26 +369,37 @@ function MaterialRows({ materials }: { materials: MaterialV2Row[] }) {
             <table className="w-full" aria-label="Material conformance items">
               <thead>
                 <tr className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th scope="col" className="pb-2 w-8" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={() => onToggleMaterialSelectAll(allIds)}
+                      aria-label="Select all materials in this project"
+                    />
+                  </th>
                   <th scope="col" className="pb-2 text-left pr-3">Spec Section</th>
                   <th scope="col" className="pb-2 text-left pr-3">Catalog Title</th>
                   <th scope="col" className="pb-2 text-left pr-3 hidden md:table-cell">Description</th>
+                  <th scope="col" className="pb-2 text-left pr-3 hidden lg:table-cell">Sizes</th>
                   <th scope="col" className="pb-2 text-left pr-3 hidden lg:table-cell">Subcategory</th>
                   <th scope="col" className="pb-2 text-left pr-3">Trade</th>
                   <th scope="col" className="pb-2 text-left pr-3">AI Status</th>
                   <th scope="col" className="pb-2 text-left pr-3 hidden md:table-cell">Decision</th>
-                  <th scope="col" className="pb-2 text-left hidden lg:table-cell">System</th>
+                  <th scope="col" className="pb-2 text-left pr-3 hidden lg:table-cell">System</th>
+                  <th scope="col" className="pb-2 text-left">Confidence</th>
                 </tr>
               </thead>
               <tbody>
                 {materials.map((m) => (
-                  <tr
-                    key={m.id}
-                    className="border-t border-border/30 text-xs"
-                  >
+                  <tr key={m.id} className="border-t border-border/30 text-xs">
+                    <td className="py-2 pr-2 w-8" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selectedMaterialIds.has(m.id)}
+                        onCheckedChange={() => onToggleMaterialSelect(m.id)}
+                        aria-label={`Select ${m.catalogTitle}`}
+                      />
+                    </td>
                     <td className="py-2 pr-3">
-                      <span className="font-mono text-[11px] text-muted-foreground">
-                        {m.specSection}
-                      </span>
+                      <span className="font-mono text-[11px] text-muted-foreground">{m.specSection}</span>
                     </td>
                     <td className="py-2 pr-3">
                       <span className="font-medium text-sm">{m.catalogTitle}</span>
@@ -311,6 +407,14 @@ function MaterialRows({ materials }: { materials: MaterialV2Row[] }) {
                     <td className="py-2 pr-3 hidden md:table-cell">
                       <span className="text-muted-foreground truncate block max-w-[200px]" title={m.description}>
                         {m.description}
+                      </span>
+                    </td>
+                    <td className="py-2 pr-3 hidden lg:table-cell">
+                      <span className="text-muted-foreground text-[11px] font-mono">
+                        {m.sizes.includes("|")
+                          ? m.sizes.split("|").slice(0, 3).join(", ") +
+                            (m.sizes.split("|").length > 3 ? "…" : "")
+                          : m.sizes}
                       </span>
                     </td>
                     <td className="py-2 pr-3 hidden lg:table-cell">
@@ -329,8 +433,13 @@ function MaterialRows({ materials }: { materials: MaterialV2Row[] }) {
                         {formatStatus(m.decision)}
                       </Badge>
                     </td>
-                    <td className="py-2 hidden lg:table-cell">
+                    <td className="py-2 pr-3 hidden lg:table-cell">
                       <span className="text-muted-foreground">{m.system}</span>
+                    </td>
+                    <td className="py-2">
+                      <span className={cn("text-xs font-semibold tabular-nums", confidenceColor(m.confidenceScore))}>
+                        {m.confidenceScore}%
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -353,12 +462,18 @@ function ProjectRow({
   isSelected,
   onToggleExpand,
   onToggleSelect,
+  selectedMaterialIds,
+  onToggleMaterialSelect,
+  onToggleMaterialSelectAll,
 }: {
   row: ProjectV2Row;
   isExpanded: boolean;
   isSelected: boolean;
   onToggleExpand: (id: string) => void;
   onToggleSelect: (id: string) => void;
+  selectedMaterialIds: Set<string>;
+  onToggleMaterialSelect: (id: string) => void;
+  onToggleMaterialSelectAll: (ids: string[]) => void;
 }) {
   return (
     <React.Fragment>
@@ -379,7 +494,6 @@ function ProjectRow({
           }
         }}
       >
-        {/* Checkbox */}
         <td className="p-3 w-10" onClick={(e) => e.stopPropagation()}>
           <Checkbox
             checked={isSelected}
@@ -387,7 +501,6 @@ function ProjectRow({
             aria-label={`Select ${row.name}`}
           />
         </td>
-        {/* Chevron */}
         <td className="p-3 w-10">
           <ChevronDown
             className={cn(
@@ -397,7 +510,6 @@ function ProjectRow({
             aria-hidden="true"
           />
         </td>
-        {/* Project Name */}
         <td className="p-3">
           <p className="text-sm font-medium group-hover:text-nav-accent transition-colors">
             {row.name}
@@ -406,29 +518,22 @@ function ProjectRow({
             {row.materials.length} material{row.materials.length !== 1 ? "s" : ""}
           </p>
         </td>
-        {/* Job ID */}
         <td className="p-3 w-[120px]">
-          <span className="font-mono text-[11px] text-muted-foreground">
-            {row.jobId}
-          </span>
+          <span className="font-mono text-[11px] text-muted-foreground">{row.jobId}</span>
         </td>
-        {/* Type */}
         <td className="p-3 w-[120px] hidden md:table-cell">
           <span className="text-xs text-muted-foreground">{row.type}</span>
         </td>
-        {/* Status */}
         <td className="p-3 w-[100px]">
           <Badge variant="secondary" className={cn("text-[10px]", STATUS_COLORS[row.status])}>
             {formatStatus(row.status)}
           </Badge>
         </td>
-        {/* Confidence */}
         <td className="p-3 w-[100px] hidden lg:table-cell">
           <span className={cn("text-sm font-semibold tabular-nums", confidenceColor(row.overallConfidence))}>
             {row.overallConfidence}%
           </span>
         </td>
-        {/* Material Category */}
         <td className="p-3 w-[130px] hidden xl:table-cell">
           {row.materialCategory !== "n/a" ? (
             <Badge variant="secondary" className={cn("text-[10px]", MATERIAL_CAT_COLORS[row.materialCategory])}>
@@ -440,14 +545,20 @@ function ProjectRow({
         </td>
       </tr>
 
-      {/* L2 Material rows (expanded) */}
-      {isExpanded && <MaterialRows materials={row.materials} />}
+      {isExpanded && (
+        <MaterialRows
+          materials={row.materials}
+          selectedMaterialIds={selectedMaterialIds}
+          onToggleMaterialSelect={onToggleMaterialSelect}
+          onToggleMaterialSelectAll={onToggleMaterialSelectAll}
+        />
+      )}
     </React.Fragment>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Projects v2 Table                                                          */
+/*  Projects v2 Table (List View)                                              */
 /* -------------------------------------------------------------------------- */
 
 function ProjectsV2Table({
@@ -457,6 +568,9 @@ function ProjectsV2Table({
   selectedIds,
   onToggleSelect,
   onToggleSelectAll,
+  selectedMaterialIds,
+  onToggleMaterialSelect,
+  onToggleMaterialSelectAll,
 }: {
   rows: ProjectV2Row[];
   expandedId: string | null;
@@ -464,6 +578,9 @@ function ProjectsV2Table({
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onToggleSelectAll: (ids: string[]) => void;
+  selectedMaterialIds: Set<string>;
+  onToggleMaterialSelect: (id: string) => void;
+  onToggleMaterialSelectAll: (ids: string[]) => void;
 }) {
   const allIds = rows.map((r) => r.id);
   const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
@@ -511,11 +628,90 @@ function ProjectsV2Table({
                 isSelected={selectedIds.has(row.id)}
                 onToggleExpand={onToggleExpand}
                 onToggleSelect={onToggleSelect}
+                selectedMaterialIds={selectedMaterialIds}
+                onToggleMaterialSelect={onToggleMaterialSelect}
+                onToggleMaterialSelectAll={onToggleMaterialSelectAll}
               />
             ))}
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Grid View                                                                  */
+/* -------------------------------------------------------------------------- */
+
+function ProjectGridCard({
+  row,
+  onClick,
+}: {
+  row: ProjectV2Row;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "bg-card border rounded-xl p-5 hover:border-nav-accent/50 hover:shadow-sm",
+        "transition-all duration-150 cursor-pointer group"
+      )}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      aria-label={`${row.name} — click to expand in list view`}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold truncate group-hover:text-nav-accent transition-colors">
+          {row.name}
+        </h3>
+        <Badge variant="secondary" className={cn("text-[10px] shrink-0", STATUS_COLORS[row.status])}>
+          {formatStatus(row.status)}
+        </Badge>
+      </div>
+      <p className="text-[11px] font-mono text-muted-foreground mt-1">{row.jobId}</p>
+      <div className="flex items-center gap-4 mt-4 pt-3 border-t border-border/50">
+        <div>
+          <p className={cn("text-lg font-semibold tabular-nums", confidenceColor(row.overallConfidence))}>
+            {row.overallConfidence}%
+          </p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Confidence</p>
+        </div>
+        <div>
+          <p className="text-lg font-semibold tabular-nums">{row.materials.length}</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Materials</p>
+        </div>
+        <div className="ml-auto">
+          {row.materialCategory !== "n/a" && (
+            <Badge variant="secondary" className={cn("text-[10px]", MATERIAL_CAT_COLORS[row.materialCategory])}>
+              {row.materialCategory}
+            </Badge>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProjectGridView({
+  rows,
+  onCardClick,
+}: {
+  rows: ProjectV2Row[];
+  onCardClick: (projectId: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {rows.map((row) => (
+        <ProjectGridCard key={row.id} row={row} onClick={() => onCardClick(row.id)} />
+      ))}
     </div>
   );
 }
@@ -529,6 +725,7 @@ export default function ProjectsV2Page() {
     filteredRows,
     filteredProjectCount,
     totalMaterials,
+    metrics,
     search,
     setSearch,
     tradeFilter,
@@ -546,19 +743,44 @@ export default function ProjectsV2Page() {
     hasActiveFilters,
     clearFilters,
     expandedId,
+    setExpandedId,
     toggleExpand,
+    viewMode,
+    setViewMode,
     selectedIds,
     toggleSelect,
     toggleSelectAll,
+    selectedMaterialIds,
+    toggleMaterialSelect,
+    toggleMaterialSelectAll,
+    clearMaterialSelection,
+    selectedMaterials,
   } = useProjectsV2();
 
+  const handleGridCardClick = useCallback(
+    (projectId: string) => {
+      setViewMode("list");
+      setExpandedId(projectId);
+    },
+    [setViewMode, setExpandedId]
+  );
+
+  const handleExport = useCallback(() => {
+    exportMaterialsCsv(selectedMaterials);
+  }, [selectedMaterials]);
+
   return (
-    <main className="px-6 py-6 space-y-6 max-w-[1400px] mx-auto">
+    <main className="px-6 py-6 space-y-5 max-w-[1400px] mx-auto">
       {/* Hero */}
       <HeroSection
         projectCount={filteredProjectCount}
         materialCount={totalMaterials}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
+
+      {/* Metrics */}
+      <MetricsDashboard metrics={metrics} />
 
       {/* Filters */}
       <FiltersBar
@@ -580,7 +802,16 @@ export default function ProjectsV2Page() {
         onClearFilters={clearFilters}
       />
 
-      {/* Table or Empty */}
+      {/* Selection action bar */}
+      {selectedMaterials.length > 0 && (
+        <SelectionBar
+          count={selectedMaterials.length}
+          onExport={handleExport}
+          onClear={clearMaterialSelection}
+        />
+      )}
+
+      {/* Content — table or grid or empty */}
       {filteredRows.length === 0 ? (
         <EmptyState
           icon={Search}
@@ -592,7 +823,7 @@ export default function ProjectsV2Page() {
             Clear Filters
           </Button>
         </EmptyState>
-      ) : (
+      ) : viewMode === "list" ? (
         <ProjectsV2Table
           rows={filteredRows}
           expandedId={expandedId}
@@ -600,7 +831,12 @@ export default function ProjectsV2Page() {
           selectedIds={selectedIds}
           onToggleSelect={toggleSelect}
           onToggleSelectAll={toggleSelectAll}
+          selectedMaterialIds={selectedMaterialIds}
+          onToggleMaterialSelect={toggleMaterialSelect}
+          onToggleMaterialSelectAll={toggleMaterialSelectAll}
         />
+      ) : (
+        <ProjectGridView rows={filteredRows} onCardClick={handleGridCardClick} />
       )}
     </main>
   );

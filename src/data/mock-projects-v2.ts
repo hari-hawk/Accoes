@@ -1,6 +1,7 @@
 import { mockProjects } from "./mock-projects";
 import { mockDocuments } from "./mock-documents";
 import { mockValidations } from "./mock-validations";
+import { getAllHydroEntries } from "./mock-project-index";
 import type {
   Project,
   ProjectStatus,
@@ -77,6 +78,35 @@ export function formatStatus(status: string): string {
     .join(" ");
 }
 
+/* ── Seeded PRNG (deterministic, React 19 safe) ────────────────── */
+
+function hashString(str: string): number {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+function seededRandom(seed: number): () => number {
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function weightedPick<T>(rng: () => number, items: T[], weights: number[]): T {
+  const r = rng();
+  let cum = 0;
+  for (let i = 0; i < items.length; i++) {
+    cum += weights[i];
+    if (r <= cum) return items[i];
+  }
+  return items[items.length - 1];
+}
+
 /* ── Trade / material derivation ───────────────────────────────── */
 
 const CATEGORY_TO_TRADE: Record<string, HydroTrade> = {
@@ -126,7 +156,62 @@ function buildMaterialRows(project: Project): MaterialV2Row[] {
   });
 }
 
-/* ── Synthetic materials for projects without real documents ───── */
+/* ── Scaled material generation from hydro matrix templates ───── */
+
+const AI_STATUSES: ValidationStatus[] = ["pre_approved", "review_required", "action_mandatory"];
+const AI_WEIGHTS = [0.55, 0.30, 0.15];
+
+const DECISIONS: DecisionStatus[] = ["approved", "pending", "approved_with_notes", "revision_requested", "rejected", "revisit"];
+const DECISION_WEIGHTS = [0.35, 0.20, 0.15, 0.15, 0.10, 0.05];
+
+const SPEC_SECTIONS = [
+  "05 29 00", "23 21 13", "23 05 23", "23 07 19", "23 09 00",
+  "23 11 23", "22 10 00", "22 11 16", "26 05 19", "21 13 13",
+  "23 05 29", "23 21 16", "22 05 23", "23 05 53", "23 23 00",
+];
+
+function buildScaledMaterials(projectId: string, count: number): MaterialV2Row[] {
+  const entries = getAllHydroEntries();
+  const rng = seededRandom(hashString(projectId));
+  const materials: MaterialV2Row[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const template = entries[i % entries.length];
+    const aiStatus = weightedPick(rng, AI_STATUSES, AI_WEIGHTS);
+    const decision = weightedPick(rng, DECISIONS, DECISION_WEIGHTS);
+
+    let confidence: number;
+    if (aiStatus === "pre_approved") {
+      confidence = 80 + Math.floor(rng() * 20);
+    } else if (aiStatus === "review_required") {
+      confidence = 50 + Math.floor(rng() * 30);
+    } else {
+      confidence = 20 + Math.floor(rng() * 30);
+    }
+
+    const specIdx = Math.floor(rng() * SPEC_SECTIONS.length);
+
+    materials.push({
+      id: `${projectId}-sc-${i}`,
+      specSection: SPEC_SECTIONS[specIdx],
+      catalogTitle: i < entries.length
+        ? template.description
+        : `${template.description} (Var ${Math.floor(i / entries.length)})`,
+      description: template.indexDescription,
+      sizes: template.sizes,
+      subcategory: template.indexCategory,
+      trade: template.trade,
+      aiStatus,
+      decision,
+      system: template.systemCategory,
+      confidenceScore: confidence,
+    });
+  }
+
+  return materials;
+}
+
+/* ── Synthetic materials (small fallback for low-doc projects) ── */
 
 const SYNTHETIC_DATA: Array<{
   specSection: string;
@@ -205,16 +290,36 @@ function buildSyntheticMaterials(project: Project): MaterialV2Row[] {
   }));
 }
 
+/* ── Project-to-material-count mapping ─────────────────────────── */
+
+const SCALED_PROJECTS: Record<string, number> = {
+  "proj-1": 200,   // Mayo Clinic (34 docs, completed)
+  "proj-3": 120,   // NET (15 docs, active)
+  "proj-5": 150,   // PSL (18 docs, on_hold)
+  "proj-6": 80,    // DCJC (12 docs, active)
+  "proj-7": 100,   // IEUA (20 docs, active)
+  "proj-8": 180,   // PF (26 docs, completed)
+};
+
 /* ── Public API ─────────────────────────────────────────────────── */
 
 export function getProjectV2Rows(): ProjectV2Row[] {
   return mockProjects
     .filter((p) => p.status !== "extracting")
     .map((project) => {
-      let materials = buildMaterialRows(project);
-      if (materials.length === 0) {
-        materials = buildSyntheticMaterials(project);
+      let materials: MaterialV2Row[];
+
+      if (SCALED_PROJECTS[project.id]) {
+        // Use scaled generation for high-volume projects
+        materials = buildScaledMaterials(project.id, SCALED_PROJECTS[project.id]);
+      } else {
+        // Try real documents first, fall back to synthetic
+        materials = buildMaterialRows(project);
+        if (materials.length === 0) {
+          materials = buildSyntheticMaterials(project);
+        }
       }
+
       return {
         id: project.id,
         name: project.name,

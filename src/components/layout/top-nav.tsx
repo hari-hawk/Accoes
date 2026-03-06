@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   FolderKanban,
+  Layers,
   Users,
   FileStack,
   Bell,
@@ -44,6 +45,7 @@ import { currentUser } from "@/data/mock-users";
 
 const mainNavItems = [
   { title: "Projects", href: "/projects", icon: FolderKanban },
+  { title: "Projects v2", href: "/projects-v2", icon: Layers },
   { title: "User Management", href: "/user-management", icon: Users },
   { title: "Project Index", href: "/project-index", icon: FileStack },
 ];

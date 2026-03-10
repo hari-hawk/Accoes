@@ -154,7 +154,7 @@ function MetricsDashboard({ metrics }: { metrics: Metrics }) {
     { label: "Approval Rate", value: `${metrics.approvalRate}%`, accent: "border-l-emerald-500" },
     { label: "Pre-Approved", value: String(metrics.preApprovedCount), accent: "border-l-emerald-500" },
     { label: "Review Required", value: String(metrics.reviewRequiredCount), accent: "border-l-amber-500" },
-    { label: "Action Mandatory", value: String(metrics.actionMandatoryCount), accent: "border-l-red-500" },
+    { label: "Action Required", value: String(metrics.actionMandatoryCount), accent: "border-l-red-500" },
     { label: "Avg Confidence", value: `${metrics.avgConfidence}%`, accent: "border-l-violet-500" },
   ];
 

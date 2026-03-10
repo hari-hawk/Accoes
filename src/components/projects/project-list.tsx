@@ -536,10 +536,10 @@ const REPORT_STATUS_OPTIONS: {
   dotColor: string;
   kind: "validation" | "decision";
 }[] = [
-  { key: "pre_approved", label: "Pre-Approved", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "validation" },
-  { key: "review_required", label: "Review Required", icon: AlertTriangle, color: "text-status-review-required", bgColor: "bg-status-review-required-bg", dotColor: "bg-status-review-required", kind: "validation" },
-  { key: "action_mandatory", label: "Action Mandatory", icon: XCircle, color: "text-status-action-mandatory", bgColor: "bg-status-action-mandatory-bg", dotColor: "bg-status-action-mandatory", kind: "validation" },
-  { key: "approved", label: "Approved", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "decision" },
+  { key: "pre_approved", label: "Pre-Approved (80-100%)", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "validation" },
+  { key: "review_required", label: "Review Required (70-79%)", icon: AlertTriangle, color: "text-status-review-required", bgColor: "bg-status-review-required-bg", dotColor: "bg-status-review-required", kind: "validation" },
+  { key: "action_mandatory", label: "Action Required (0-69%)", icon: XCircle, color: "text-status-action-mandatory", bgColor: "bg-status-action-mandatory-bg", dotColor: "bg-status-action-mandatory", kind: "validation" },
+  { key: "approved", label: "Approved (100%)", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "decision" },
   { key: "revisit", label: "Revisit", icon: RotateCcw, color: "text-status-review-required", bgColor: "bg-status-review-required-bg", dotColor: "bg-status-review-required", kind: "decision" },
 ];
 
@@ -916,7 +916,7 @@ function DownloadReportSheet({
                       <AlertTriangle className="h-3 w-3" aria-hidden="true" />
                       {statusCountMap.review_required}
                     </span>
-                    <span className="flex items-center gap-1 text-status-action-mandatory" aria-label={`${statusCountMap.action_mandatory} action mandatory`}>
+                    <span className="flex items-center gap-1 text-status-action-mandatory" aria-label={`${statusCountMap.action_mandatory} action required`}>
                       <XCircle className="h-3 w-3" aria-hidden="true" />
                       {statusCountMap.action_mandatory}
                     </span>

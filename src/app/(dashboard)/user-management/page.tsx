@@ -156,11 +156,11 @@ const MOCK_USER_ACTIVITIES: Record<string, UserActivity[]> = {
   u2: [
     { id: "a5", action: "Uploaded Structural Steel Shop Drawings.pdf", project: "Mayo Clinic", timestamp: "2026-02-24T14:30:00Z", type: "upload" },
     { id: "a6", action: "Submitted resubmittal for anchor bolt coating", project: "NET", timestamp: "2026-02-23T11:00:00Z", type: "upload" },
-    { id: "a7", action: "Updated status: Action Mandatory → Review Required", project: "UCD", timestamp: "2026-02-22T10:00:00Z", type: "status" },
+    { id: "a7", action: "Updated status: Action Required → Review Required", project: "UCD", timestamp: "2026-02-22T10:00:00Z", type: "status" },
   ],
   u3: [
     { id: "a8", action: "Flagged fireproofing density issue", project: "Mayo Clinic", timestamp: "2026-02-24T10:46:00Z", type: "review" },
-    { id: "a9", action: "Updated status: Review Required → Action Mandatory", project: "DCJC", timestamp: "2026-02-23T10:46:00Z", type: "status" },
+    { id: "a9", action: "Updated status: Review Required → Action Required", project: "DCJC", timestamp: "2026-02-23T10:46:00Z", type: "status" },
     { id: "a10", action: "Reviewed curtain wall specification", project: "Mayo Clinic", timestamp: "2026-02-22T15:00:00Z", type: "review" },
   ],
   u4: [

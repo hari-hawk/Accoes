@@ -118,7 +118,7 @@ export function ItemDetailPanel({
             <SelectContent>
               <SelectItem value="pre_approved">Pre-Approved</SelectItem>
               <SelectItem value="review_required">Review Required</SelectItem>
-              <SelectItem value="action_mandatory">Action Mandatory</SelectItem>
+              <SelectItem value="action_mandatory">Action Required</SelectItem>
             </SelectContent>
           </Select>
         </div>

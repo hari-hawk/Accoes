@@ -33,7 +33,10 @@ export type DecisionStatus =
   | "approved_with_notes"
   | "revision_requested"
   | "rejected"
-  | "revisit";
+  | "revisit"
+  | "no_acco_id"
+  | "sent_to_acco_review"
+  | "defer_to_future";
 
 export type ProjectStage =
   | "extraction"

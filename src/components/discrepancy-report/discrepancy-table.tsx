@@ -61,7 +61,7 @@ export function DiscrepancyTable({
             <SelectContent>
               <SelectItem value="pre_approved">Pre-Approved</SelectItem>
               <SelectItem value="review_required">Review Required</SelectItem>
-              <SelectItem value="action_mandatory">Action Mandatory</SelectItem>
+              <SelectItem value="action_mandatory">Action Required</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" className="h-8 text-xs">

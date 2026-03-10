@@ -241,11 +241,14 @@ const STATUS_OPTIONS: {
   dotColor: string;
   kind: "validation" | "decision";
 }[] = [
-  { key: "pre_approved", label: "Pre-Approved", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "validation" },
-  { key: "review_required", label: "Review Required", icon: AlertTriangle, color: "text-status-review-required", bgColor: "bg-status-review-required-bg", dotColor: "bg-status-review-required", kind: "validation" },
-  { key: "action_mandatory", label: "Action Mandatory", icon: XCircle, color: "text-status-action-mandatory", bgColor: "bg-status-action-mandatory-bg", dotColor: "bg-status-action-mandatory", kind: "validation" },
-  { key: "approved", label: "Approved", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "decision" },
+  { key: "pre_approved", label: "Pre-Approved (80-100%)", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "validation" },
+  { key: "review_required", label: "Review Required (70-79%)", icon: AlertTriangle, color: "text-status-review-required", bgColor: "bg-status-review-required-bg", dotColor: "bg-status-review-required", kind: "validation" },
+  { key: "action_mandatory", label: "Action Required (0-69%)", icon: XCircle, color: "text-status-action-mandatory", bgColor: "bg-status-action-mandatory-bg", dotColor: "bg-status-action-mandatory", kind: "validation" },
+  { key: "approved", label: "Approved (100%)", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "decision" },
   { key: "revisit", label: "Revisit", icon: RotateCcw, color: "text-status-review-required", bgColor: "bg-status-review-required-bg", dotColor: "bg-status-review-required", kind: "decision" },
+  { key: "no_acco_id", label: "No ACCO ID", icon: XCircle, color: "text-orange-700", bgColor: "bg-orange-100", dotColor: "bg-orange-500", kind: "decision" },
+  { key: "sent_to_acco_review", label: "Sent to ACCO Review Team", icon: CheckCircle2, color: "text-cyan-700", bgColor: "bg-cyan-100", dotColor: "bg-cyan-500", kind: "decision" },
+  { key: "defer_to_future", label: "Defer to future Submittal", icon: RotateCcw, color: "text-slate-600", bgColor: "bg-slate-100", dotColor: "bg-slate-500", kind: "decision" },
   { key: "alternative", label: "Alternate", icon: Replace, color: "text-yellow-700", bgColor: "bg-yellow-100", dotColor: "bg-yellow-500", kind: "decision" },
 ];
 
@@ -325,12 +328,26 @@ export function MaterialList({
     ? materials.filter((m) => alternativeIds.has(m.document.id)).length
     : 0;
 
+  // Count new decision statuses
+  const noAccoIdCount = materials.filter(
+    (m) => decisions[m.document.id] === "no_acco_id"
+  ).length;
+  const sentToAccoReviewCount = materials.filter(
+    (m) => decisions[m.document.id] === "sent_to_acco_review"
+  ).length;
+  const deferToFutureCount = materials.filter(
+    (m) => decisions[m.document.id] === "defer_to_future"
+  ).length;
+
   const statusCountMap: Record<string, number> = {
     pre_approved: preApprovedCount,
     review_required: reviewCount,
     action_mandatory: actionCount,
     approved: approvedCount,
     revisit: revisitCount,
+    no_acco_id: noAccoIdCount,
+    sent_to_acco_review: sentToAccoReviewCount,
+    defer_to_future: deferToFutureCount,
     alternative: alternativeCount,
   };
 
@@ -635,7 +652,7 @@ export function MaterialList({
               <AlertTriangle className="h-3 w-3" aria-hidden="true" />
               {reviewCount}
             </span>
-            <span className="flex items-center gap-1 text-status-action-mandatory" aria-label={`${actionCount} action mandatory`}>
+            <span className="flex items-center gap-1 text-status-action-mandatory" aria-label={`${actionCount} action required`}>
               <XCircle className="h-3 w-3" aria-hidden="true" />
               {actionCount}
             </span>

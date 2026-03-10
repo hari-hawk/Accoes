@@ -69,7 +69,7 @@ export function useMaterials(versionId: string) {
       result = result.filter((m) => {
         // Check validation status (pre_approved, review_required, action_mandatory)
         if (m.validation?.status && statusFilter.has(m.validation.status)) return true;
-        // Check decision status (approved, revisit)
+        // Check decision status (approved, revisit, no_acco_id, sent_to_acco_review, defer_to_future)
         const decision = decisions[m.document.id];
         if (decision && statusFilter.has(decision)) return true;
         // Check alternative filter

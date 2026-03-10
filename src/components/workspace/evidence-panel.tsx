@@ -743,7 +743,7 @@ export function EvidencePanel({
                     Review Required
                   </SelectItem>
                   <SelectItem value="action_mandatory">
-                    Action Mandatory
+                    Action Required
                   </SelectItem>
                 </SelectContent>
               </Select>

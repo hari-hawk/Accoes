@@ -70,7 +70,7 @@ const SUBMITTAL_STATUS_OPTIONS: {
 }[] = [
   {
     key: "pre_approved",
-    label: "Pre-Approved",
+    label: "Pre-Approved (80-100%)",
     color: "text-status-pre-approved",
     bgColor: "bg-status-pre-approved-bg",
     dotColor: "bg-status-pre-approved",
@@ -78,7 +78,7 @@ const SUBMITTAL_STATUS_OPTIONS: {
   },
   {
     key: "review_required",
-    label: "Review Required",
+    label: "Review Required (70-79%)",
     color: "text-status-review-required",
     bgColor: "bg-status-review-required-bg",
     dotColor: "bg-status-review-required",
@@ -86,7 +86,7 @@ const SUBMITTAL_STATUS_OPTIONS: {
   },
   {
     key: "action_mandatory",
-    label: "Action Mandatory",
+    label: "Action Required (0-69%)",
     color: "text-status-action-mandatory",
     bgColor: "bg-status-action-mandatory-bg",
     dotColor: "bg-status-action-mandatory",
@@ -188,7 +188,11 @@ export function GenerateSubmittalSheet({
     preApprovedMaterials.length > 0 &&
     preApprovedMaterials.every((m) => selectedIds.has(m.document.id));
 
-  const selectedCount = preApprovedMaterials.filter((m) =>
+  const allFilteredSelected =
+    filteredMaterials.length > 0 &&
+    filteredMaterials.every((m) => selectedIds.has(m.document.id));
+
+  const selectedCount = filteredMaterials.filter((m) =>
     selectedIds.has(m.document.id)
   ).length;
 
@@ -485,11 +489,25 @@ export function GenerateSubmittalSheet({
           <div className="flex items-center gap-3 text-xs">
             <label className="flex items-center gap-1.5 cursor-pointer">
               <Checkbox
-                checked={allPreApprovedSelected}
-                onCheckedChange={toggleAllPreApproved}
+                checked={allFilteredSelected}
+                onCheckedChange={() => {
+                  if (allFilteredSelected) {
+                    setSelectedIds((prev) => {
+                      const next = new Set(prev);
+                      filteredMaterials.forEach((m) => next.delete(m.document.id));
+                      return next;
+                    });
+                  } else {
+                    setSelectedIds((prev) => {
+                      const next = new Set(prev);
+                      filteredMaterials.forEach((m) => next.add(m.document.id));
+                      return next;
+                    });
+                  }
+                }}
                 className="h-3.5 w-3.5"
               />
-              <span className="text-muted-foreground">Select All Pre-Approved</span>
+              <span className="text-muted-foreground">Select All</span>
             </label>
             {activeFilterCount > 0 && (
               <button
@@ -514,7 +532,7 @@ export function GenerateSubmittalSheet({
                 <AlertTriangle className="h-3 w-3" aria-hidden="true" />
                 {statusCounts.review_required}
               </span>
-              <span className="flex items-center gap-1 text-status-action-mandatory" aria-label={`${statusCounts.action_mandatory} action mandatory`}>
+              <span className="flex items-center gap-1 text-status-action-mandatory" aria-label={`${statusCounts.action_mandatory} action required`}>
                 <XCircle className="h-3 w-3" aria-hidden="true" />
                 {statusCounts.action_mandatory}
               </span>
@@ -544,10 +562,8 @@ export function GenerateSubmittalSheet({
                         : "hover:bg-muted/30 border-l-2 border-l-transparent"
                     )}
                     onClick={() => {
-                      if (isPreApproved) {
-                        toggleItem(item.document.id);
-                      } else if (project) {
-                        // Navigate to conformance page at this specific item
+                      if (project) {
+                        // Navigate to conformance page for this specific item
                         handleClose(false);
                         router.push(`/projects/${project.id}/versions/${project.latestVersionId}/review?item=${item.document.id}`);
                       }
@@ -555,14 +571,9 @@ export function GenerateSubmittalSheet({
                   >
                     <Checkbox
                       checked={isChecked}
-                      onCheckedChange={() => isPreApproved && toggleItem(item.document.id)}
-                      disabled={!isPreApproved}
-                      aria-label={
-                        isPreApproved
-                          ? `Select ${item.document.fileName}`
-                          : `${item.document.fileName} — click to view on conformance page`
-                      }
-                      className={cn("mt-1 shrink-0", !isPreApproved && "opacity-40")}
+                      onCheckedChange={() => toggleItem(item.document.id)}
+                      aria-label={`Select ${item.document.fileName}`}
+                      className="mt-1 shrink-0"
                       onClick={(e) => e.stopPropagation()}
                     />
                     <div className="flex-1 min-w-0 overflow-hidden">
@@ -654,7 +665,7 @@ export function GenerateSubmittalSheet({
           <div className="flex items-center gap-3 w-full">
             <span className="text-xs text-muted-foreground flex-1">
               <span className="font-semibold text-nav-accent">{selectedCount}</span>
-              {" "}of {statusCounts.pre_approved} pre-approved selected
+              {" "}of {filteredMaterials.length} selected
             </span>
             <Button variant="outline" onClick={() => handleClose(false)} disabled={generating}>
               Cancel

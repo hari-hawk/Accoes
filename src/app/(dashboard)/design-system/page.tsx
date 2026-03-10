@@ -43,8 +43,8 @@ const semanticColors = [
   { name: "Pre-approved BG", class: "bg-status-pre-approved-bg" },
   { name: "Review Required", class: "bg-status-review-required" },
   { name: "Review Required BG", class: "bg-status-review-required-bg" },
-  { name: "Action Mandatory", class: "bg-status-action-mandatory" },
-  { name: "Action Mandatory BG", class: "bg-status-action-mandatory-bg" },
+  { name: "Action Required", class: "bg-status-action-mandatory" },
+  { name: "Action Required BG", class: "bg-status-action-mandatory-bg" },
   { name: "Confidence High", class: "bg-confidence-high" },
   { name: "Confidence Medium", class: "bg-confidence-medium" },
   { name: "Confidence Low", class: "bg-confidence-low" },
@@ -273,7 +273,7 @@ export default function DesignSystemPage() {
           <div className="grid grid-cols-3 gap-4">
             <StatCard label="Pre-approved" value={8} icon={CheckCircle2} />
             <StatCard label="Review Required" value={3} icon={AlertTriangle} />
-            <StatCard label="Action Mandatory" value={1} icon={XCircle} />
+            <StatCard label="Action Required" value={1} icon={XCircle} />
           </div>
         </div>
 

@@ -69,17 +69,17 @@ export const VALIDATION_STATUS_CONFIG: Record<
   { label: string; color: string; bgColor: string }
 > = {
   pre_approved: {
-    label: "Pre-approved",
+    label: "Pre-Approved (80-100%)",
     color: "text-status-pre-approved",
     bgColor: "bg-status-pre-approved-bg",
   },
   review_required: {
-    label: "Review Required",
+    label: "Review Required (70-79%)",
     color: "text-status-review-required",
     bgColor: "bg-status-review-required-bg",
   },
   action_mandatory: {
-    label: "Action Mandatory",
+    label: "Action Required (0-69%)",
     color: "text-status-action-mandatory",
     bgColor: "bg-status-action-mandatory-bg",
   },
@@ -90,11 +90,14 @@ export const DECISION_STATUS_CONFIG: Record<
   { label: string; color: string }
 > = {
   pending: { label: "Pending", color: "bg-muted text-muted-foreground" },
-  approved: { label: "Approved", color: "bg-status-pre-approved-bg text-status-pre-approved" },
+  approved: { label: "Approved (100%)", color: "bg-status-pre-approved-bg text-status-pre-approved" },
   approved_with_notes: { label: "Approved with Notes", color: "bg-status-pre-approved-bg text-status-pre-approved" },
   revision_requested: { label: "Revision Requested", color: "bg-status-review-required-bg text-status-review-required" },
   rejected: { label: "Rejected", color: "bg-status-action-mandatory-bg text-status-action-mandatory" },
   revisit: { label: "Revisit", color: "bg-status-review-required-bg text-status-review-required" },
+  no_acco_id: { label: "No ACCO ID", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
+  sent_to_acco_review: { label: "Sent to ACCO Review Team", color: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400" },
+  defer_to_future: { label: "Defer to future Submittal", color: "bg-slate-100 text-slate-600 dark:bg-slate-900/30 dark:text-slate-400" },
 };
 
 export const PROJECT_STAGE_CONFIG: Record<
@@ -112,7 +115,7 @@ export const PROJECT_STAGE_CONFIG: Record<
     bgColor: "bg-status-review-required-bg",
   },
   action_mandatory: {
-    label: "Action Mandatory",
+    label: "Action Required",
     color: "text-status-action-mandatory",
     bgColor: "bg-status-action-mandatory-bg",
   },
@@ -156,7 +159,7 @@ export const DISCREPANCY_STATUS_CONFIG: Record<
     bgColor: "bg-status-review-required-bg",
   },
   action_mandatory: {
-    label: "Action Mandatory",
+    label: "Action Required",
     color: "text-status-action-mandatory",
     bgColor: "bg-status-action-mandatory-bg",
   },

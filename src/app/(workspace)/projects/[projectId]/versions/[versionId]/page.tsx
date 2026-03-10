@@ -577,7 +577,7 @@ function ProjectInsightsSection({
   const stageOrder = ["review_required", "action_mandatory", "pre_approved", "approved"];
   const stageIndex = stageOrder.indexOf(project.stage);
   const stageProgress = stageIndex >= 0 ? stageIndex + 1 : 1;
-  const stageLabels = ["Review Required", "Action Mandatory", "Pre-Approved", "Approved"];
+  const stageLabels = ["Review Required", "Action Required", "Pre-Approved", "Approved"];
 
   // Verified count derived from confidence
   const verifiedDocs =
@@ -664,7 +664,7 @@ function ProjectInsightsSection({
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-sm text-status-action-mandatory">
                 <XCircle className="h-4 w-4" aria-hidden="true" />
-                Action Mandatory
+                Action Required
               </span>
               <span className="text-sm font-bold">{confidenceSummary.actionMandatory}</span>
             </div>

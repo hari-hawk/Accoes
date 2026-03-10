@@ -168,10 +168,10 @@ export function ProjectCard({
                 <span className="font-semibold text-foreground">{reviewRequired}</span>
                 Review Required
               </span>
-              <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground" aria-label={`${actionMandatory} action mandatory`}>
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground" aria-label={`${actionMandatory} action required`}>
                 <span className="h-1.5 w-1.5 rounded-full bg-status-action-mandatory shrink-0" aria-hidden="true" />
                 <span className="font-semibold text-foreground">{actionMandatory}</span>
-                Action Mandatory
+                Action Required
               </span>
             </>
           ) : (

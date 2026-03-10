@@ -92,7 +92,9 @@ export function GenerateSubmittalSheet({
         const matchesSearch =
           m.document.fileName.toLowerCase().includes(lower) ||
           m.document.specSection.toLowerCase().includes(lower) ||
-          m.document.specSectionTitle.toLowerCase().includes(lower);
+          m.document.specSectionTitle.toLowerCase().includes(lower) ||
+          (m.document.indexCategory?.toLowerCase().includes(lower) ?? false) ||
+          (m.document.systemCategory?.toLowerCase().includes(lower) ?? false);
         if (!matchesSearch) return false;
       }
       if (statusFilter.size > 0) {
@@ -325,6 +327,7 @@ export function GenerateSubmittalSheet({
                 const isPreApproved = status === "pre_approved";
                 const isChecked = selectedIds.has(item.document.id);
                 const statusConfig = status ? VALIDATION_STATUS_CONFIG[status] : null;
+                const confidenceScore = item.validation?.confidenceScore;
 
                 return (
                   <label
@@ -350,6 +353,7 @@ export function GenerateSubmittalSheet({
                       className="mt-1 shrink-0"
                     />
                     <div className="flex-1 min-w-0 overflow-hidden">
+                      {/* Row 1: Product title */}
                       <div className="flex items-center gap-1.5">
                         {status && (
                           <span className={cn("h-2 w-2 rounded-full shrink-0", SUBMITTAL_STATUS_OPTIONS.find((o) => o.key === status)?.dotColor)} />
@@ -358,11 +362,46 @@ export function GenerateSubmittalSheet({
                           {item.document.fileName.replace(/\.[^/.]+$/, "")}
                         </p>
                       </div>
+
+                      {/* Row 2: Description */}
                       <p className="text-xs text-muted-foreground mt-1 leading-tight truncate">
-                        <span className="font-mono font-semibold text-primary/80">{item.document.specSection}</span>
-                        {" — "}
                         {item.document.specSectionTitle}
                       </p>
+
+                      {/* Row 3: Metadata chips — Trade · Category · Section */}
+                      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                        {item.document.systemCategory && (
+                          <span
+                            className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                            title={`Trade: ${item.document.systemCategory}`}
+                          >
+                            {item.document.systemCategory}
+                          </span>
+                        )}
+                        {item.document.indexCategory && (
+                          <span
+                            className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                            title={`Index Category: ${item.document.indexCategory}`}
+                          >
+                            {item.document.indexCategory}
+                          </span>
+                        )}
+                        <span
+                          className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-mono font-semibold text-primary/80"
+                          title={`Spec Section: ${item.document.specSection}`}
+                        >
+                          {item.document.specSection}
+                        </span>
+
+                        {/* Confidence score */}
+                        {confidenceScore !== undefined && (
+                          <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-muted-foreground">
+                            {confidenceScore}%
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Row 4: AI Status badge */}
                       {statusConfig && (
                         <div className="mt-2">
                           <span className={cn("inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold leading-none", statusConfig.bgColor, statusConfig.color)}>

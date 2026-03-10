@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Check, FolderKanban, ShieldCheck, FileText, BookOpen } from "lucide-react";
+import { FolderKanban, ShieldCheck, FileText, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WorkflowStage } from "@/data/types";
 
@@ -147,18 +147,16 @@ export function MilestoneProgressBar({
                           : "bg-background border-border hover:border-muted-foreground"
                     )}
                   >
-                    {isCompleted ? (
-                      <Check className="h-3 w-3 text-white" strokeWidth={3} />
-                    ) : (
-                      <Icon
-                        className={cn(
-                          "h-3 w-3",
-                          isActive
+                    <Icon
+                      className={cn(
+                        "h-3 w-3",
+                        isCompleted
+                          ? "text-white"
+                          : isActive
                             ? "text-white"
                             : "text-muted-foreground group-hover:text-foreground"
-                        )}
-                      />
-                    )}
+                      )}
+                    />
                   </div>
 
                   {/* Label */}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import {
   Pencil,
   X,
@@ -170,9 +171,15 @@ const mockSpecFiles = [
 
 // Material Matrix files — current + historical
 const currentMatrixFiles = [
-  { id: "mig-7", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v3.csv", fileType: "csv", fileSize: 548864, version: "v3" },
-  { id: "mig-8", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v3.csv", fileType: "csv", fileSize: 516096, version: "v3" },
-  { id: "mig-9", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v3.csv", fileType: "csv", fileSize: 483328, version: "v3" },
+  { id: "mig-7", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v3.csv", fileType: "csv", fileSize: 548864, version: "v3", trade: "Plumbing" },
+  { id: "mig-8", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v3.csv", fileType: "csv", fileSize: 516096, version: "v3", trade: "Heating" },
+  { id: "mig-9", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v3.csv", fileType: "csv", fileSize: 483328, version: "v3", trade: "Mechanical" },
+];
+
+const mockDownloadRecords = [
+  { id: "gen-1", name: "UCD_HobbsVet_Plumbing_Submittal_Rev1", matrixSource: "Plumbing Matrix Index Grid v3", revision: "Rev 1", generatedAt: "2026-03-08T14:30:00Z", generatedBy: "Sarah Wilson", materialCount: 6 },
+  { id: "gen-2", name: "UCD_HobbsVet_Heating_Submittal_Rev1", matrixSource: "Heating Matrix Index Grid v3", revision: "Rev 1", generatedAt: "2026-03-08T14:35:00Z", generatedBy: "Sarah Wilson", materialCount: 5 },
+  { id: "gen-3", name: "UCD_HobbsVet_Mechanical_Submittal_Rev1", matrixSource: "Mechanical Matrix Index Grid v3", revision: "Rev 1", generatedAt: "2026-03-08T14:40:00Z", generatedBy: "Sarah Wilson", materialCount: 5 },
 ];
 
 const historicalMatrixFiles = [
@@ -431,6 +438,14 @@ export function ProjectDetailSheet({
   const [exportComplete, setExportComplete] = useState(false);
   const [matrixHistoryOpen, setMatrixHistoryOpen] = useState(false);
   const [renderTime] = useState(() => Date.now());
+  const [approvedFileIds, setApprovedFileIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!project?.latestVersionId) return;
+    const stored = localStorage.getItem(`submittal-approved-files-${project.latestVersionId}`);
+    if (stored) {
+      try { setApprovedFileIds(new Set(JSON.parse(stored) as string[])); } catch { /* ignore */ }
+    }
+  }, [project?.latestVersionId]);
 
   if (!project) return null;
 
@@ -816,7 +831,7 @@ export function ProjectDetailSheet({
               {/*  Tabs: Documents | Activity | Material Matrix             */}
               {/* ======================================================== */}
               <Tabs defaultValue="files" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="files" className="text-xs gap-1.5">
                     <FileText className="h-3.5 w-3.5" />
                     Documents
@@ -824,6 +839,10 @@ export function ProjectDetailSheet({
                   <TabsTrigger value="activity" className="text-xs gap-1.5">
                     <Activity className="h-3.5 w-3.5" />
                     Activity
+                  </TabsTrigger>
+                  <TabsTrigger value="downloads" className="text-xs gap-1.5">
+                    <Download className="h-3.5 w-3.5" />
+                    Downloads
                   </TabsTrigger>
                 </TabsList>
 
@@ -917,8 +936,13 @@ export function ProjectDetailSheet({
                                 </span>
                               </div>
                             </div>
+                            {file.trade && (
+                              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-700 shrink-0">
+                                {file.trade}
+                              </span>
+                            )}
                             <Badge variant="secondary" className="text-[11px] px-1.5 py-0 h-4 bg-status-pre-approved-bg text-status-pre-approved shrink-0">
-                              Active
+                              {approvedFileIds.has(file.id) ? "Approved" : "Active"}
                             </Badge>
                             <Eye className="h-3.5 w-3.5 text-muted-foreground/0 group-hover/mfile:text-muted-foreground transition-colors shrink-0" aria-hidden="true" />
                           </div>
@@ -1105,6 +1129,56 @@ export function ProjectDetailSheet({
                       No activity in this time range
                     </div>
                   )}
+                </TabsContent>
+
+                {/* --- Downloads Tab --- */}
+                <TabsContent value="downloads" className="mt-4 space-y-3">
+                  <div className="divide-y border rounded-lg overflow-hidden" role="list" aria-label="Downloadable records">
+                    {mockDownloadRecords.length > 0 ? (
+                      mockDownloadRecords.map((gen) => (
+                        <div key={gen.id} className="px-3 py-3 hover:bg-muted/30 transition-colors" role="listitem">
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-lg gradient-accent flex items-center justify-center shrink-0">
+                              <FileText className="h-4 w-4 text-white" aria-hidden="true" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate">{gen.name}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                                Source: {gen.matrixSource}
+                              </p>
+                            </div>
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
+                              {gen.revision}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary"
+                              onClick={() => toast.success(`Downloading ${gen.name}...`)}
+                              aria-label={`Download ${gen.name}`}
+                            >
+                              <Download className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                          </div>
+                          <div className="flex items-center gap-3 mt-2 ml-12 text-[11px] text-muted-foreground">
+                            <span>{new Date(gen.generatedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>
+                            <span>{gen.materialCount} materials</span>
+                            <span>{gen.generatedBy}</span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="w-14 h-14 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
+                          <FileText className="h-6 w-6 text-muted-foreground/60" aria-hidden="true" />
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground">No generated records yet</p>
+                        <p className="text-xs text-muted-foreground/60 mt-1 max-w-[200px]">
+                          Generate a submittal to see downloadable records here
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </TabsContent>
 
               </Tabs>

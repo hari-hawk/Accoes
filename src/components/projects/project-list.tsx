@@ -777,18 +777,14 @@ function DownloadReportSheet({
 
             {/* Tab 1: Material Matrix — existing content */}
             <TabsContent value="material-matrix" className="flex-1 min-h-0 flex flex-col mt-0 data-[state=inactive]:hidden">
-              {/* Search */}
-              <div className="px-4 pt-3 pb-2 border-b shrink-0">
+              {/* Search + Filter Controls */}
+              <div className="px-4 pt-3 pb-2 space-y-2 border-b shrink-0 bg-muted/20">
                 <SearchInput
                   placeholder="Search materials..."
                   value={search}
                   onChange={setSearch}
                   className="[&_input]:h-8 [&_input]:text-xs"
                 />
-              </div>
-
-              {/* Filter Controls */}
-              <div className="px-4 pt-2 pb-2 space-y-2 border-b shrink-0 bg-muted/20">
                 {/* Row 1: Document dropdown + Status filter */}
                 <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
                   <Select defaultValue="all">

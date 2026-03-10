@@ -14,6 +14,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Plus } from "lucide-react";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  AvatarGroup,
+  AvatarGroupCount,
+} from "@/components/ui/avatar";
+import { TeamAccessSheet } from "@/components/projects/team-access-sheet";
+import { mockUsers } from "@/data/mock-users";
+import type { Project } from "@/data/types";
 import { mockProjects } from "@/data/mock-projects";
 import { getVersion } from "@/data/mock-versions";
 
@@ -21,13 +32,29 @@ import { getVersion } from "@/data/mock-versions";
 /*  Header Actions — Share + Export                                            */
 /* -------------------------------------------------------------------------- */
 
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
 function HeaderActions({
-  projectName,
+  project,
 }: {
-  projectName: string;
+  project: Project;
 }) {
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [teamSheetOpen, setTeamSheetOpen] = useState(false);
+
+  const members = project.memberIds
+    .map((id) => mockUsers.find((u) => u.id === id))
+    .filter(Boolean);
+  const visibleMembers = members.slice(0, 3);
+  const overflowCount = members.length - visibleMembers.length;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -37,7 +64,7 @@ function HeaderActions({
   };
 
   const handleEmailShare = () => {
-    const subject = encodeURIComponent(`Accoes — ${projectName}`);
+    const subject = encodeURIComponent(`Accoes — ${project.name}`);
     const body = encodeURIComponent(
       `Here's the link to the project:\n${window.location.href}`
     );
@@ -47,6 +74,30 @@ function HeaderActions({
 
   return (
     <>
+      {/* Team member avatars */}
+      <AvatarGroup>
+        {visibleMembers.map((user) => (
+          <Avatar key={user!.id} size="sm">
+            {user!.avatarUrl && <AvatarImage src={user!.avatarUrl} alt={user!.name} />}
+            <AvatarFallback className="text-[9px] font-medium">
+              {getInitials(user!.name)}
+            </AvatarFallback>
+          </Avatar>
+        ))}
+        {overflowCount > 0 && (
+          <AvatarGroupCount className="text-[9px]">+{overflowCount}</AvatarGroupCount>
+        )}
+        <button
+          type="button"
+          className="size-6 rounded-full border border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-nav-accent hover:bg-nav-accent/5 transition-colors ml-0.5"
+          onClick={() => setTeamSheetOpen(true)}
+          aria-label="Manage team access"
+          title="Manage team"
+        >
+          <Plus className="h-3 w-3 text-muted-foreground" />
+        </button>
+      </AvatarGroup>
+
       {/* Share */}
       <Popover open={shareOpen} onOpenChange={setShareOpen}>
         <PopoverTrigger asChild>
@@ -89,6 +140,13 @@ function HeaderActions({
           </div>
         </PopoverContent>
       </Popover>
+
+      {/* Team Access Sheet */}
+      <TeamAccessSheet
+        project={project}
+        open={teamSheetOpen}
+        onOpenChange={setTeamSheetOpen}
+      />
     </>
   );
 }
@@ -125,7 +183,7 @@ export default function VersionLayout({
         onProjectNameClick={handleProjectNameClick}
         actions={
           <HeaderActions
-            projectName={project.name}
+            project={project}
           />
         }
       />

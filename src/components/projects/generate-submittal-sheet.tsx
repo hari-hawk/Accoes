@@ -8,6 +8,7 @@ import {
   ChevronDown,
   FileText,
   Loader2,
+  Filter,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -32,6 +33,31 @@ import { useMaterials } from "@/hooks/use-materials";
 import { VALIDATION_STATUS_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { Project, ValidationStatus } from "@/data/types";
+
+/* ── Confidence helpers ─────────────────────────────────────── */
+
+function confidenceColor(score: number) {
+  if (score >= 80) return { text: "text-status-pre-approved", bar: "bg-status-pre-approved", bg: "bg-status-pre-approved-bg" };
+  if (score >= 40) return { text: "text-status-review-required", bar: "bg-status-review-required", bg: "bg-status-review-required-bg" };
+  return { text: "text-status-action-mandatory", bar: "bg-status-action-mandatory", bg: "bg-status-action-mandatory-bg" };
+}
+
+function ConfidenceIndicator({ score }: { score: number }) {
+  const colors = confidenceColor(score);
+  return (
+    <div className="flex items-center gap-1.5 shrink-0" title={`AI Confidence: ${score}%`}>
+      <span className={cn("text-xs font-bold tabular-nums", colors.text)}>
+        {score}%
+      </span>
+      <div className="h-1.5 w-14 rounded-full bg-muted overflow-hidden">
+        <div
+          className={cn("h-full rounded-full transition-all duration-500", colors.bar)}
+          style={{ width: `${score}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 const SUBMITTAL_STATUS_OPTIONS: {
   key: ValidationStatus;
@@ -80,10 +106,27 @@ export function GenerateSubmittalSheet({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set());
+  const [documentFilter, setDocumentFilter] = useState<Set<string>>(new Set());
+  const [tradeFilter, setTradeFilter] = useState<Set<string>>(new Set());
+  const [categoryFilter, setCategoryFilter] = useState<Set<string>>(new Set());
   const [generating, setGenerating] = useState(false);
 
   const versionId = project?.latestVersionId ?? "";
   const { allMaterials } = useMaterials(versionId);
+
+  /* Derive unique filter options from data */
+  const documentNames = useMemo(
+    () => [...new Set(allMaterials.map((m) => m.document.fileName))].sort(),
+    [allMaterials]
+  );
+  const tradeOptions = useMemo(
+    () => [...new Set(allMaterials.map((m) => m.document.systemCategory).filter(Boolean))] as string[],
+    [allMaterials]
+  );
+  const categoryOptions = useMemo(
+    () => [...new Set(allMaterials.map((m) => m.document.indexCategory).filter(Boolean))] as string[],
+    [allMaterials]
+  );
 
   const filteredMaterials = useMemo(() => {
     return allMaterials.filter((m) => {
@@ -101,9 +144,18 @@ export function GenerateSubmittalSheet({
         if (!m.validation?.status || !statusFilter.has(m.validation.status))
           return false;
       }
+      if (documentFilter.size > 0) {
+        if (!documentFilter.has(m.document.fileName)) return false;
+      }
+      if (tradeFilter.size > 0) {
+        if (!m.document.systemCategory || !tradeFilter.has(m.document.systemCategory)) return false;
+      }
+      if (categoryFilter.size > 0) {
+        if (!m.document.indexCategory || !categoryFilter.has(m.document.indexCategory)) return false;
+      }
       return true;
     });
-  }, [allMaterials, search, statusFilter]);
+  }, [allMaterials, search, statusFilter, documentFilter, tradeFilter, categoryFilter]);
 
   const preApprovedMaterials = filteredMaterials.filter(
     (m) => m.validation?.status === "pre_approved"
@@ -148,11 +200,11 @@ export function GenerateSubmittalSheet({
     }
   };
 
-  const toggleStatusFilter = (status: string) => {
-    setStatusFilter((prev) => {
+  const toggleSetItem = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, value: string) => {
+    setter((prev) => {
       const next = new Set(prev);
-      if (next.has(status)) next.delete(status);
-      else next.add(status);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
       return next;
     });
   };
@@ -177,10 +229,15 @@ export function GenerateSubmittalSheet({
       setSelectedIds(new Set());
       setSearch("");
       setStatusFilter(new Set());
+      setDocumentFilter(new Set());
+      setTradeFilter(new Set());
+      setCategoryFilter(new Set());
       setGenerating(false);
     }
     onOpenChange(isOpen);
   };
+
+  const activeFilterCount = statusFilter.size + documentFilter.size + tradeFilter.size + categoryFilter.size;
 
   if (!project) return null;
 
@@ -218,22 +275,63 @@ export function GenerateSubmittalSheet({
 
         {/* Filters + status counts */}
         <div className="px-4 pt-2 pb-2 space-y-2 border-b shrink-0 bg-muted/20">
-          <div className="grid grid-cols-3 gap-2">
-            {/* Status filter popover */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Documents multi-select */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
                   className={cn(
-                    "h-8 text-xs justify-between font-normal",
+                    "h-7 text-[11px] justify-between font-normal gap-1 px-2.5",
+                    documentFilter.size > 0 && "border-primary/40 bg-primary/5"
+                  )}
+                >
+                  <Filter className="h-3 w-3 shrink-0 opacity-60" />
+                  <span className="truncate">
+                    {documentFilter.size === 0 ? "All Documents" : `${documentFilter.size} Doc${documentFilter.size !== 1 ? "s" : ""}`}
+                  </span>
+                  <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 p-2" align="start">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <span className="text-xs font-semibold text-muted-foreground">Select Documents</span>
+                    {documentFilter.size > 0 && (
+                      <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={() => setDocumentFilter(new Set())}>
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <div className="h-px bg-border" />
+                  <ScrollArea className="max-h-48">
+                    {documentNames.map((name) => (
+                      <label key={name} className={cn("flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-xs", documentFilter.has(name) ? "bg-primary/5" : "hover:bg-muted/50")}>
+                        <Checkbox checked={documentFilter.has(name)} onCheckedChange={() => toggleSetItem(setDocumentFilter, name)} className="h-3.5 w-3.5" />
+                        <span className="truncate font-medium">{name.replace(/\.[^/.]+$/, "")}</span>
+                      </label>
+                    ))}
+                  </ScrollArea>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Status filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-7 text-[11px] justify-between font-normal gap-1 px-2.5",
                     statusFilter.size > 0 && "border-primary/40 bg-primary/5"
                   )}
                 >
                   <span className="truncate">
                     {statusFilter.size === 0 ? "Status" : `${statusFilter.size} Status`}
                   </span>
-                  <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50 ml-1" />
+                  <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-56 p-2" align="start">
@@ -241,12 +339,8 @@ export function GenerateSubmittalSheet({
                   <div className="flex items-center justify-between px-2 py-1">
                     <span className="text-xs font-semibold text-muted-foreground">Filter by Status</span>
                     {statusFilter.size > 0 && (
-                      <button
-                        type="button"
-                        className="text-[11px] text-primary hover:underline font-medium"
-                        onClick={() => setStatusFilter(new Set())}
-                      >
-                        Clear all
+                      <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={() => setStatusFilter(new Set())}>
+                        Clear
                       </button>
                     )}
                   </div>
@@ -256,18 +350,8 @@ export function GenerateSubmittalSheet({
                     const isActive = statusFilter.has(opt.key);
                     const count = statusCounts[opt.key];
                     return (
-                      <label
-                        key={opt.key}
-                        className={cn(
-                          "flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors",
-                          isActive ? "bg-primary/5" : "hover:bg-muted/50"
-                        )}
-                      >
-                        <Checkbox
-                          checked={isActive}
-                          onCheckedChange={() => toggleStatusFilter(opt.key)}
-                          className="h-3.5 w-3.5"
-                        />
+                      <label key={opt.key} className={cn("flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors", isActive ? "bg-primary/5" : "hover:bg-muted/50")}>
+                        <Checkbox checked={isActive} onCheckedChange={() => toggleSetItem(setStatusFilter, opt.key)} className="h-3.5 w-3.5" />
                         <Icon className={cn("h-3.5 w-3.5 shrink-0", opt.color)} aria-hidden="true" />
                         <span className="text-xs font-medium flex-1">{opt.label}</span>
                         <span className="text-[11px] text-muted-foreground tabular-nums font-medium">{count}</span>
@@ -278,17 +362,105 @@ export function GenerateSubmittalSheet({
               </PopoverContent>
             </Popover>
 
-            {/* Trade filter — placeholder */}
-            <Button variant="outline" size="sm" className="h-8 text-xs justify-between font-normal" disabled>
-              <span className="truncate">Trade</span>
-              <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50 ml-1" />
-            </Button>
+            {/* Trade filter */}
+            {tradeOptions.length > 0 && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-7 text-[11px] justify-between font-normal gap-1 px-2.5",
+                      tradeFilter.size > 0 && "border-primary/40 bg-primary/5"
+                    )}
+                  >
+                    <span className="truncate">
+                      {tradeFilter.size === 0 ? "Trade" : `${tradeFilter.size} Trade`}
+                    </span>
+                    <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-2" align="start">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between px-2 py-1">
+                      <span className="text-xs font-semibold text-muted-foreground">Filter by Trade</span>
+                      {tradeFilter.size > 0 && (
+                        <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={() => setTradeFilter(new Set())}>
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    <div className="h-px bg-border" />
+                    <ScrollArea className="max-h-48">
+                      {tradeOptions.map((trade) => (
+                        <label key={trade} className={cn("flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-xs", tradeFilter.has(trade) ? "bg-primary/5" : "hover:bg-muted/50")}>
+                          <Checkbox checked={tradeFilter.has(trade)} onCheckedChange={() => toggleSetItem(setTradeFilter, trade)} className="h-3.5 w-3.5" />
+                          <span className="truncate font-medium">{trade}</span>
+                        </label>
+                      ))}
+                    </ScrollArea>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
 
-            {/* Index Category filter — placeholder */}
-            <Button variant="outline" size="sm" className="h-8 text-xs justify-between font-normal" disabled>
-              <span className="truncate">Category</span>
-              <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50 ml-1" />
-            </Button>
+            {/* Category filter */}
+            {categoryOptions.length > 0 && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-7 text-[11px] justify-between font-normal gap-1 px-2.5",
+                      categoryFilter.size > 0 && "border-primary/40 bg-primary/5"
+                    )}
+                  >
+                    <span className="truncate">
+                      {categoryFilter.size === 0 ? "Category" : `${categoryFilter.size} Cat.`}
+                    </span>
+                    <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-2" align="start">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between px-2 py-1">
+                      <span className="text-xs font-semibold text-muted-foreground">Filter by Category</span>
+                      {categoryFilter.size > 0 && (
+                        <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={() => setCategoryFilter(new Set())}>
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    <div className="h-px bg-border" />
+                    <ScrollArea className="max-h-48">
+                      {categoryOptions.map((cat) => (
+                        <label key={cat} className={cn("flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-xs", categoryFilter.has(cat) ? "bg-primary/5" : "hover:bg-muted/50")}>
+                          <Checkbox checked={categoryFilter.has(cat)} onCheckedChange={() => toggleSetItem(setCategoryFilter, cat)} className="h-3.5 w-3.5" />
+                          <span className="truncate font-medium">{cat}</span>
+                        </label>
+                      ))}
+                    </ScrollArea>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+
+            {/* Clear all filters */}
+            {activeFilterCount > 0 && (
+              <button
+                type="button"
+                className="text-[11px] text-primary hover:underline font-medium ml-1"
+                onClick={() => {
+                  setStatusFilter(new Set());
+                  setDocumentFilter(new Set());
+                  setTradeFilter(new Set());
+                  setCategoryFilter(new Set());
+                }}
+              >
+                Clear all
+              </button>
+            )}
           </div>
 
           {/* Select All + counts */}
@@ -353,60 +525,58 @@ export function GenerateSubmittalSheet({
                       className="mt-1 shrink-0"
                     />
                     <div className="flex-1 min-w-0 overflow-hidden">
-                      {/* Row 1: Product title */}
-                      <div className="flex items-center gap-1.5">
-                        {status && (
-                          <span className={cn("h-2 w-2 rounded-full shrink-0", SUBMITTAL_STATUS_OPTIONS.find((o) => o.key === status)?.dotColor)} />
-                        )}
-                        <p className="text-sm font-medium leading-tight truncate">
-                          {item.document.fileName.replace(/\.[^/.]+$/, "")}
-                        </p>
+                      {/* Row 1: Title + Status badge & Confidence (right side) */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                          {status && (
+                            <span className={cn("h-2 w-2 rounded-full shrink-0", SUBMITTAL_STATUS_OPTIONS.find((o) => o.key === status)?.dotColor)} />
+                          )}
+                          <p className="text-sm font-medium leading-tight truncate">
+                            {item.document.fileName.replace(/\.[^/.]+$/, "")}
+                          </p>
+                        </div>
+
+                        {/* Right corner: Status badge + Confidence */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {statusConfig && (
+                            <span className={cn("inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none whitespace-nowrap", statusConfig.bgColor, statusConfig.color)}>
+                              {statusConfig.label}
+                            </span>
+                          )}
+                          {confidenceScore !== undefined && (
+                            <ConfidenceIndicator score={confidenceScore} />
+                          )}
+                        </div>
                       </div>
 
-                      {/* Row 2: Description */}
+                      {/* Row 2: Section number (mono, underscored) + description */}
                       <p className="text-xs text-muted-foreground mt-1 leading-tight truncate">
+                        <span className="font-mono font-semibold text-primary/80 underline decoration-primary/20 underline-offset-2">
+                          {item.document.specSection}
+                        </span>
+                        {" — "}
                         {item.document.specSectionTitle}
                       </p>
 
-                      {/* Row 3: Metadata chips — Trade · Category · Section */}
-                      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                        {item.document.systemCategory && (
-                          <span
-                            className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-                            title={`Trade: ${item.document.systemCategory}`}
-                          >
-                            {item.document.systemCategory}
-                          </span>
-                        )}
-                        {item.document.indexCategory && (
-                          <span
-                            className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-                            title={`Index Category: ${item.document.indexCategory}`}
-                          >
-                            {item.document.indexCategory}
-                          </span>
-                        )}
-                        <span
-                          className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-mono font-semibold text-primary/80"
-                          title={`Spec Section: ${item.document.specSection}`}
-                        >
-                          {item.document.specSection}
-                        </span>
-
-                        {/* Confidence score */}
-                        {confidenceScore !== undefined && (
-                          <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-muted-foreground">
-                            {confidenceScore}%
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Row 4: AI Status badge */}
-                      {statusConfig && (
-                        <div className="mt-2">
-                          <span className={cn("inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold leading-none", statusConfig.bgColor, statusConfig.color)}>
-                            {statusConfig.label}
-                          </span>
+                      {/* Row 3: Category pills (conformance style — colored rings) */}
+                      {(item.document.indexCategory || item.document.systemCategory) && (
+                        <div className="flex items-center gap-1.5 mt-2">
+                          {item.document.systemCategory && (
+                            <span
+                              className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-700"
+                              title={`Trade: ${item.document.systemCategory}`}
+                            >
+                              {item.document.systemCategory}
+                            </span>
+                          )}
+                          {item.document.indexCategory && (
+                            <span
+                              className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-700"
+                              title={`Category: ${item.document.indexCategory}`}
+                            >
+                              {item.document.indexCategory}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>

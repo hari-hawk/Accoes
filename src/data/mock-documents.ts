@@ -219,3 +219,48 @@ export function getDocumentsByVersion(versionId: string): Document[] {
 export function getDocument(documentId: string): Document | undefined {
   return mockDocuments.find((d) => d.id === documentId);
 }
+
+/* ── Matrix Index Grid files ─────────────────────────────────
+ * Source CSV files that contain grouped materials.
+ * Each matrix file maps to a subset of document IDs.
+ * Mirrors the data on the overview page's Material Matrix section.
+ * ──────────────────────────────────────────────────────────── */
+
+export interface MatrixFile {
+  id: string;
+  fileName: string;
+  fileType: "csv";
+  documentIds: string[];
+}
+
+const matrixFiles: MatrixFile[] = [
+  {
+    id: "mig-7",
+    fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v3.csv",
+    fileType: "csv",
+    documentIds: ["doc-28", "doc-29", "doc-30", "doc-31", "doc-32", "doc-33"],
+  },
+  {
+    id: "mig-8",
+    fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v3.csv",
+    fileType: "csv",
+    documentIds: ["doc-34", "doc-35", "doc-36", "doc-37", "doc-38"],
+  },
+  {
+    id: "mig-9",
+    fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v3.csv",
+    fileType: "csv",
+    documentIds: ["doc-39", "doc-40", "doc-41", "doc-42", "doc-43"],
+  },
+];
+
+/** Get matrix index grid files for a version. Returns empty array if none exist. */
+export function getMatrixFilesByVersion(versionId: string): MatrixFile[] {
+  const versionDocIds = new Set(
+    mockDocuments.filter((d) => d.versionId === versionId).map((d) => d.id)
+  );
+  // Return matrix files whose documents belong to this version
+  return matrixFiles.filter((mf) =>
+    mf.documentIds.some((id) => versionDocIds.has(id))
+  );
+}

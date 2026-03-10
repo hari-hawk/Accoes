@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/popover";
 import { SearchInput } from "@/components/shared/search-input";
 import { useMaterials } from "@/hooks/use-materials";
+import { getMatrixFilesByVersion } from "@/data/mock-documents";
 import { VALIDATION_STATUS_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { Project, ValidationStatus } from "@/data/types";
@@ -115,9 +116,9 @@ export function GenerateSubmittalSheet({
   const { allMaterials } = useMaterials(versionId);
 
   /* Derive unique filter options from data */
-  const documentNames = useMemo(
-    () => [...new Set(allMaterials.map((m) => m.document.fileName))].sort(),
-    [allMaterials]
+  const matrixFiles = useMemo(
+    () => getMatrixFilesByVersion(versionId),
+    [versionId]
   );
   const tradeOptions = useMemo(
     () => [...new Set(allMaterials.map((m) => m.document.systemCategory).filter(Boolean))] as string[],
@@ -127,6 +128,22 @@ export function GenerateSubmittalSheet({
     () => [...new Set(allMaterials.map((m) => m.document.indexCategory).filter(Boolean))] as string[],
     [allMaterials]
   );
+
+  /* Build a set of document IDs that pass the document filter.
+   * When matrix files exist, filter keys are matrix file IDs → resolve to doc IDs.
+   * When no matrix files exist (fallback), filter keys ARE doc IDs directly. */
+  const matrixFilterDocIds = useMemo(() => {
+    if (documentFilter.size === 0) return null; // no filter = show all
+    if (matrixFiles.length > 0) {
+      const ids = new Set<string>();
+      matrixFiles
+        .filter((mf) => documentFilter.has(mf.id))
+        .forEach((mf) => mf.documentIds.forEach((id) => ids.add(id)));
+      return ids;
+    }
+    // Fallback: documentFilter contains direct document IDs
+    return documentFilter;
+  }, [documentFilter, matrixFiles]);
 
   const filteredMaterials = useMemo(() => {
     return allMaterials.filter((m) => {
@@ -144,8 +161,8 @@ export function GenerateSubmittalSheet({
         if (!m.validation?.status || !statusFilter.has(m.validation.status))
           return false;
       }
-      if (documentFilter.size > 0) {
-        if (!documentFilter.has(m.document.fileName)) return false;
+      if (matrixFilterDocIds) {
+        if (!matrixFilterDocIds.has(m.document.id)) return false;
       }
       if (tradeFilter.size > 0) {
         if (!m.document.systemCategory || !tradeFilter.has(m.document.systemCategory)) return false;
@@ -155,7 +172,7 @@ export function GenerateSubmittalSheet({
       }
       return true;
     });
-  }, [allMaterials, search, statusFilter, documentFilter, tradeFilter, categoryFilter]);
+  }, [allMaterials, search, statusFilter, matrixFilterDocIds, tradeFilter, categoryFilter]);
 
   const preApprovedMaterials = filteredMaterials.filter(
     (m) => m.validation?.status === "pre_approved"
@@ -263,39 +280,37 @@ export function GenerateSubmittalSheet({
           </div>
         </SheetHeader>
 
-        {/* Search */}
-        <div className="px-4 pt-3 pb-2 border-b shrink-0">
+        {/* Search + Filters — no divider, spacing only */}
+        <div className="px-4 pt-3 pb-2 space-y-2.5 border-b shrink-0 bg-muted/20">
           <SearchInput
             placeholder="Search by title, description, trade..."
             value={search}
             onChange={setSearch}
             className="[&_input]:h-8 [&_input]:text-xs"
           />
-        </div>
 
-        {/* Filters + status counts */}
-        <div className="px-4 pt-2 pb-2 space-y-2 border-b shrink-0 bg-muted/20">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Documents multi-select */}
+          {/* 4-column equal-width responsive filter grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {/* Documents multi-select (matrix files) */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
                   className={cn(
-                    "h-7 text-[11px] justify-between font-normal gap-1 px-2.5",
+                    "h-8 w-full text-[11px] justify-between font-normal gap-1 px-2.5",
                     documentFilter.size > 0 && "border-primary/40 bg-primary/5"
                   )}
                 >
                   <Filter className="h-3 w-3 shrink-0 opacity-60" />
-                  <span className="truncate">
+                  <span className="truncate flex-1 text-left">
                     {documentFilter.size === 0 ? "All Documents" : `${documentFilter.size} Doc${documentFilter.size !== 1 ? "s" : ""}`}
                   </span>
                   <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-72 p-2" align="start">
-                <div className="space-y-1">
+              <PopoverContent className="w-80 p-0" align="start" side="bottom" avoidCollisions sideOffset={4}>
+                <div className="p-2 space-y-1">
                   <div className="flex items-center justify-between px-2 py-1">
                     <span className="text-xs font-semibold text-muted-foreground">Select Documents</span>
                     {documentFilter.size > 0 && (
@@ -304,16 +319,28 @@ export function GenerateSubmittalSheet({
                       </button>
                     )}
                   </div>
-                  <div className="h-px bg-border" />
-                  <ScrollArea className="max-h-48">
-                    {documentNames.map((name) => (
-                      <label key={name} className={cn("flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-xs", documentFilter.has(name) ? "bg-primary/5" : "hover:bg-muted/50")}>
-                        <Checkbox checked={documentFilter.has(name)} onCheckedChange={() => toggleSetItem(setDocumentFilter, name)} className="h-3.5 w-3.5" />
-                        <span className="truncate font-medium">{name.replace(/\.[^/.]+$/, "")}</span>
-                      </label>
-                    ))}
-                  </ScrollArea>
                 </div>
+                <ScrollArea className="h-[200px] px-2 pb-2">
+                  {matrixFiles.length > 0 ? (
+                    matrixFiles.map((mf) => (
+                      <label key={mf.id} className={cn("flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer transition-colors text-xs", documentFilter.has(mf.id) ? "bg-primary/5" : "hover:bg-muted/50")}>
+                        <Checkbox checked={documentFilter.has(mf.id)} onCheckedChange={() => toggleSetItem(setDocumentFilter, mf.id)} className="h-3.5 w-3.5 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <span className="block truncate font-medium">{mf.fileName.replace(/\.[^/.]+$/, "")}</span>
+                          <span className="block text-[10px] text-muted-foreground mt-0.5">{mf.documentIds.length} materials</span>
+                        </div>
+                      </label>
+                    ))
+                  ) : (
+                    /* Fallback: show individual document fileNames if no matrix files exist */
+                    allMaterials.map((m) => (
+                      <label key={m.document.id} className={cn("flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-xs", documentFilter.has(m.document.id) ? "bg-primary/5" : "hover:bg-muted/50")}>
+                        <Checkbox checked={documentFilter.has(m.document.id)} onCheckedChange={() => toggleSetItem(setDocumentFilter, m.document.id)} className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate font-medium">{m.document.fileName}</span>
+                      </label>
+                    ))
+                  )}
+                </ScrollArea>
               </PopoverContent>
             </Popover>
 
@@ -324,18 +351,18 @@ export function GenerateSubmittalSheet({
                   variant="outline"
                   size="sm"
                   className={cn(
-                    "h-7 text-[11px] justify-between font-normal gap-1 px-2.5",
+                    "h-8 w-full text-[11px] justify-between font-normal gap-1 px-2.5",
                     statusFilter.size > 0 && "border-primary/40 bg-primary/5"
                   )}
                 >
-                  <span className="truncate">
+                  <span className="truncate flex-1 text-left">
                     {statusFilter.size === 0 ? "Status" : `${statusFilter.size} Status`}
                   </span>
                   <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-56 p-2" align="start">
-                <div className="space-y-1">
+              <PopoverContent className="w-56 p-0" align="start" side="bottom" avoidCollisions sideOffset={4}>
+                <div className="p-2 space-y-1">
                   <div className="flex items-center justify-between px-2 py-1">
                     <span className="text-xs font-semibold text-muted-foreground">Filter by Status</span>
                     {statusFilter.size > 0 && (
@@ -344,7 +371,8 @@ export function GenerateSubmittalSheet({
                       </button>
                     )}
                   </div>
-                  <div className="h-px bg-border" />
+                </div>
+                <div className="px-2 pb-2 space-y-0.5">
                   {SUBMITTAL_STATUS_OPTIONS.map((opt) => {
                     const Icon = opt.icon;
                     const isActive = statusFilter.has(opt.key);
@@ -363,107 +391,87 @@ export function GenerateSubmittalSheet({
             </Popover>
 
             {/* Trade filter */}
-            {tradeOptions.length > 0 && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "h-7 text-[11px] justify-between font-normal gap-1 px-2.5",
-                      tradeFilter.size > 0 && "border-primary/40 bg-primary/5"
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-8 w-full text-[11px] justify-between font-normal gap-1 px-2.5",
+                    tradeFilter.size > 0 && "border-primary/40 bg-primary/5"
+                  )}
+                  disabled={tradeOptions.length === 0}
+                >
+                  <span className="truncate flex-1 text-left">
+                    {tradeFilter.size === 0 ? "Trade" : `${tradeFilter.size} Trade`}
+                  </span>
+                  <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-0" align="start" side="bottom" avoidCollisions sideOffset={4}>
+                <div className="p-2 space-y-1">
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <span className="text-xs font-semibold text-muted-foreground">Filter by Trade</span>
+                    {tradeFilter.size > 0 && (
+                      <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={() => setTradeFilter(new Set())}>
+                        Clear
+                      </button>
                     )}
-                  >
-                    <span className="truncate">
-                      {tradeFilter.size === 0 ? "Trade" : `${tradeFilter.size} Trade`}
-                    </span>
-                    <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56 p-2" align="start">
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between px-2 py-1">
-                      <span className="text-xs font-semibold text-muted-foreground">Filter by Trade</span>
-                      {tradeFilter.size > 0 && (
-                        <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={() => setTradeFilter(new Set())}>
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                    <div className="h-px bg-border" />
-                    <ScrollArea className="max-h-48">
-                      {tradeOptions.map((trade) => (
-                        <label key={trade} className={cn("flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-xs", tradeFilter.has(trade) ? "bg-primary/5" : "hover:bg-muted/50")}>
-                          <Checkbox checked={tradeFilter.has(trade)} onCheckedChange={() => toggleSetItem(setTradeFilter, trade)} className="h-3.5 w-3.5" />
-                          <span className="truncate font-medium">{trade}</span>
-                        </label>
-                      ))}
-                    </ScrollArea>
                   </div>
-                </PopoverContent>
-              </Popover>
-            )}
+                </div>
+                <ScrollArea className="h-[180px] px-2 pb-2">
+                  {tradeOptions.map((trade) => (
+                    <label key={trade} className={cn("flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-xs", tradeFilter.has(trade) ? "bg-primary/5" : "hover:bg-muted/50")}>
+                      <Checkbox checked={tradeFilter.has(trade)} onCheckedChange={() => toggleSetItem(setTradeFilter, trade)} className="h-3.5 w-3.5" />
+                      <span className="truncate font-medium">{trade}</span>
+                    </label>
+                  ))}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
 
             {/* Category filter */}
-            {categoryOptions.length > 0 && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "h-7 text-[11px] justify-between font-normal gap-1 px-2.5",
-                      categoryFilter.size > 0 && "border-primary/40 bg-primary/5"
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-8 w-full text-[11px] justify-between font-normal gap-1 px-2.5",
+                    categoryFilter.size > 0 && "border-primary/40 bg-primary/5"
+                  )}
+                  disabled={categoryOptions.length === 0}
+                >
+                  <span className="truncate flex-1 text-left">
+                    {categoryFilter.size === 0 ? "Category" : `${categoryFilter.size} Cat.`}
+                  </span>
+                  <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-0" align="start" side="bottom" avoidCollisions sideOffset={4}>
+                <div className="p-2 space-y-1">
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <span className="text-xs font-semibold text-muted-foreground">Filter by Category</span>
+                    {categoryFilter.size > 0 && (
+                      <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={() => setCategoryFilter(new Set())}>
+                        Clear
+                      </button>
                     )}
-                  >
-                    <span className="truncate">
-                      {categoryFilter.size === 0 ? "Category" : `${categoryFilter.size} Cat.`}
-                    </span>
-                    <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56 p-2" align="start">
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between px-2 py-1">
-                      <span className="text-xs font-semibold text-muted-foreground">Filter by Category</span>
-                      {categoryFilter.size > 0 && (
-                        <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={() => setCategoryFilter(new Set())}>
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                    <div className="h-px bg-border" />
-                    <ScrollArea className="max-h-48">
-                      {categoryOptions.map((cat) => (
-                        <label key={cat} className={cn("flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-xs", categoryFilter.has(cat) ? "bg-primary/5" : "hover:bg-muted/50")}>
-                          <Checkbox checked={categoryFilter.has(cat)} onCheckedChange={() => toggleSetItem(setCategoryFilter, cat)} className="h-3.5 w-3.5" />
-                          <span className="truncate font-medium">{cat}</span>
-                        </label>
-                      ))}
-                    </ScrollArea>
                   </div>
-                </PopoverContent>
-              </Popover>
-            )}
-
-            {/* Clear all filters */}
-            {activeFilterCount > 0 && (
-              <button
-                type="button"
-                className="text-[11px] text-primary hover:underline font-medium ml-1"
-                onClick={() => {
-                  setStatusFilter(new Set());
-                  setDocumentFilter(new Set());
-                  setTradeFilter(new Set());
-                  setCategoryFilter(new Set());
-                }}
-              >
-                Clear all
-              </button>
-            )}
+                </div>
+                <ScrollArea className="h-[180px] px-2 pb-2">
+                  {categoryOptions.map((cat) => (
+                    <label key={cat} className={cn("flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-xs", categoryFilter.has(cat) ? "bg-primary/5" : "hover:bg-muted/50")}>
+                      <Checkbox checked={categoryFilter.has(cat)} onCheckedChange={() => toggleSetItem(setCategoryFilter, cat)} className="h-3.5 w-3.5" />
+                      <span className="truncate font-medium">{cat}</span>
+                    </label>
+                  ))}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
           </div>
 
-          {/* Select All + counts */}
+          {/* Select All + counts + clear filters */}
           <div className="flex items-center gap-3 text-xs">
             <label className="flex items-center gap-1.5 cursor-pointer">
               <Checkbox
@@ -473,6 +481,20 @@ export function GenerateSubmittalSheet({
               />
               <span className="text-muted-foreground">Select All Pre-Approved</span>
             </label>
+            {activeFilterCount > 0 && (
+              <button
+                type="button"
+                className="text-[11px] text-primary hover:underline font-medium"
+                onClick={() => {
+                  setStatusFilter(new Set());
+                  setDocumentFilter(new Set());
+                  setTradeFilter(new Set());
+                  setCategoryFilter(new Set());
+                }}
+              >
+                Clear filters
+              </button>
+            )}
             <div className="flex items-center gap-2 ml-auto" role="group" aria-label="Status counts">
               <span className="flex items-center gap-1 text-status-pre-approved" aria-label={`${statusCounts.pre_approved} pre-approved`}>
                 <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
@@ -549,9 +571,9 @@ export function GenerateSubmittalSheet({
                         </div>
                       </div>
 
-                      {/* Row 2: Section number (mono, underscored) + description */}
+                      {/* Row 2: Section number (mono) + description — matching conformance page */}
                       <p className="text-xs text-muted-foreground mt-1 leading-tight truncate">
-                        <span className="font-mono font-semibold text-primary/80 underline decoration-primary/20 underline-offset-2">
+                        <span className="font-mono font-semibold text-primary/80">
                           {item.document.specSection}
                         </span>
                         {" — "}

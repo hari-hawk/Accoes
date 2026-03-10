@@ -49,6 +49,8 @@ import { VALIDATION_STATUS_CONFIG } from "@/lib/constants";
 import { ProjectCard } from "./project-card";
 import { ProjectFilters } from "./project-filters";
 import { ProjectDetailSheet } from "./project-detail-sheet";
+import { GenerateSubmittalSheet } from "./generate-submittal-sheet";
+import { TeamAccessSheet } from "./team-access-sheet";
 // CreateProjectDialog replaced by /projects/create page
 import { useProjects } from "@/hooks/use-projects";
 import { useMaterials } from "@/hooks/use-materials";
@@ -496,7 +498,7 @@ function DownloadReportSheet({
   const [statusPopoverOpen, setStatusPopoverOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
-  const [exportFormat, setExportFormat] = useState<"csv" | "xlsx">("csv");
+  const [exportFormat, setExportFormat] = useState<"pdf" | "xlsx">("pdf");
 
   /* ---- Data from hook ---- */
   // TODO: Phase 2 — extract a lighter read-only hook to avoid unused internal state
@@ -574,13 +576,13 @@ function DownloadReportSheet({
     });
   };
 
-  const handleExport = (format: "csv" | "xlsx") => {
+  const handleExport = (format: "pdf" | "xlsx") => {
     setExportFormat(format);
     setExporting(true);
     setTimeout(() => {
       setExporting(false);
       setExportComplete(true);
-      toast.success(`Report exported as ${format === "csv" ? "CSV" : "Excel"}`, {
+      toast.success(`Report exported as ${format === "pdf" ? "PDF" : "Excel"}`, {
         description: `${selectedIds.size} document${selectedIds.size !== 1 ? "s" : ""} included in the report.`,
       });
     }, 1500);
@@ -595,13 +597,13 @@ function DownloadReportSheet({
       setStatusPopoverOpen(false);
       setExporting(false);
       setExportComplete(false);
-      setExportFormat("csv");
+      setExportFormat("pdf");
     }
     onOpenChange(isOpen);
   };
 
   const activeFilterCount = statusFilter.size;
-  const formatLabel = exportFormat === "csv" ? "CSV" : "Excel";
+  const formatLabel = exportFormat === "pdf" ? "PDF" : "Excel";
 
   /* ---- Early return after all hooks ---- */
   if (!project) return null;
@@ -610,7 +612,7 @@ function DownloadReportSheet({
     <Sheet open={open} onOpenChange={handleClose}>
       <SheetContent
         side="right"
-        className="sm:max-w-md w-full flex flex-col p-0"
+        className="sm:max-w-[50vw] lg:max-w-2xl w-full flex flex-col p-0"
         aria-label={`Download report for ${project.name}`}
       >
         {/* Header */}
@@ -934,31 +936,9 @@ function DownloadReportSheet({
               <div className="flex items-center gap-3 w-full">
                 <Button
                   variant="outline"
-                  onClick={() => handleExport("csv")}
-                  disabled={selectedIds.size === 0 || exporting}
-                  className="flex-1"
-                  aria-label={
-                    selectedIds.size === 0
-                      ? "Select materials to export as CSV"
-                      : `Export ${selectedIds.size} material${selectedIds.size !== 1 ? "s" : ""} as CSV`
-                  }
-                >
-                  {exporting && exportFormat === "csv" ? (
-                    <>
-                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                      Exporting…
-                    </>
-                  ) : (
-                    <>
-                      <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                      Export CSV{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
-                    </>
-                  )}
-                </Button>
-                <Button
                   onClick={() => handleExport("xlsx")}
                   disabled={selectedIds.size === 0 || exporting}
-                  className="flex-1 gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity"
+                  className="flex-1"
                   aria-label={
                     selectedIds.size === 0
                       ? "Select materials to export as Excel"
@@ -974,6 +954,28 @@ function DownloadReportSheet({
                     <>
                       <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
                       Export Excel{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={() => handleExport("pdf")}
+                  disabled={selectedIds.size === 0 || exporting}
+                  className="flex-1 gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity"
+                  aria-label={
+                    selectedIds.size === 0
+                      ? "Select materials to export as PDF"
+                      : `Export ${selectedIds.size} material${selectedIds.size !== 1 ? "s" : ""} as PDF`
+                  }
+                >
+                  {exporting && exportFormat === "pdf" ? (
+                    <>
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      Exporting…
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                      Export PDF{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
                     </>
                   )}
                 </Button>
@@ -1010,6 +1012,14 @@ export function ProjectList() {
   // Download Report sheet
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
   const [reportProject, setReportProject] = useState<Project | null>(null);
+
+  // Generate Submittal sheet
+  const [submittalSheetOpen, setSubmittalSheetOpen] = useState(false);
+  const [submittalProject, setSubmittalProject] = useState<Project | null>(null);
+
+  // Team Access sheet
+  const [teamSheetOpen, setTeamSheetOpen] = useState(false);
+  const [teamProject, setTeamProject] = useState<Project | null>(null);
 
 
   // TODO: Phase 2 — replace with real extraction status polling
@@ -1051,6 +1061,16 @@ export function ProjectList() {
   const handleDownloadReport = (project: Project) => {
     setReportProject(project);
     setReportSheetOpen(true);
+  };
+
+  const handleGenerateSubmittal = (project: Project) => {
+    setSubmittalProject(project);
+    setSubmittalSheetOpen(true);
+  };
+
+  const handleManageTeam = (project: Project) => {
+    setTeamProject(project);
+    setTeamSheetOpen(true);
   };
 
   // Override extracting → active for completed extractions
@@ -1098,6 +1118,9 @@ export function ProjectList() {
               project={project}
               onNameClick={handleCardClick}
               onDownloadReport={handleDownloadReport}
+              onGenerateSubmittal={handleGenerateSubmittal}
+              onManageTeam={handleManageTeam}
+              isAdmin={true}
             />
           ))}
         </div>
@@ -1135,6 +1158,20 @@ export function ProjectList() {
         project={reportProject}
         open={reportSheetOpen}
         onOpenChange={setReportSheetOpen}
+      />
+
+      {/* Generate Submittal Sheet */}
+      <GenerateSubmittalSheet
+        project={submittalProject}
+        open={submittalSheetOpen}
+        onOpenChange={setSubmittalSheetOpen}
+      />
+
+      {/* Team Access Sheet */}
+      <TeamAccessSheet
+        project={teamProject}
+        open={teamSheetOpen}
+        onOpenChange={setTeamSheetOpen}
       />
     </div>
   );

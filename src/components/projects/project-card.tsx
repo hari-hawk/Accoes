@@ -4,10 +4,8 @@ import Link from "next/link";
 import {
   Download,
   Loader2,
-  TrendingUp,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
+  Plus,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -17,7 +15,6 @@ import {
   AvatarGroup,
   AvatarGroupCount,
 } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { StatusIndicator } from "@/components/shared/status-indicator";
 import { mockUsers } from "@/data/mock-users";
 import { getDocumentsByVersion } from "@/data/mock-documents";
@@ -38,12 +35,18 @@ export function ProjectCard({
   project,
   onNameClick,
   onDownloadReport,
+  onGenerateSubmittal,
+  onManageTeam,
+  isAdmin = false,
 }: {
   project: Project;
   onNameClick?: (project: Project) => void;
   onDownloadReport?: (project: Project) => void;
+  onGenerateSubmittal?: (project: Project) => void;
+  onManageTeam?: (project: Project) => void;
+  isAdmin?: boolean;
 }) {
-  const { overallConfidence: confidence, preApproved, reviewRequired, actionMandatory, total } = project.confidenceSummary;
+  const { preApproved, reviewRequired, actionMandatory, total } = project.confidenceSummary;
 
   const hasVersions = !!project.latestVersionId;
 
@@ -79,7 +82,7 @@ export function ProjectCard({
       )}
 
       <div className="px-4 py-4">
-        {/* Row 1: Name + Job ID + Status */}
+        {/* Row 1: Name + Job ID + Status Pill */}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h3 className="text-sm font-semibold truncate transition-colors">
@@ -99,89 +102,85 @@ export function ProjectCard({
               {project.jobId}
             </p>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {project.projectType && (
-              <Badge
-                variant="secondary"
-                className="text-[11px] font-bold px-2 py-0.5 bg-ds-primary-100 text-ds-primary-800"
-              >
-                {project.projectType === "dr" ? "Discrepancy Report" : "Design Job"}
-              </Badge>
-            )}
-            <StatusIndicator status={project.status} />
+          <StatusIndicator status={project.status} />
+        </div>
+
+        {/* Row 2: 2-column metadata grid */}
+        <div className="mt-2.5 grid grid-cols-2 gap-2.5 gap-x-4">
+          <div>
+            <div className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Type</div>
+            <div className="text-xs text-foreground">
+              {project.projectType === "dr" ? "Discrepancy Report" : "Design Job"}
+            </div>
+          </div>
+          <div>
+            <div className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Company</div>
+            <div className="text-xs text-foreground truncate" title={project.client}>{project.client}</div>
+          </div>
+          <div>
+            <div className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Location</div>
+            <div className="text-xs text-foreground">{project.location}</div>
+          </div>
+          <div>
+            <div className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Team</div>
+            <AvatarGroup>
+              {visibleMembers.map((user) => (
+                <Avatar key={user!.id} size="sm">
+                  {user!.avatarUrl && <AvatarImage src={user!.avatarUrl} alt={user!.name} />}
+                  <AvatarFallback className="text-[9px] font-medium">{getInitials(user!.name)}</AvatarFallback>
+                </Avatar>
+              ))}
+              {overflowCount > 0 && (
+                <AvatarGroupCount className="text-[9px]">+{overflowCount}</AvatarGroupCount>
+              )}
+              {isAdmin && (
+                <button
+                  type="button"
+                  className="size-6 rounded-full border border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-nav-accent hover:bg-nav-accent/5 transition-colors ml-0.5"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onManageTeam?.(project);
+                  }}
+                  aria-label={`Add team member to ${project.name}`}
+                  title="Manage team"
+                >
+                  <Plus className="h-3 w-3 text-muted-foreground" />
+                </button>
+              )}
+            </AvatarGroup>
           </div>
         </div>
 
-        {/* Row 2: Confidence + Progress Bar */}
-        <div className="mt-2.5" aria-label={`Confidence: ${confidence > 0 ? `${confidence}%` : "Pending"}`}>
-          <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="text-muted-foreground font-medium flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" aria-hidden="true" />
-              Confidence
-            </span>
-            <span className={cn("font-bold text-xs", isExtracting ? "text-amber-600 dark:text-amber-400" : "text-foreground")}>
-              {isExtracting ? "Extracting..." : confidence > 0 ? `${confidence}%` : "Pending"}
-            </span>
-          </div>
-          {/* Single-fill progress bar */}
-          <div className="h-2.5 rounded-full bg-muted overflow-hidden" role="progressbar" aria-valuenow={confidence} aria-valuemin={0} aria-valuemax={100}>
-            {isExtracting ? (
-              <div className="h-full w-1/3 bg-amber-400 dark:bg-amber-500 rounded-full animate-indeterminate" />
-            ) : confidence > 0 ? (
-              <div
-                className="h-full bg-nav-accent rounded-full transition-all duration-500"
-                style={{ width: `${confidence}%` }}
-                title={`${confidence}% overall confidence`}
-              />
-            ) : null}
-          </div>
-        </div>
-
-        {/* Row 3: Status counts + Avatar stack */}
-        <div className="mt-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 flex-wrap" aria-label="Validation breakdown">
-            {isExtracting ? (
-              <span className="text-xs text-muted-foreground italic">Processing documents…</span>
-            ) : total > 0 ? (
-              <>
-                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground" aria-label={`${preApproved} pre-approved`}>
-                  <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
-                  {preApproved}
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground" aria-label={`${reviewRequired} review required`}>
-                  <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
-                  {reviewRequired}
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground" aria-label={`${actionMandatory} action mandatory`}>
-                  <XCircle className="h-2.5 w-2.5" aria-hidden="true" />
-                  {actionMandatory}
-                </span>
-              </>
-            ) : (
-              <span className="text-[10px] text-muted-foreground italic">No documents</span>
-            )}
-          </div>
-          <AvatarGroup>
-            {visibleMembers.map((user) => (
-              <Avatar key={user!.id} size="sm">
-                {user!.avatarUrl && (
-                  <AvatarImage src={user!.avatarUrl} alt={user!.name} />
-                )}
-                <AvatarFallback className="text-[9px] font-medium">
-                  {getInitials(user!.name)}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-            {overflowCount > 0 && (
-              <AvatarGroupCount className="text-[9px]">
-                +{overflowCount}
-              </AvatarGroupCount>
-            )}
-          </AvatarGroup>
+        {/* Row 3: Status counts */}
+        <div className="mt-2.5 flex items-center gap-3 flex-wrap" aria-label="Validation breakdown">
+          {isExtracting ? (
+            <span className="text-xs text-muted-foreground italic">Processing documents...</span>
+          ) : total > 0 ? (
+            <>
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground" aria-label={`${preApproved} pre-approved`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-status-pre-approved shrink-0" aria-hidden="true" />
+                <span className="font-semibold text-foreground">{preApproved}</span>
+                Pre-Approved
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground" aria-label={`${reviewRequired} review required`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-status-review-required shrink-0" aria-hidden="true" />
+                <span className="font-semibold text-foreground">{reviewRequired}</span>
+                Review Required
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground" aria-label={`${actionMandatory} action mandatory`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-status-action-mandatory shrink-0" aria-hidden="true" />
+                <span className="font-semibold text-foreground">{actionMandatory}</span>
+                Action Mandatory
+              </span>
+            </>
+          ) : (
+            <span className="text-[10px] text-muted-foreground italic">No documents</span>
+          )}
         </div>
       </div>
 
-      {/* Footer: Download Report action */}
+      {/* Footer: Download Report | Generate Submittal */}
       <div
         className="px-4 py-2 border-t bg-muted/20 flex items-center"
         onClick={(e) => e.stopPropagation()}
@@ -189,42 +188,65 @@ export function ProjectCard({
         role="group"
         aria-label="Quick actions"
       >
+        {/* Three-way: extracting -> processing text, no versions -> disabled spans, normal -> active buttons */}
         {isExtracting ? (
           <span className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-medium">
             <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
             Processing documents...
           </span>
-        ) : hasVersions ? (
-          <button
-            type="button"
-            className={cn(
-              "flex items-center gap-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-sm outline-none px-0.5",
-              hasDocuments
-                ? "text-muted-foreground hover:text-nav-accent"
-                : "text-muted-foreground/60 cursor-not-allowed"
-            )}
-            disabled={!hasDocuments}
-            onClick={(e) => {
-              e.preventDefault();
-              if (hasDocuments) onDownloadReport?.(project);
-            }}
-            aria-label={
-              hasDocuments
-                ? `Download report for ${project.name}`
-                : `No documents available for ${project.name}`
-            }
-          >
-            <Download className="h-3 w-3" aria-hidden="true" />
-            Download Report
-          </button>
+        ) : !hasVersions ? (
+          <>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground/60 font-medium cursor-not-allowed">
+              <Download className="h-3 w-3" aria-hidden="true" />
+              Download Report
+            </span>
+            <div className="w-px h-3.5 bg-border mx-3" aria-hidden="true" />
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground/60 font-medium cursor-not-allowed">
+              <FileText className="h-3 w-3" aria-hidden="true" />
+              Generate Submittal
+            </span>
+          </>
         ) : (
-          <span
-            className="flex items-center gap-1.5 text-xs text-muted-foreground/60 font-medium cursor-not-allowed"
-            aria-label="Download report unavailable — no versions"
-          >
-            <Download className="h-3 w-3" aria-hidden="true" />
-            Download Report
-          </span>
+          <>
+            <button
+              type="button"
+              className={cn(
+                "flex items-center gap-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-sm outline-none px-0.5",
+                hasDocuments
+                  ? "text-muted-foreground hover:text-nav-accent"
+                  : "text-muted-foreground/60 cursor-not-allowed"
+              )}
+              disabled={!hasDocuments}
+              onClick={(e) => {
+                e.preventDefault();
+                if (hasDocuments) onDownloadReport?.(project);
+              }}
+              aria-label={hasDocuments ? `Download report for ${project.name}` : `No documents available for ${project.name}`}
+            >
+              <Download className="h-3 w-3" aria-hidden="true" />
+              Download Report
+            </button>
+            {/* Pipe separator */}
+            <div className="w-px h-3.5 bg-border mx-3" aria-hidden="true" />
+            <button
+              type="button"
+              className={cn(
+                "flex items-center gap-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-sm outline-none px-0.5",
+                hasDocuments
+                  ? "text-nav-accent hover:text-nav-accent/80"
+                  : "text-muted-foreground/60 cursor-not-allowed"
+              )}
+              disabled={!hasDocuments}
+              onClick={(e) => {
+                e.preventDefault();
+                if (hasDocuments) onGenerateSubmittal?.(project);
+              }}
+              aria-label={hasDocuments ? `Generate submittal for ${project.name}` : `No documents available for ${project.name}`}
+            >
+              <FileText className="h-3 w-3" aria-hidden="true" />
+              Generate Submittal
+            </button>
+          </>
         )}
       </div>
     </>

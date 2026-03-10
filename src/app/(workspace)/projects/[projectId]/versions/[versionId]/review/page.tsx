@@ -13,6 +13,7 @@ import {
   Loader2,
   ArrowRight,
   BookOpen,
+  Replace,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -71,6 +72,9 @@ export default function ReviewPage() {
     systemCategories,
     sortBy,
     setSortBy,
+    alternativeIds,
+    toggleAlternative,
+    batchToggleAlternative,
   } = useMaterials(version.id);
 
   // ── Review progress tracking ──
@@ -162,6 +166,15 @@ export default function ReviewPage() {
               Revisit
             </Button>
             <Button
+              size="sm"
+              variant="outline"
+              onClick={batchToggleAlternative}
+              className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+            >
+              <Replace className="mr-1.5 h-3.5 w-3.5" />
+              Alternative
+            </Button>
+            <Button
               size="icon"
               variant="outline"
               className="h-7 w-7"
@@ -207,6 +220,7 @@ export default function ReviewPage() {
             indexCategories={indexCategories}
             systemCategories={systemCategories}
             sortBy={sortBy}
+            alternativeIds={alternativeIds}
             onSelect={setSelectedId}
             onToggleCheck={toggleCheck}
             onSearchChange={setSearch}
@@ -217,6 +231,7 @@ export default function ReviewPage() {
             onSystemCategoryToggle={toggleSystemCategoryFilter}
             onSystemCategoryClear={clearSystemCategoryFilter}
             onSortChange={setSortBy}
+            onToggleAlternative={toggleAlternative}
           />
         </ResizablePanel>
         <ResizableHandle withHandle />

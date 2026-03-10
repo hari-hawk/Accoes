@@ -9,6 +9,7 @@ import {
   X,
   RotateCcw,
   ArrowUpDown,
+  Replace,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -70,15 +71,19 @@ function MaterialListItem({
   isSelected,
   isChecked,
   decision,
+  isAlternative,
   onSelect,
   onToggleCheck,
+  onToggleAlternative,
 }: {
   item: MaterialItem;
   isSelected: boolean;
   isChecked: boolean;
   decision?: DecisionStatus;
+  isAlternative?: boolean;
   onSelect: () => void;
   onToggleCheck: () => void;
+  onToggleAlternative?: () => void;
 }) {
   const effectiveDecision = decision ?? item.validation?.decision;
   const status = item.validation?.status;
@@ -185,21 +190,39 @@ function MaterialListItem({
           </div>
         </div>
 
-        {/* Category pills */}
-        {(item.document.indexCategory || item.document.systemCategory) && (
-          <div className="flex items-center gap-1.5 mt-1.5">
-            {item.document.indexCategory && (
-              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200">
-                {item.document.indexCategory}
-              </span>
-            )}
-            {item.document.systemCategory && (
-              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200">
-                {item.document.systemCategory}
-              </span>
-            )}
-          </div>
-        )}
+        {/* Category pills + Alternative toggle */}
+        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+          {item.document.indexCategory && (
+            <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200">
+              {item.document.indexCategory}
+            </span>
+          )}
+          {item.document.systemCategory && (
+            <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200">
+              {item.document.systemCategory}
+            </span>
+          )}
+          {/* Alternative toggle */}
+          {onToggleAlternative && (
+            <label
+              className={cn(
+                "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold cursor-pointer transition-all ml-auto",
+                isAlternative
+                  ? "bg-yellow-100 text-yellow-800 ring-1 ring-yellow-300"
+                  : "bg-muted/50 text-muted-foreground hover:bg-yellow-50 hover:text-yellow-700"
+              )}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Checkbox
+                checked={!!isAlternative}
+                onCheckedChange={onToggleAlternative}
+                className="h-3 w-3"
+                aria-label={`Mark ${item.document.fileName} as alternative`}
+              />
+              ALT
+            </label>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -220,6 +243,7 @@ const STATUS_OPTIONS: {
   { key: "action_mandatory", label: "Action Mandatory", icon: XCircle, color: "text-status-action-mandatory", bgColor: "bg-status-action-mandatory-bg", dotColor: "bg-status-action-mandatory", kind: "validation" },
   { key: "approved", label: "Approved", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "decision" },
   { key: "revisit", label: "Revisit", icon: RotateCcw, color: "text-status-review-required", bgColor: "bg-status-review-required-bg", dotColor: "bg-status-review-required", kind: "decision" },
+  { key: "alternative", label: "Alternative", icon: Replace, color: "text-yellow-700", bgColor: "bg-yellow-100", dotColor: "bg-yellow-500", kind: "decision" },
 ];
 
 export function MaterialList({
@@ -234,6 +258,7 @@ export function MaterialList({
   indexCategories,
   systemCategories,
   sortBy,
+  alternativeIds,
   onSelect,
   onToggleCheck,
   onSearchChange,
@@ -244,6 +269,7 @@ export function MaterialList({
   onSystemCategoryToggle,
   onSystemCategoryClear,
   onSortChange,
+  onToggleAlternative,
 }: {
   materials: MaterialItem[];
   selectedId: string | null;
@@ -256,6 +282,7 @@ export function MaterialList({
   indexCategories: string[];
   systemCategories: string[];
   sortBy: "name-asc" | "name-desc" | "index-category";
+  alternativeIds?: Set<string>;
   onSelect: (id: string) => void;
   onToggleCheck: (id: string) => void;
   onSearchChange: (value: string) => void;
@@ -266,6 +293,7 @@ export function MaterialList({
   onSystemCategoryToggle: (sys: string) => void;
   onSystemCategoryClear: () => void;
   onSortChange: (sort: "name-asc" | "name-desc" | "index-category") => void;
+  onToggleAlternative?: (id: string) => void;
 }) {
   const [statusPopoverOpen, setStatusPopoverOpen] = useState(false);
   const [indexCatPopoverOpen, setIndexCatPopoverOpen] = useState(false);
@@ -290,12 +318,17 @@ export function MaterialList({
     (m) => decisions[m.document.id] === "revisit"
   ).length;
 
+  const alternativeCount = alternativeIds
+    ? materials.filter((m) => alternativeIds.has(m.document.id)).length
+    : 0;
+
   const statusCountMap: Record<string, number> = {
     pre_approved: preApprovedCount,
     review_required: reviewCount,
     action_mandatory: actionCount,
     approved: approvedCount,
     revisit: revisitCount,
+    alternative: alternativeCount,
   };
 
   const allChecked =
@@ -618,8 +651,10 @@ export function MaterialList({
                 isSelected={selectedId === item.document.id}
                 isChecked={checkedIds.has(item.document.id)}
                 decision={decisions[item.document.id]}
+                isAlternative={alternativeIds?.has(item.document.id)}
                 onSelect={() => onSelect(item.document.id)}
                 onToggleCheck={() => onToggleCheck(item.document.id)}
+                onToggleAlternative={onToggleAlternative ? () => onToggleAlternative(item.document.id) : undefined}
               />
             ))}
             {materials.length === 0 && (

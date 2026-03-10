@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { getDocumentsByVersion } from "@/data/mock-documents";
 import {
   getValidationByDocument,
@@ -26,6 +26,21 @@ export function useMaterials(versionId: string) {
   const [systemCategoryFilter, setSystemCategoryFilter] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<"name-asc" | "name-desc" | "index-category">("name-asc");
   const [activeCategory, setActiveCategory] = useState<ValidationCategory>("overall");
+
+  // Alternative items — persisted to localStorage for cross-page access
+  const [alternativeIds, setAlternativeIds] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set<string>();
+    try {
+      const stored = localStorage.getItem(`alternative-items-${versionId}`);
+      return stored ? new Set(JSON.parse(stored) as string[]) : new Set<string>();
+    } catch {
+      return new Set<string>();
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(`alternative-items-${versionId}`, JSON.stringify([...alternativeIds]));
+  }, [alternativeIds, versionId]);
 
   const materials: MaterialItem[] = useMemo(() => {
     const docs = getDocumentsByVersion(versionId);
@@ -57,6 +72,8 @@ export function useMaterials(versionId: string) {
         // Check decision status (approved, revisit)
         const decision = decisions[m.document.id];
         if (decision && statusFilter.has(decision)) return true;
+        // Check alternative filter
+        if (statusFilter.has("alternative") && alternativeIds.has(m.document.id)) return true;
         return false;
       });
     }
@@ -94,7 +111,7 @@ export function useMaterials(versionId: string) {
     }
 
     return result;
-  }, [materials, search, statusFilter, decisions, indexCategoryFilter, systemCategoryFilter, sortBy]);
+  }, [materials, search, statusFilter, decisions, alternativeIds, indexCategoryFilter, systemCategoryFilter, sortBy]);
 
   const indexCategories = useMemo(
     () => [...new Set(materials.map((m) => m.document.indexCategory).filter(Boolean))] as string[],
@@ -195,6 +212,30 @@ export function useMaterials(versionId: string) {
 
   const clearSystemCategoryFilter = useCallback(() => setSystemCategoryFilter(new Set()), []);
 
+  const toggleAlternative = useCallback((id: string) => {
+    setAlternativeIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const batchToggleAlternative = useCallback(() => {
+    setAlternativeIds((prev) => {
+      const allCheckedAreAlt = [...checkedIds].every((id) => prev.has(id));
+      const next = new Set(prev);
+      if (allCheckedAreAlt) {
+        // Un-mark all checked items
+        checkedIds.forEach((id) => next.delete(id));
+      } else {
+        // Mark all checked items as alternative
+        checkedIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  }, [checkedIds]);
+
   return {
     materials: filteredMaterials,
     allMaterials: materials,
@@ -227,5 +268,8 @@ export function useMaterials(versionId: string) {
     setSortBy,
     indexCategories,
     systemCategories,
+    alternativeIds,
+    toggleAlternative,
+    batchToggleAlternative,
   };
 }

@@ -244,6 +244,8 @@ export function GenerateSubmittalSheet({
           `submittal-approved-files-${project.latestVersionId}`,
           JSON.stringify(approvedMatrixFileIds)
         );
+        // Advance milestone progress so preview-cover & submittal-binder milestones turn green
+        localStorage.setItem(`milestone-highest-${project.id}`, String(3));
         router.push(`/projects/${project.id}/versions/${project.latestVersionId}/preview-cover`);
       }
     }, 1500);

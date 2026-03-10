@@ -115,8 +115,10 @@ export function MilestoneProgressBar({
       <div className="grid w-full max-w-4xl" style={{ gridTemplateColumns: `repeat(${MILESTONES.length}, 1fr)` }}>
         {MILESTONES.map((milestone, index) => {
           const isActive = milestone.key === activeMilestone;
-          const isUnlocked = milestone.unlockedAt.includes(currentStage);
           const isCompleted = index < completedUpTo;
+          // Milestone is unlocked if the workflow stage naturally allows it,
+          // OR if the user has already progressed to/past it (persisted in localStorage)
+          const isUnlocked = milestone.unlockedAt.includes(currentStage) || index <= completedUpTo;
           const Icon = milestone.icon;
           const href = `${base}${milestone.path}`;
           const isLast = index === MILESTONES.length - 1;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Fragment } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import {
   FileText,
@@ -32,6 +32,7 @@ import {
 import { useWorkspace } from "@/providers/workspace-provider";
 import { mockUsers } from "@/data/mock-users";
 import { productIndexSections } from "@/data/mock-product-index";
+import { getDocumentsByVersion } from "@/data/mock-documents";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
@@ -83,6 +84,43 @@ function FieldDisplay({
 export default function PreviewCoverPage() {
   const { project, version } = useWorkspace();
   const router = useRouter();
+
+  // Read alternative item IDs from localStorage (set on conformance page)
+  const [alternativeSpecTitles, setAlternativeSpecTitles] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(`alternative-items-${version.id}`);
+      if (stored) {
+        const altIds = new Set(JSON.parse(stored) as string[]);
+        // Map document IDs → specSectionTitles to match TOC itemDetail fields
+        const docs = getDocumentsByVersion(version.id);
+        const titles = new Set<string>();
+        docs.forEach((doc) => {
+          if (altIds.has(doc.id)) {
+            titles.add(doc.specSectionTitle.toLowerCase());
+          }
+        });
+        setAlternativeSpecTitles(titles);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, [version.id]);
+
+  // Build enhanced product index sections with dynamic isAlternate from conformance page
+  const enhancedProductIndexSections = useMemo(() => {
+    if (alternativeSpecTitles.size === 0) return productIndexSections;
+    return productIndexSections.map((section) => ({
+      ...section,
+      items: section.items.map((item) => ({
+        ...item,
+        isAlternate:
+          item.isAlternate ||
+          alternativeSpecTitles.has(item.itemDetail.toLowerCase()),
+      })),
+    }));
+  }, [alternativeSpecTitles]);
 
   // Sheet overlay for editing
   const [editSheetOpen, setEditSheetOpen] = useState(false);
@@ -539,7 +577,7 @@ export default function PreviewCoverPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {productIndexSections.map((section) => (
+                  {enhancedProductIndexSections.map((section) => (
                     <Fragment key={section.code}>
                       {/* Section header row */}
                       <tr className="bg-gray-100">

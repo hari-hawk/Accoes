@@ -190,39 +190,42 @@ function MaterialListItem({
           </div>
         </div>
 
-        {/* Category pills + Alternative toggle */}
-        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-          {item.document.indexCategory && (
-            <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200">
-              {item.document.indexCategory}
-            </span>
-          )}
-          {item.document.systemCategory && (
-            <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200">
-              {item.document.systemCategory}
-            </span>
-          )}
-          {/* Alternative toggle */}
-          {onToggleAlternative && (
-            <label
-              className={cn(
-                "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold cursor-pointer transition-all ml-auto",
-                isAlternative
-                  ? "bg-yellow-100 text-yellow-800 ring-1 ring-yellow-300"
-                  : "bg-muted/50 text-muted-foreground hover:bg-yellow-50 hover:text-yellow-700"
-              )}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Checkbox
-                checked={!!isAlternative}
-                onCheckedChange={onToggleAlternative}
-                className="h-3 w-3"
-                aria-label={`Mark ${item.document.fileName} as alternative`}
-              />
-              ALT
-            </label>
-          )}
-        </div>
+        {/* Category pills */}
+        {(item.document.indexCategory || item.document.systemCategory) && (
+          <div className="flex items-center gap-1.5 mt-1.5">
+            {item.document.indexCategory && (
+              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200">
+                {item.document.indexCategory}
+              </span>
+            )}
+            {item.document.systemCategory && (
+              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200">
+                {item.document.systemCategory}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Alternate toggle — distinct row for clear visual separation */}
+        {onToggleAlternative && (
+          <label
+            className={cn(
+              "flex items-center gap-2 mt-2 px-2 py-1 rounded-md cursor-pointer transition-all border",
+              isAlternative
+                ? "bg-yellow-50 border-yellow-300 text-yellow-800"
+                : "bg-transparent border-transparent text-muted-foreground hover:bg-yellow-50/50 hover:border-yellow-200 hover:text-yellow-700"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Checkbox
+              checked={!!isAlternative}
+              onCheckedChange={onToggleAlternative}
+              className="h-3.5 w-3.5"
+              aria-label={`Mark ${item.document.fileName} as alternate`}
+            />
+            <span className="text-[11px] font-semibold">Alternate</span>
+          </label>
+        )}
       </div>
     </div>
   );
@@ -243,7 +246,7 @@ const STATUS_OPTIONS: {
   { key: "action_mandatory", label: "Action Mandatory", icon: XCircle, color: "text-status-action-mandatory", bgColor: "bg-status-action-mandatory-bg", dotColor: "bg-status-action-mandatory", kind: "validation" },
   { key: "approved", label: "Approved", icon: CheckCircle2, color: "text-status-pre-approved", bgColor: "bg-status-pre-approved-bg", dotColor: "bg-status-pre-approved", kind: "decision" },
   { key: "revisit", label: "Revisit", icon: RotateCcw, color: "text-status-review-required", bgColor: "bg-status-review-required-bg", dotColor: "bg-status-review-required", kind: "decision" },
-  { key: "alternative", label: "Alternative", icon: Replace, color: "text-yellow-700", bgColor: "bg-yellow-100", dotColor: "bg-yellow-500", kind: "decision" },
+  { key: "alternative", label: "Alternate", icon: Replace, color: "text-yellow-700", bgColor: "bg-yellow-100", dotColor: "bg-yellow-500", kind: "decision" },
 ];
 
 export function MaterialList({

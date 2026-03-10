@@ -632,7 +632,7 @@ export default function PreviewCoverPage() {
             }
           >
             <BookOpen className="h-4 w-4" />
-            Proceed to Submittal Binder
+            Create a Submittal Binder
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>

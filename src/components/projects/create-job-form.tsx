@@ -268,7 +268,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
     projectName.trim() !== "" &&
     companyClient.trim() !== "" &&
     location.trim() !== "" &&
-    (projectManager !== "" && (projectManager !== "__custom__" || projectManagerCustom.trim() !== ""));
+    projectManager.trim() !== "";
 
   // Group files by category
   const filesByCategory = files.reduce(
@@ -445,7 +445,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
                 </span>
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Max 200MB each
+                Max 1GB each
               </p>
             </div>
 
@@ -509,7 +509,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
                 </span>
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Max 200MB each
+                Max 1GB each
               </p>
             </div>
 
@@ -695,35 +695,14 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
               <User className="h-3 w-3" aria-hidden="true" />
               Project Manager <span className="text-destructive">*</span>
             </label>
-            <Select
+            <Input
+              id="project-manager"
+              placeholder="Enter project manager name"
               value={projectManager}
-              onValueChange={(v) => {
-                setProjectManager(v);
-                if (v !== "__custom__") setProjectManagerCustom("");
-              }}
-            >
-              <SelectTrigger id="project-manager" className="h-10 w-full">
-                <SelectValue placeholder="Select project manager" />
-              </SelectTrigger>
-              <SelectContent>
-                {mockUsers.map((u) => (
-                  <SelectItem key={u.id} value={u.id}>
-                    {u.name}
-                  </SelectItem>
-                ))}
-                <SelectItem value="__custom__">Custom (External PM)</SelectItem>
-              </SelectContent>
-            </Select>
-            {projectManager === "__custom__" && (
-              <Input
-                placeholder="Enter PM name"
-                value={projectManagerCustom}
-                onChange={(e) => setProjectManagerCustom(e.target.value)}
-                className="h-10 mt-2"
-                aria-label="Custom project manager name"
-                aria-required="true"
-              />
-            )}
+              onChange={(e) => setProjectManager(e.target.value)}
+              aria-required="true"
+              className="h-10"
+            />
           </div>
         </div>
 

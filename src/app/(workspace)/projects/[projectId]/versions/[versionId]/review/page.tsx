@@ -172,7 +172,7 @@ export default function ReviewPage() {
               className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
             >
               <Replace className="mr-1.5 h-3.5 w-3.5" />
-              Alternative
+              Alternate
             </Button>
             <Button
               size="icon"
@@ -308,30 +308,14 @@ export default function ReviewPage() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <p className="text-sm text-muted-foreground">
-              Select which validations to comment on:
+              Add a comment to all selected items. Comments will appear on each item&apos;s individual comment section.
             </p>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={commentPS}
-                  onCheckedChange={(v) => setCommentPS(!!v)}
-                />
-                <span className="text-sm font-medium">PS</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={commentPI}
-                  onCheckedChange={(v) => setCommentPI(!!v)}
-                />
-                <span className="text-sm font-medium">PI</span>
-              </label>
-            </div>
             <Input
               placeholder="Type your comment..."
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && commentText.trim() && (commentPS || commentPI)) {
+                if (e.key === "Enter" && commentText.trim()) {
                   handleBatchComment();
                 }
               }}
@@ -350,7 +334,7 @@ export default function ReviewPage() {
             <Button
               size="sm"
               onClick={handleBatchComment}
-              disabled={(!commentPS && !commentPI) || !commentText.trim()}
+              disabled={!commentText.trim()}
             >
               <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
               Send Comment

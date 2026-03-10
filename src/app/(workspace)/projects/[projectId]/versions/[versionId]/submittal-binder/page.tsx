@@ -452,16 +452,8 @@ export default function SubmittalBinderPage() {
   }, []);
 
   return (
-    <div className="h-full overflow-auto">
-      {/* Fixed header — Export only (navigation via milestone bar) */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b">
-        <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-end">
-          <Button size="sm" className="gap-1.5 h-8 gradient-action text-white border-0">
-            <Download className="h-3.5 w-3.5" />
-            Export PDF
-          </Button>
-        </div>
-      </div>
+    <div className="h-full flex flex-col">
+      <div className="flex-1 overflow-auto">
 
       {/* Loading state */}
       {loading && (
@@ -618,6 +610,22 @@ export default function SubmittalBinderPage() {
           100% { width: 98%; }
         }
       `}</style>
+      </div>
+
+      {/* Sticky CTA bar at the bottom — consistent with other milestone pages */}
+      {!loading && (
+        <div className="shrink-0 border-t bg-background/95 backdrop-blur-sm">
+          <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-end">
+            <Button
+              size="lg"
+              className="gradient-action text-white border-0 gap-2 font-semibold px-8"
+            >
+              <Download className="h-4 w-4" />
+              Generate Export PDF
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

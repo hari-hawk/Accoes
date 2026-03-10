@@ -534,16 +534,24 @@ export function GenerateSubmittalSheet({
                 const confidenceScore = item.validation?.confidenceScore;
 
                 return (
-                  <label
+                  <div
                     key={item.document.id}
                     role="listitem"
                     className={cn(
                       "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b",
-                      !isPreApproved && "opacity-50 cursor-not-allowed",
                       isChecked
                         ? "bg-nav-accent/5 border-l-2 border-l-nav-accent"
                         : "hover:bg-muted/30 border-l-2 border-l-transparent"
                     )}
+                    onClick={() => {
+                      if (isPreApproved) {
+                        toggleItem(item.document.id);
+                      } else if (project) {
+                        // Navigate to conformance page at this specific item
+                        handleClose(false);
+                        router.push(`/projects/${project.id}/versions/${project.latestVersionId}/review?item=${item.document.id}`);
+                      }
+                    }}
                   >
                     <Checkbox
                       checked={isChecked}
@@ -552,9 +560,10 @@ export function GenerateSubmittalSheet({
                       aria-label={
                         isPreApproved
                           ? `Select ${item.document.fileName}`
-                          : `${item.document.fileName} — not selectable (${status?.replace(/_/g, " ")})`
+                          : `${item.document.fileName} — click to view on conformance page`
                       }
-                      className="mt-1 shrink-0"
+                      className={cn("mt-1 shrink-0", !isPreApproved && "opacity-40")}
+                      onClick={(e) => e.stopPropagation()}
                     />
                     <div className="flex-1 min-w-0 overflow-hidden">
                       {/* Row 1: Title + Status badge & Confidence (right side) */}
@@ -590,29 +599,34 @@ export function GenerateSubmittalSheet({
                         {item.document.specSectionTitle}
                       </p>
 
-                      {/* Row 3: Category pills (conformance style — colored rings) */}
-                      {(item.document.indexCategory || item.document.systemCategory) && (
-                        <div className="flex items-center gap-1.5 mt-2">
-                          {item.document.systemCategory && (
-                            <span
-                              className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-700"
-                              title={`Trade: ${item.document.systemCategory}`}
-                            >
-                              {item.document.systemCategory}
-                            </span>
-                          )}
-                          {item.document.indexCategory && (
-                            <span
-                              className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-700"
-                              title={`Category: ${item.document.indexCategory}`}
-                            >
-                              {item.document.indexCategory}
-                            </span>
-                          )}
-                        </div>
-                      )}
+                      {/* Row 3: Category pills + Submittal Package # */}
+                      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                        {item.document.systemCategory && (
+                          <span
+                            className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-700"
+                            title={`Trade: ${item.document.systemCategory}`}
+                          >
+                            {item.document.systemCategory}
+                          </span>
+                        )}
+                        {item.document.indexCategory && (
+                          <span
+                            className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-700"
+                            title={`Category: ${item.document.indexCategory}`}
+                          >
+                            {item.document.indexCategory}
+                          </span>
+                        )}
+                        {/* Submittal Package # — read-only revision indicator */}
+                        <span
+                          className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-mono font-medium bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:ring-purple-700 ml-auto"
+                          title="Submittal Package #"
+                        >
+                          {isPreApproved ? `SP#Rev1` : "—"}
+                        </span>
+                      </div>
                     </div>
-                  </label>
+                  </div>
                 );
               })
             ) : allMaterials.length === 0 ? (

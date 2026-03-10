@@ -330,10 +330,16 @@ function ProjectListRow({
   project,
   onNameClick,
   onDownloadReport,
+  onGenerateSubmittal,
+  onManageTeam,
+  isAdmin = false,
 }: {
   project: Project;
   onNameClick: (project: Project) => void;
   onDownloadReport: (project: Project) => void;
+  onGenerateSubmittal?: (project: Project) => void;
+  onManageTeam?: (project: Project) => void;
+  isAdmin?: boolean;
 }) {
   const router = useRouter();
   const confidence = project.confidenceSummary.overallConfidence;
@@ -408,14 +414,15 @@ function ProjectListRow({
         </time>
       </div>
 
-      {/* Download action */}
+      {/* Actions */}
       <div
-        className="shrink-0 flex items-center gap-1"
+        className="shrink-0 flex items-center gap-0.5"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
         role="group"
         aria-label="Project actions"
       >
+        {/* Download Report */}
         {hasVersions ? (
           <button
             type="button"
@@ -445,6 +452,51 @@ function ProjectListRow({
           >
             <Download className="h-4 w-4" aria-hidden="true" />
           </span>
+        )}
+
+        {/* Generate Submittal */}
+        {hasVersions ? (
+          <button
+            type="button"
+            className={cn(
+              "inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none",
+              hasDocuments
+                ? "text-muted-foreground hover:text-nav-accent hover:bg-muted/50"
+                : "text-muted-foreground/60 cursor-not-allowed"
+            )}
+            aria-label={
+              hasDocuments
+                ? `Generate submittal for ${project.name}`
+                : `No documents available for ${project.name}`
+            }
+            disabled={!hasDocuments}
+            onClick={() => {
+              if (hasDocuments) onGenerateSubmittal?.(project);
+            }}
+          >
+            <FileText className="h-4 w-4" aria-hidden="true" />
+          </button>
+        ) : (
+          <span
+            className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/60 cursor-not-allowed"
+            role="img"
+            aria-label="Generate submittal unavailable — no versions"
+          >
+            <FileText className="h-4 w-4" aria-hidden="true" />
+          </span>
+        )}
+
+        {/* Manage Team (admin only) */}
+        {isAdmin && (
+          <button
+            type="button"
+            className="inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none text-muted-foreground hover:text-nav-accent hover:bg-muted/50"
+            aria-label={`Manage team for ${project.name}`}
+            title="Manage team"
+            onClick={() => onManageTeam?.(project)}
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+          </button>
         )}
       </div>
     </div>
@@ -1133,7 +1185,7 @@ export function ProjectList() {
             <div className="shrink-0" role="columnheader">Status</div>
             <div className="shrink-0 w-16 text-right" role="columnheader" aria-label="Confidence">Conf.</div>
             <div className="shrink-0 w-24 text-right hidden lg:block" role="columnheader">Created</div>
-            <div className="shrink-0 w-10" role="columnheader" aria-label="Actions" />
+            <div className="shrink-0 w-28" role="columnheader" aria-label="Actions" />
           </div>
           {enrichedProjects.map((project) => (
             <ProjectListRow
@@ -1141,6 +1193,9 @@ export function ProjectList() {
               project={project}
               onNameClick={handleCardClick}
               onDownloadReport={handleDownloadReport}
+              onGenerateSubmittal={handleGenerateSubmittal}
+              onManageTeam={handleManageTeam}
+              isAdmin={true}
             />
           ))}
         </div>

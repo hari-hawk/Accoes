@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
@@ -108,9 +108,9 @@ const mockProjectSpecs = [
 
 // Mock Material matrix files — split into current (active) and historical
 const currentMaterialFiles = [
-  { id: "mig-7", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 548864, uploadedAt: "2026-02-18T10:30:00Z" },
-  { id: "mig-8", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 516096, uploadedAt: "2026-02-18T10:35:00Z" },
-  { id: "mig-9", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 483328, uploadedAt: "2026-02-18T10:40:00Z" },
+  { id: "mig-7", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 548864, uploadedAt: "2026-02-18T10:30:00Z", trade: "Plumbing", version: "v3" },
+  { id: "mig-8", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 516096, uploadedAt: "2026-02-18T10:35:00Z", trade: "Heating", version: "v3" },
+  { id: "mig-9", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v3.csv", fileType: "csv" as const, fileSize: 483328, uploadedAt: "2026-02-18T10:40:00Z", trade: "Mechanical", version: "v3" },
 ];
 
 const historicalMaterialFiles = [
@@ -297,15 +297,30 @@ function MaterialIndexGridCard({
   onUpload,
   onFileClick,
   onHistoryFileClick,
+  versionId,
 }: {
   onUpload: () => void;
   onFileClick?: (fileId: string) => void;
   onHistoryFileClick?: (fileId: string) => void;
+  versionId: string;
 }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+
+  const [approvedFileIds, setApprovedFileIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const stored = localStorage.getItem(`submittal-approved-files-${versionId}`);
+    if (stored) {
+      try {
+        setApprovedFileIds(new Set(JSON.parse(stored) as string[]));
+      } catch {
+        // ignore malformed localStorage
+      }
+    }
+  }, [versionId]);
 
   const files = currentMaterialFiles;
   const allSelected = files.length > 0 && selectedIds.size === files.length;
@@ -439,8 +454,20 @@ function MaterialIndexGridCard({
                   </span>
                 </div>
               </div>
+              {/* Trade pill */}
+              {file.trade && (
+                <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-700 shrink-0">
+                  {file.trade}
+                </span>
+              )}
+              {/* Revision badge */}
+              {file.version && (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
+                  {file.version}
+                </Badge>
+              )}
               <Badge variant="secondary" className="text-[11px] px-1.5 py-0 h-4 bg-status-pre-approved-bg text-status-pre-approved shrink-0">
-                Active
+                {approvedFileIds.has(file.id) ? "Approved" : "Active"}
               </Badge>
               <ChevronRight className="h-4 w-4 text-muted-foreground/0 group-hover/row:text-muted-foreground transition-colors shrink-0" aria-hidden="true" />
             </div>
@@ -529,12 +556,10 @@ function MaterialIndexGridCard({
 function ProjectInsightsSection({
   project,
   confidence,
-  confidenceColor,
   confidenceSummary,
 }: {
   project: { stage: string; memberIds: string[]; createdAt: string; updatedAt: string; totalDocuments: number };
   confidence: number;
-  confidenceColor: string;
   confidenceSummary: { total: number; preApproved: number; reviewRequired: number; actionMandatory: number };
 }) {
   const totalDocs = confidenceSummary.total;
@@ -560,6 +585,10 @@ function ProjectInsightsSection({
       ? Math.round((confidence / 100) * totalDocs)
       : 0;
 
+  const completedCount = confidenceSummary.preApproved;
+  const outstandingCount = confidenceSummary.reviewRequired + confidenceSummary.actionMandatory;
+  const completionPct = totalDocs > 0 ? Math.round((completedCount / totalDocs) * 100) : 0;
+
   return (
     <section
       className="rounded-xl border bg-card shadow-card overflow-hidden"
@@ -582,37 +611,33 @@ function ProjectInsightsSection({
           </p>
         </div>
 
-        {/* Stat 2: Confidence Score */}
+        {/* Stat 2: Completion Rate */}
         <div className="p-4">
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
-            Confidence Score
+            Completion Rate
           </p>
-          <p className={cn("text-2xl font-bold", confidenceColor)}>
-            {confidence > 0 ? `${confidence}%` : "Pending"}
+          <p className={cn("text-2xl font-bold", completionPct >= 80 ? "text-status-pre-approved" : completionPct >= 50 ? "text-status-review-required" : completionPct > 0 ? "text-status-action-mandatory" : "text-muted-foreground")}>
+            {totalDocs > 0 ? `${completionPct}%` : "Pending"}
           </p>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-2">
             <div
               className={cn(
                 "h-full rounded-full transition-all duration-500",
-                confidence >= 80
+                completionPct >= 80
                   ? "bg-status-pre-approved"
-                  : confidence >= 60
+                  : completionPct >= 50
                     ? "bg-status-review-required"
-                    : confidence > 0
+                    : completionPct > 0
                       ? "bg-status-action-mandatory"
                       : "bg-muted-foreground/30"
               )}
-              style={{ width: confidence > 0 ? `${confidence}%` : "0%" }}
+              style={{ width: totalDocs > 0 ? `${completionPct}%` : "0%" }}
             />
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            {confidence >= 80
-              ? "Strong — ready for approval"
-              : confidence >= 60
-                ? "Moderate — review recommended"
-                : confidence > 0
-                  ? "Low — action needed"
-                  : "Awaiting AI processing"}
+            {totalDocs > 0
+              ? `${completedCount} completed · ${outstandingCount} outstanding`
+              : "Awaiting AI processing"}
           </p>
         </div>
 
@@ -859,7 +884,6 @@ export default function VersionOverviewPage() {
       <ProjectInsightsSection
         project={project}
         confidence={confidence}
-        confidenceColor={confidenceColor}
         confidenceSummary={confidenceSummary}
       />
 
@@ -875,6 +899,7 @@ export default function VersionOverviewPage() {
             onHistoryFileClick={() => {
               router.push(`/projects/${project.id}/versions/${version.id}/review?mode=readonly`);
             }}
+            versionId={version.id}
           />
 
           {/* Project Specifications — at the bottom */}

@@ -236,7 +236,15 @@ export function GenerateSubmittalSheet({
       });
       handleClose(false);
       if (project?.latestVersionId) {
-        router.push(`/projects/${project.id}/versions/${project.latestVersionId}`);
+        // Store matrix file IDs that had selected materials
+        const approvedMatrixFileIds = matrixFiles
+          .filter(mf => mf.documentIds.some(id => selectedIds.has(id)))
+          .map(mf => mf.id);
+        localStorage.setItem(
+          `submittal-approved-files-${project.latestVersionId}`,
+          JSON.stringify(approvedMatrixFileIds)
+        );
+        router.push(`/projects/${project.id}/versions/${project.latestVersionId}/preview-cover`);
       }
     }, 1500);
   };
@@ -281,7 +289,7 @@ export function GenerateSubmittalSheet({
         </SheetHeader>
 
         {/* Search + Filters — no divider, spacing only */}
-        <div className="px-4 pt-3 pb-2 space-y-2.5 border-b shrink-0 bg-muted/20">
+        <div className="px-4 pt-2 pb-2 space-y-2.5 border-b shrink-0 bg-muted/20">
           <SearchInput
             placeholder="Search by title, description, trade..."
             value={search}
@@ -309,9 +317,9 @@ export function GenerateSubmittalSheet({
                   <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="start" side="bottom" avoidCollisions sideOffset={4}>
-                <div className="p-2 space-y-1">
-                  <div className="flex items-center justify-between px-2 py-1">
+              <PopoverContent className="w-64 p-0" align="start" side="bottom" avoidCollisions sideOffset={4}>
+                <div className="px-3 pt-2.5 pb-1.5">
+                  <div className="flex items-center justify-between py-1">
                     <span className="text-xs font-semibold text-muted-foreground">Select Documents</span>
                     {documentFilter.size > 0 && (
                       <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={() => setDocumentFilter(new Set())}>
@@ -320,10 +328,10 @@ export function GenerateSubmittalSheet({
                     )}
                   </div>
                 </div>
-                <ScrollArea className="h-[200px] px-2 pb-2">
+                <ScrollArea className="h-[180px] px-3 pb-2">
                   {matrixFiles.length > 0 ? (
                     matrixFiles.map((mf) => (
-                      <label key={mf.id} className={cn("flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer transition-colors text-xs", documentFilter.has(mf.id) ? "bg-primary/5" : "hover:bg-muted/50")}>
+                      <label key={mf.id} className={cn("flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-xs", documentFilter.has(mf.id) ? "bg-primary/5" : "hover:bg-muted/50")}>
                         <Checkbox checked={documentFilter.has(mf.id)} onCheckedChange={() => toggleSetItem(setDocumentFilter, mf.id)} className="h-3.5 w-3.5 shrink-0" />
                         <div className="min-w-0 flex-1">
                           <span className="block truncate font-medium">{mf.fileName.replace(/\.[^/.]+$/, "")}</span>
@@ -361,9 +369,9 @@ export function GenerateSubmittalSheet({
                   <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-56 p-0" align="start" side="bottom" avoidCollisions sideOffset={4}>
-                <div className="p-2 space-y-1">
-                  <div className="flex items-center justify-between px-2 py-1">
+              <PopoverContent className="w-64 p-0" align="start" side="bottom" avoidCollisions sideOffset={4}>
+                <div className="px-3 pt-2.5 pb-1.5">
+                  <div className="flex items-center justify-between py-1">
                     <span className="text-xs font-semibold text-muted-foreground">Filter by Status</span>
                     {statusFilter.size > 0 && (
                       <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={() => setStatusFilter(new Set())}>
@@ -372,13 +380,13 @@ export function GenerateSubmittalSheet({
                     )}
                   </div>
                 </div>
-                <div className="px-2 pb-2 space-y-0.5">
+                <ScrollArea className="h-[180px] px-3 pb-2">
                   {SUBMITTAL_STATUS_OPTIONS.map((opt) => {
                     const Icon = opt.icon;
                     const isActive = statusFilter.has(opt.key);
                     const count = statusCounts[opt.key];
                     return (
-                      <label key={opt.key} className={cn("flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors", isActive ? "bg-primary/5" : "hover:bg-muted/50")}>
+                      <label key={opt.key} className={cn("flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors", isActive ? "bg-primary/5" : "hover:bg-muted/50")}>
                         <Checkbox checked={isActive} onCheckedChange={() => toggleSetItem(setStatusFilter, opt.key)} className="h-3.5 w-3.5" />
                         <Icon className={cn("h-3.5 w-3.5 shrink-0", opt.color)} aria-hidden="true" />
                         <span className="text-xs font-medium flex-1">{opt.label}</span>
@@ -386,7 +394,7 @@ export function GenerateSubmittalSheet({
                       </label>
                     );
                   })}
-                </div>
+                </ScrollArea>
               </PopoverContent>
             </Popover>
 
@@ -408,9 +416,9 @@ export function GenerateSubmittalSheet({
                   <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-56 p-0" align="start" side="bottom" avoidCollisions sideOffset={4}>
-                <div className="p-2 space-y-1">
-                  <div className="flex items-center justify-between px-2 py-1">
+              <PopoverContent className="w-64 p-0" align="start" side="bottom" avoidCollisions sideOffset={4}>
+                <div className="px-3 pt-2.5 pb-1.5">
+                  <div className="flex items-center justify-between py-1">
                     <span className="text-xs font-semibold text-muted-foreground">Filter by Trade</span>
                     {tradeFilter.size > 0 && (
                       <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={() => setTradeFilter(new Set())}>
@@ -419,11 +427,11 @@ export function GenerateSubmittalSheet({
                     )}
                   </div>
                 </div>
-                <ScrollArea className="h-[180px] px-2 pb-2">
+                <ScrollArea className="h-[180px] px-3 pb-2">
                   {tradeOptions.map((trade) => (
                     <label key={trade} className={cn("flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-xs", tradeFilter.has(trade) ? "bg-primary/5" : "hover:bg-muted/50")}>
                       <Checkbox checked={tradeFilter.has(trade)} onCheckedChange={() => toggleSetItem(setTradeFilter, trade)} className="h-3.5 w-3.5" />
-                      <span className="truncate font-medium">{trade}</span>
+                      <span className="min-w-0 flex-1 truncate font-medium">{trade}</span>
                     </label>
                   ))}
                 </ScrollArea>
@@ -448,9 +456,9 @@ export function GenerateSubmittalSheet({
                   <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-56 p-0" align="start" side="bottom" avoidCollisions sideOffset={4}>
-                <div className="p-2 space-y-1">
-                  <div className="flex items-center justify-between px-2 py-1">
+              <PopoverContent className="w-64 p-0" align="start" side="bottom" avoidCollisions sideOffset={4}>
+                <div className="px-3 pt-2.5 pb-1.5">
+                  <div className="flex items-center justify-between py-1">
                     <span className="text-xs font-semibold text-muted-foreground">Filter by Category</span>
                     {categoryFilter.size > 0 && (
                       <button type="button" className="text-[11px] text-primary hover:underline font-medium" onClick={() => setCategoryFilter(new Set())}>
@@ -459,11 +467,11 @@ export function GenerateSubmittalSheet({
                     )}
                   </div>
                 </div>
-                <ScrollArea className="h-[180px] px-2 pb-2">
+                <ScrollArea className="h-[180px] px-3 pb-2">
                   {categoryOptions.map((cat) => (
                     <label key={cat} className={cn("flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-xs", categoryFilter.has(cat) ? "bg-primary/5" : "hover:bg-muted/50")}>
                       <Checkbox checked={categoryFilter.has(cat)} onCheckedChange={() => toggleSetItem(setCategoryFilter, cat)} className="h-3.5 w-3.5" />
-                      <span className="truncate font-medium">{cat}</span>
+                      <span className="min-w-0 flex-1 truncate font-medium">{cat}</span>
                     </label>
                   ))}
                 </ScrollArea>

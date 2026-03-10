@@ -233,7 +233,7 @@ export function ProjectCard({
               className={cn(
                 "flex items-center gap-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-sm outline-none px-0.5",
                 hasDocuments
-                  ? "text-nav-accent hover:text-nav-accent/80"
+                  ? "text-muted-foreground hover:text-nav-accent"
                   : "text-muted-foreground/60 cursor-not-allowed"
               )}
               disabled={!hasDocuments}

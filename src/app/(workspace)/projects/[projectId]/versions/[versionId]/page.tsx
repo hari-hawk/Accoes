@@ -806,7 +806,8 @@ export default function VersionOverviewPage() {
 
 
   return (
-    <div className="absolute inset-0 overflow-auto">
+    <div className="absolute inset-0 flex flex-col">
+    <div className="flex-1 overflow-auto">
     <main className="p-6 space-y-6 max-w-[1400px] mx-auto">
       {/* Project Insights — full-width stats section */}
       <ProjectInsightsSection
@@ -1083,18 +1084,6 @@ export default function VersionOverviewPage() {
         </div>
       )}
 
-      {/* Next CTA */}
-      <div className="flex justify-end pt-2 pb-4">
-        <Button
-          size="lg"
-          className="gradient-accent text-white border-0 gap-2 px-6"
-          onClick={() => router.push(`/projects/${project.id}/versions/${version.id}/review`)}
-        >
-          Next
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </Button>
-      </div>
-
       {/* ------------------------------------------------------------------ */}
       {/*  Upload Files Dialog (Conformance)                            */}
       {/* ------------------------------------------------------------------ */}
@@ -1336,6 +1325,21 @@ export default function VersionOverviewPage() {
       </Sheet>
 
     </main>
+    </div>
+
+    {/* Sticky bottom CTA bar — consistent with confirmation/preview-cover pages */}
+    <div className="shrink-0 border-t bg-background/95 backdrop-blur-sm">
+      <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-end">
+        <Button
+          className="gradient-accent text-white border-0 gap-2 font-semibold px-6"
+          onClick={() => router.push(`/projects/${project.id}/versions/${version.id}/review`)}
+        >
+          <BookOpen className="h-4 w-4" />
+          Next
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
     </div>
   );
 }

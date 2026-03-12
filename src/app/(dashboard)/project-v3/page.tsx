@@ -503,7 +503,7 @@ export default function ProjectV3Page() {
                     return (
                       <label
                         key={mf.id}
-                        className="flex items-start gap-2.5 cursor-pointer group"
+                        className="flex items-start gap-2.5 cursor-pointer group min-w-0"
                       >
                         <Checkbox
                           checked={isChecked}
@@ -511,9 +511,12 @@ export default function ProjectV3Page() {
                             handleToggleMatrixFile(mf.documentIds)
                           }
                           aria-label={`Select ${mf.fileName}`}
-                          className="mt-0.5"
+                          className="mt-0.5 shrink-0"
                         />
-                        <span className="text-sm leading-snug group-hover:text-foreground text-muted-foreground transition-colors">
+                        <span
+                          className="text-sm leading-snug group-hover:text-foreground text-muted-foreground transition-colors break-all min-w-0"
+                          title={mf.fileName}
+                        >
                           {mf.fileName}
                         </span>
                       </label>

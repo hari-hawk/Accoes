@@ -623,8 +623,7 @@ export default function PreviewCoverPage() {
       <div className="shrink-0 border-t bg-background/95 backdrop-blur-sm">
         <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-end">
           <Button
-            size="lg"
-            className="gradient-accent text-white border-0 gap-2 font-semibold px-8"
+            className="gradient-accent text-white border-0 gap-2 font-semibold px-6"
             onClick={() =>
               router.push(
                 `/projects/${project.id}/versions/${version.id}/submittal-binder`

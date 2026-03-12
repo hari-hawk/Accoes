@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import {
+  ArrowRight,
   BookOpen,
   Download,
   FileText,
@@ -493,7 +494,7 @@ export default function SubmittalBinderPage() {
       {/* Stacked PDF pages */}
       {!loading && (
         <div className="max-w-[1400px] mx-auto px-6 py-8 space-y-8 animate-fade-up">
-          {/* Page Header — mirrors preview-cover style */}
+          {/* Page Header — matches preview-cover style */}
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl gradient-accent flex items-center justify-center">
@@ -504,18 +505,19 @@ export default function SubmittalBinderPage() {
                   Submittal Binder
                 </h1>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  {TOTAL_PAGES}-page binder for {project.name} &mdash; {version.name}
+                  {TOTAL_PAGES}-page submittal binder for {project.name} &mdash; {version.name}
                 </p>
               </div>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5"
-            >
-              <Download className="h-3.5 w-3.5" />
-              Export
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                className="gradient-action text-white border-0 gap-1.5"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Export
+              </Button>
+            </div>
           </div>
 
           {/* Page 1: Binder Cover */}
@@ -627,7 +629,7 @@ export default function SubmittalBinderPage() {
 
       {/* Floating page indicator */}
       {!loading && (
-        <div className="fixed bottom-6 right-6 z-40 bg-background/90 backdrop-blur-sm border rounded-full px-4 py-2 shadow-lg flex items-center gap-2">
+        <div className="fixed bottom-20 right-6 z-40 bg-background/90 backdrop-blur-sm border rounded-full px-4 py-2 shadow-lg flex items-center gap-2">
           <FileText className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-xs font-medium tabular-nums">
             Page {currentVisiblePage} of {TOTAL_PAGES}
@@ -651,12 +653,12 @@ export default function SubmittalBinderPage() {
         <div className="shrink-0 border-t bg-background/95 backdrop-blur-sm">
           <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-end">
             <Button
-              size="lg"
-              className="gradient-action text-white border-0 gap-2 font-semibold px-8"
+              className="gradient-action text-white border-0 gap-2 font-semibold px-6"
               onClick={() => setShowGenerateDialog(true)}
             >
               <BookOpen className="h-4 w-4" />
               Generate
+              <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </div>

@@ -788,19 +788,24 @@ export function EvidencePanel({
               </Tabs>
             )}
 
-            {/* Confidence bar */}
-            <div className="flex items-center gap-2 shrink-0">
-              <span className={cn("text-sm font-bold tabular-nums", scoreColor)}>
-                {score}%
+            {/* Status indicator with confidence */}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <span className={cn("text-xs font-semibold", scoreColor)}>
+                {score >= 80 ? "Pre-Approved" : score >= 40 ? "Review Required" : "Action Mandatory"}
               </span>
-              <div className="h-2 w-24 rounded-full bg-muted overflow-hidden">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-500",
-                    barColor
-                  )}
-                  style={{ width: `${score}%` }}
-                />
+              <div className="flex items-center gap-1.5">
+                <div className="h-2 w-20 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all duration-500",
+                      barColor
+                    )}
+                    style={{ width: `${score}%` }}
+                  />
+                </div>
+                <span className="text-[11px] text-muted-foreground tabular-nums">
+                  {score}%
+                </span>
               </div>
             </div>
           </div>

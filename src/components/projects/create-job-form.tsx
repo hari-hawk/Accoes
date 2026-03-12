@@ -682,7 +682,7 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="dr">Discrepancy Report</SelectItem>
-                <SelectItem value="design_job">Design Job</SelectItem>
+                <SelectItem value="design_job" disabled className="opacity-50">Design Job</SelectItem>
               </SelectContent>
             </Select>
           </div>

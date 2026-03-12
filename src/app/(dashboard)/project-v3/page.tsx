@@ -266,17 +266,6 @@ export default function ProjectV3Page() {
   ]);
 
   /* ── Status counts ─────────────────────────────────────────────────────── */
-  const statusCounts = useMemo(() => {
-    const counts = { pre_approved: 0, review_required: 0, action_mandatory: 0 };
-    for (const m of filteredMaterials) {
-      const status = m.validation?.status;
-      if (status && status in counts) {
-        counts[status as keyof typeof counts]++;
-      }
-    }
-    return counts;
-  }, [filteredMaterials]);
-
   /* ── Trade-grouped data ────────────────────────────────────────────────── */
   const groupedByTrade = useMemo(() => {
     const map = new Map<string, MaterialItem[]>();
@@ -447,7 +436,7 @@ export default function ProjectV3Page() {
 
         {/* Filter row — Sprint 1B: responsive grid */}
         <div
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2 min-w-0"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2 [&>*]:min-w-0"
           role="search"
           aria-label="Filter controls"
         >
@@ -646,73 +635,43 @@ export default function ProjectV3Page() {
         <div className="flex items-center gap-4 pt-3 border-t text-sm">
           <div className="flex items-center gap-1.5">
             <span className="font-semibold text-foreground">{selectedProject?.totalDocuments ?? 0}</span>
-            <span className="text-muted-foreground">Total Docs</span>
+            <span className="text-muted-foreground">Total Items</span>
           </div>
           <div className="h-4 w-px bg-border" />
           <div className="flex items-center gap-1.5">
             <span className="font-semibold text-emerald-600">{selectedProject?.confidenceSummary?.preApproved ?? 0}</span>
-            <span className="text-muted-foreground">Pre-Approved</span>
+            <span className="text-muted-foreground">Completed</span>
           </div>
           <div className="h-4 w-px bg-border" />
           <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-amber-600">{selectedProject?.confidenceSummary?.reviewRequired ?? 0}</span>
-            <span className="text-muted-foreground">Review Required</span>
-          </div>
-          <div className="h-4 w-px bg-border" />
-          <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-rose-600">{selectedProject?.confidenceSummary?.actionMandatory ?? 0}</span>
-            <span className="text-muted-foreground">Action Mandatory</span>
-          </div>
-          <div className="h-4 w-px bg-border" />
-          <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-blue-600">{selectedProject?.confidenceSummary?.overallConfidence ?? 0}%</span>
-            <span className="text-muted-foreground">Confidence</span>
+            <span className="font-semibold text-amber-600">{(selectedProject?.confidenceSummary?.reviewRequired ?? 0) + (selectedProject?.confidenceSummary?.actionMandatory ?? 0)}</span>
+            <span className="text-muted-foreground">Open</span>
           </div>
         </div>
       </section>
 
       {/* ── Project Info ─────────────────────────── */}
-      <section className="rounded-xl border bg-card shadow-card p-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">{selectedProject?.name ?? "Project"}</h2>
-          <p className="text-sm text-muted-foreground">{selectedProject?.client ?? ""} {selectedProject?.location ? `• ${selectedProject.location}` : ""}</p>
+      <section className="flex items-center gap-3 flex-wrap text-sm" aria-label="Project information">
+        <h2 className="text-base font-semibold">{selectedProject?.name ?? "Project"}</h2>
+        <div className="h-4 w-px bg-border" />
+        <span className="text-muted-foreground">{selectedProject?.client ?? ""}{selectedProject?.location ? ` • ${selectedProject.location}` : ""}</span>
+        <div className="h-4 w-px bg-border" />
+        <span className="text-emerald-600 font-medium">{selectedProject?.confidenceSummary?.preApproved ?? 0} Pre-Approved</span>
+        <div className="h-4 w-px bg-border" />
+        <span className="text-amber-600 font-medium">{selectedProject?.confidenceSummary?.reviewRequired ?? 0} Review Required</span>
+        <div className="h-4 w-px bg-border" />
+        <span className="text-rose-600 font-medium">{selectedProject?.confidenceSummary?.actionMandatory ?? 0} Action Mandatory</span>
+        <div className="ml-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => router.push("/project-v3/overview")}
+          >
+            <Eye className="h-4 w-4" />
+            View Overview
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          className="gap-2"
-          onClick={() => router.push("/project-v3/overview")}
-        >
-          <Eye className="h-4 w-4" />
-          View Overview
-        </Button>
-      </section>
-
-      {/* ── Status Counts Bar ─────────────────────────────────────────────── */}
-      <section
-        className="flex items-center gap-5 text-sm px-0"
-        aria-label="Status summary"
-      >
-        <div className="flex items-center gap-1.5">
-          <span className="text-muted-foreground">
-            {statusCounts.pre_approved}{" "}
-            <span className="hidden sm:inline">Pre-Approved</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-muted-foreground">
-            {statusCounts.review_required}{" "}
-            <span className="hidden sm:inline">Review Required</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-muted-foreground">
-            {statusCounts.action_mandatory}{" "}
-            <span className="hidden sm:inline">Action Required</span>
-          </span>
-        </div>
-        <span className="text-muted-foreground/60 text-xs ml-auto">
-          {filteredMaterials.length} of {allMaterials.length} items
-        </span>
       </section>
 
       {/* ── Sprint 2E: Batch actions bar ──────────────────────────────────── */}
@@ -777,16 +736,16 @@ export default function ProjectV3Page() {
               {/* Sprint 1C: colgroup for fixed widths */}
               <colgroup>
                 <col className="w-[40px]" />   {/* Checkbox */}
-                <col className="w-[40px]" />   {/* Chevron */}
-                <col className="w-[100px]" />  {/* Spec Section */}
-                <col />                         {/* Catalogue Title (flex) */}
+                <col className="w-[36px]" />   {/* Chevron */}
+                <col className="w-[90px]" />   {/* Spec Section */}
+                <col className="w-[140px]" />  {/* Catalogue Title */}
                 <col />                         {/* Description (flex) */}
-                <col className="w-[80px]" />   {/* Size */}
-                <col className="w-[90px]" />   {/* Trade */}
-                <col className="w-[120px]" />  {/* Subcategory */}
-                <col className="w-[100px]" />  {/* Material Type */}
-                <col className="w-[130px]" />  {/* AI Status */}
-                <col className="w-[50px]" />   {/* Alt */}
+                <col className="w-[70px]" />   {/* Size */}
+                <col className="w-[80px]" />   {/* Trade */}
+                <col className="w-[100px]" />  {/* Subcategory */}
+                <col className="w-[90px]" />   {/* Material Type */}
+                <col className="w-[170px]" />  {/* AI Status */}
+                <col className="w-[110px]" />  {/* Alternate */}
               </colgroup>
               <thead>
                 <tr className="border-b bg-muted/30">
@@ -847,12 +806,12 @@ export default function ProjectV3Page() {
                   >
                     AI Status
                   </th>
-                  {/* Sprint 2C: Alt column header */}
+                  {/* Sprint 2C: Alternate column header */}
                   <th
                     scope="col"
                     className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                   >
-                    Alt
+                    Alternate
                   </th>
                 </tr>
               </thead>
@@ -1146,7 +1105,7 @@ function TradeGroup({
                   )}
                 </td>
 
-                {/* 10. Alt toggle — radio style */}
+                {/* 10. Alternate toggle — explicit text with radio indicator */}
                 <td className="p-3">
                   <div onClick={(e) => e.stopPropagation()}>
                     <button
@@ -1154,13 +1113,23 @@ function TradeGroup({
                       onClick={() => toggleAlternative(item.document.id)}
                       aria-label={`Mark ${item.document.fileName} as alternative`}
                       className={cn(
-                        "h-4 w-4 rounded-full border-2 flex items-center justify-center transition-colors",
+                        "flex items-center gap-1.5 text-[10px] px-2 py-1 rounded-full border transition-colors whitespace-nowrap",
                         isAlt
-                          ? "border-yellow-500 bg-yellow-500"
-                          : "border-muted-foreground/40 bg-transparent hover:border-yellow-400"
+                          ? "border-yellow-400 bg-yellow-50 text-yellow-700 font-medium"
+                          : "border-muted-foreground/30 text-muted-foreground hover:border-yellow-400 hover:text-yellow-600"
                       )}
                     >
-                      {isAlt && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                      <span
+                        className={cn(
+                          "h-3 w-3 rounded-full border-2 flex items-center justify-center shrink-0",
+                          isAlt
+                            ? "border-yellow-500 bg-yellow-500"
+                            : "border-muted-foreground/40 bg-transparent"
+                        )}
+                      >
+                        {isAlt && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                      </span>
+                      Alternate
                     </button>
                   </div>
                 </td>

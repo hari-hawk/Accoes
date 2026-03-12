@@ -159,7 +159,7 @@ function MaterialListItem({
               )}>
                 {isAlternative && <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />}
               </span>
-              Alt
+              Alternate
             </button>
           )}
         </div>

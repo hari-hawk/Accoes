@@ -1,11 +1,18 @@
 "use client";
 
 import React, { useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Search,
   X,
   ChevronDown,
   Filter,
+  CheckCircle2,
+  RotateCcw,
+  Replace,
+  MessageSquare,
+  Eye,
+  FileText,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,13 +30,23 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/shared/empty-state";
 import { EvidencePanel } from "@/components/workspace/evidence-panel";
 import { useMaterials } from "@/hooks/use-materials";
 import type { MaterialItem } from "@/hooks/use-materials";
 import { getMatrixFilesByVersion } from "@/data/mock-documents";
+import type { MatrixFile } from "@/data/mock-documents";
+import { mockProjects } from "@/data/mock-projects";
 import { VALIDATION_STATUS_CONFIG } from "@/lib/constants";
-import type { ValidationCategory } from "@/data/types";
+import type { ValidationCategory, DecisionStatus } from "@/data/types";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
@@ -75,11 +92,25 @@ function removeFileExtension(fileName: string): string {
   return fileName.replace(/\.[^/.]+$/, "");
 }
 
+/** Total number of columns in the table (used for colSpan on trade header & expanded rows) */
+const TOTAL_COLS = 12;
+
 /* -------------------------------------------------------------------------- */
 /*  Main Page Component                                                        */
 /* -------------------------------------------------------------------------- */
 
 export default function ProjectV3Page() {
+  /* ── All hooks MUST be called first, before any early returns ─────────── */
+  const router = useRouter();
+
+  /* ── Sprint 3A: Project filter ─────────────────────────────────────────── */
+  const [projectFilter, setProjectFilter] = useState<string>("proj-2");
+
+  const activeVersionId = useMemo(() => {
+    const proj = mockProjects.find((p) => p.id === projectFilter);
+    return proj?.latestVersionId || "ver-5";
+  }, [projectFilter]);
+
   /* ── Hook calls (must be before any early returns per React 19 rules) ──── */
   const {
     allMaterials,
@@ -87,7 +118,15 @@ export default function ProjectV3Page() {
     updateDecision,
     activeCategory,
     setActiveCategory,
-  } = useMaterials("ver-5");
+    checkedIds,
+    toggleCheck,
+    clearChecks,
+    batchApprove,
+    batchRevisit,
+    alternativeIds,
+    toggleAlternative,
+    batchToggleAlternative,
+  } = useMaterials(activeVersionId);
 
   const [search, setSearch] = useState("");
   const [tradeFilter, setTradeFilter] = useState<string>("all");
@@ -99,14 +138,21 @@ export default function ProjectV3Page() {
   );
   const [sortBy, setSortBy] = useState<string>("name-asc");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [commentDialogOpen, setCommentDialogOpen] = useState(false);
+  const [commentText, setCommentText] = useState("");
 
-  /* ── Derive matrix files for the Project Files multi-select ────────────── */
-  const matrixFiles = useMemo(() => getMatrixFilesByVersion("ver-5"), []);
+  /* ── Derive matrix files (Sprint 3B: dynamic based on activeVersionId) ── */
+  const matrixFiles = useMemo(
+    () => getMatrixFilesByVersion(activeVersionId),
+    [activeVersionId]
+  );
 
   /* ── Derive unique filter options from allMaterials ────────────────────── */
   const uniqueTrades = useMemo(
     () =>
-      [...new Set(allMaterials.map((m) => m.document.trade).filter(Boolean))] as string[],
+      [
+        ...new Set(allMaterials.map((m) => m.document.trade).filter(Boolean)),
+      ] as string[],
     [allMaterials]
   );
 
@@ -115,6 +161,27 @@ export default function ProjectV3Page() {
       [
         ...new Set(
           allMaterials.map((m) => m.document.indexCategory).filter(Boolean)
+        ),
+      ] as string[],
+    [allMaterials]
+  );
+
+  /* ── Sprint 3C: Dynamic system & material filter options ───────────────── */
+  const uniqueSystems = useMemo(
+    () =>
+      [
+        ...new Set(
+          allMaterials.map((m) => m.document.systemCategory).filter(Boolean)
+        ),
+      ] as string[],
+    [allMaterials]
+  );
+
+  const uniqueMaterials = useMemo(
+    () =>
+      [
+        ...new Set(
+          allMaterials.map((m) => m.document.materialCategory).filter(Boolean)
         ),
       ] as string[],
     [allMaterials]
@@ -162,7 +229,7 @@ export default function ProjectV3Page() {
       );
     }
 
-    // Document filter (Project Files multi-select)
+    // Document filter (Matrix Files multi-select)
     if (documentFilter.size > 0) {
       result = result.filter((m) => documentFilter.has(m.document.id));
     }
@@ -237,6 +304,35 @@ export default function ProjectV3Page() {
     return map;
   }, [filteredMaterials]);
 
+  /* ── Select all: filtered material IDs ─────────────────────────────────── */
+  const filteredIds = useMemo(
+    () => filteredMaterials.map((m) => m.document.id),
+    [filteredMaterials]
+  );
+
+  const allFilteredChecked = useMemo(
+    () => filteredIds.length > 0 && filteredIds.every((id) => checkedIds.has(id)),
+    [filteredIds, checkedIds]
+  );
+
+  const handleSelectAll = useCallback(() => {
+    if (allFilteredChecked) {
+      // Uncheck all filtered
+      for (const id of filteredIds) {
+        if (checkedIds.has(id)) {
+          toggleCheck(id);
+        }
+      }
+    } else {
+      // Check all filtered
+      for (const id of filteredIds) {
+        if (!checkedIds.has(id)) {
+          toggleCheck(id);
+        }
+      }
+    }
+  }, [allFilteredChecked, filteredIds, checkedIds, toggleCheck]);
+
   /* ── Has any active filter ─────────────────────────────────────────────── */
   const hasActiveFilters =
     search !== "" ||
@@ -266,15 +362,12 @@ export default function ProjectV3Page() {
     (fileDocIds: string[]) => {
       setDocumentFilter((prev) => {
         const next = new Set(prev);
-        // Check if ALL docIds of this file are currently selected
         const allSelected = fileDocIds.every((id) => next.has(id));
         if (allSelected) {
-          // Remove them all
           for (const id of fileDocIds) {
             next.delete(id);
           }
         } else {
-          // Add them all
           for (const id of fileDocIds) {
             next.add(id);
           }
@@ -285,14 +378,31 @@ export default function ProjectV3Page() {
     []
   );
 
-  /* ── Derive the currently expanded material ────────────────────────────── */
-  const expandedMaterial = useMemo(
-    () =>
-      expandedId
-        ? filteredMaterials.find((m) => m.document.id === expandedId) ?? null
-        : null,
-    [expandedId, filteredMaterials]
+  /* Sprint 3B: Toggle "All Documents" in the Matrix Files popover */
+  const handleToggleAllDocuments = useCallback(() => {
+    setDocumentFilter((prev) => {
+      if (prev.size === 0) {
+        // Nothing selected — do nothing (already showing all)
+        return prev;
+      }
+      // Clear all file selections
+      return new Set<string>();
+    });
+  }, []);
+
+  const handleView = useCallback(
+    (matrixFileId: string) => {
+      router.push(`/project-v3/overview?file=${matrixFileId}`);
+    },
+    [router]
   );
+
+  const handleCommentSubmit = useCallback(() => {
+    // In real app, this would save comments. For now, just close.
+    setCommentText("");
+    setCommentDialogOpen(false);
+  }, []);
+
 
   /* ── Count selected files for Popover label ────────────────────────────── */
   const selectedFileCount = useMemo(() => {
@@ -304,7 +414,7 @@ export default function ProjectV3Page() {
 
   /* ── Render ────────────────────────────────────────────────────────────── */
   return (
-    <main className="px-6 py-6 space-y-6 max-w-[1400px] mx-auto">
+    <main className="px-4 sm:px-6 py-6 space-y-6 max-w-[1400px] mx-auto overflow-x-hidden">
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <section
         className="flex flex-col gap-1 animate-fade-up"
@@ -318,9 +428,9 @@ export default function ProjectV3Page() {
       </section>
 
       {/* ── Filter Section ────────────────────────────────────────────────── */}
-      <section className="space-y-3" aria-label="Filters">
-        {/* Search bar — full width */}
-        <div className="relative w-full max-w-xl">
+      <section className="space-y-3 px-0" aria-label="Filters">
+        {/* Search bar — full width (Sprint 1B: removed max-w-xl) */}
+        <div className="relative w-full">
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
             aria-hidden="true"
@@ -347,31 +457,64 @@ export default function ProjectV3Page() {
           )}
         </div>
 
-        {/* Filter row */}
+        {/* Filter row — Sprint 1B: responsive grid */}
         <div
-          className="flex flex-wrap items-center gap-3"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2"
           role="search"
           aria-label="Filter controls"
         >
-          {/* 1. Project Files — multi-select Popover */}
+          {/* 1. Project Name (Sprint 3A) */}
+          <Select
+            value={projectFilter}
+            onValueChange={(v) => setProjectFilter(v)}
+          >
+            <SelectTrigger aria-label="Filter by project">
+              <SelectValue placeholder="Select Project" />
+            </SelectTrigger>
+            <SelectContent>
+              {mockProjects.map((proj) => (
+                <SelectItem key={proj.id} value={proj.id}>
+                  {proj.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* 2. Matrix Files — multi-select Popover (Sprint 3B: renamed) */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="h-9 gap-1.5 text-sm font-normal"
-                aria-label="Filter by project files"
+                className="h-9 gap-1.5 text-sm font-normal w-full justify-between"
+                aria-label="Filter by matrix files"
               >
-                <Filter className="h-3.5 w-3.5" aria-hidden="true" />
-                {selectedFileCount > 0
-                  ? `${selectedFileCount} file${selectedFileCount !== 1 ? "s" : ""}`
-                  : "Project Files"}
-                <ChevronDown className="h-3 w-3 opacity-50" aria-hidden="true" />
+                <span className="flex items-center gap-1.5 truncate">
+                  <Filter className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {selectedFileCount > 0
+                    ? `${selectedFileCount} file${selectedFileCount !== 1 ? "s" : ""}`
+                    : "Matrix Files"}
+                </span>
+                <ChevronDown className="h-3 w-3 opacity-50 shrink-0" aria-hidden="true" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80 p-3" align="start">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                 Matrix Index Grid Files
               </p>
+
+              {/* All Documents toggle (Sprint 3B) */}
+              <label className="flex items-start gap-2.5 cursor-pointer group mb-2 pb-2 border-b">
+                <Checkbox
+                  checked={documentFilter.size === 0}
+                  onCheckedChange={handleToggleAllDocuments}
+                  aria-label="Show all documents"
+                  className="mt-0.5"
+                />
+                <span className="text-sm leading-snug font-medium group-hover:text-foreground text-muted-foreground transition-colors">
+                  All Documents
+                </span>
+              </label>
+
               <div className="space-y-2">
                 {matrixFiles.map((mf) => {
                   const isChecked = mf.documentIds.every((id) =>
@@ -410,12 +553,12 @@ export default function ProjectV3Page() {
             </PopoverContent>
           </Popover>
 
-          {/* 2. Trade */}
+          {/* 3. Trade */}
           <Select
             value={tradeFilter}
             onValueChange={(v) => setTradeFilter(v)}
           >
-            <SelectTrigger className="w-[160px]" aria-label="Filter by trade">
+            <SelectTrigger aria-label="Filter by trade">
               <SelectValue placeholder="All Trades" />
             </SelectTrigger>
             <SelectContent>
@@ -428,15 +571,12 @@ export default function ProjectV3Page() {
             </SelectContent>
           </Select>
 
-          {/* 3. Category */}
+          {/* 4. Category */}
           <Select
             value={categoryFilter}
             onValueChange={(v) => setCategoryFilter(v)}
           >
-            <SelectTrigger
-              className="w-[180px]"
-              aria-label="Filter by index category"
-            >
+            <SelectTrigger aria-label="Filter by index category">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
@@ -449,47 +589,45 @@ export default function ProjectV3Page() {
             </SelectContent>
           </Select>
 
-          {/* 4. System */}
+          {/* 5. System (Sprint 3C: dynamic) */}
           <Select
             value={systemFilter}
             onValueChange={(v) => setSystemFilter(v)}
           >
-            <SelectTrigger
-              className="w-[160px]"
-              aria-label="Filter by system category"
-            >
+            <SelectTrigger aria-label="Filter by system category">
               <SelectValue placeholder="All Systems" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Systems</SelectItem>
-              <SelectItem value="Chilled Water">Chilled Water</SelectItem>
-              <SelectItem value="Condenser Water">Condenser Water</SelectItem>
-              <SelectItem value="Generic">Generic</SelectItem>
+              {uniqueSystems.map((sys) => (
+                <SelectItem key={sys} value={sys}>
+                  {sys}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
-          {/* 5. Material */}
+          {/* 6. Material (Sprint 3C: dynamic) */}
           <Select
             value={materialFilter}
             onValueChange={(v) => setMaterialFilter(v)}
           >
-            <SelectTrigger
-              className="w-[160px]"
-              aria-label="Filter by material category"
-            >
+            <SelectTrigger aria-label="Filter by material category">
               <SelectValue placeholder="All Materials" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Materials</SelectItem>
-              <SelectItem value="Carbon Steel">Carbon Steel</SelectItem>
-              <SelectItem value="Copper">Copper</SelectItem>
-              <SelectItem value="n/a">N/A</SelectItem>
+              {uniqueMaterials.map((mat) => (
+                <SelectItem key={mat} value={mat}>
+                  {mat === "n/a" ? "N/A" : mat}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
-          {/* 6. Sort */}
+          {/* 7. Sort */}
           <Select value={sortBy} onValueChange={(v) => setSortBy(v)}>
-            <SelectTrigger className="w-[160px]" aria-label="Sort order">
+            <SelectTrigger aria-label="Sort order">
               <SelectValue placeholder="Name A-Z" />
             </SelectTrigger>
             <SelectContent>
@@ -498,9 +636,11 @@ export default function ProjectV3Page() {
               <SelectItem value="index-category">Index Category</SelectItem>
             </SelectContent>
           </Select>
+        </div>
 
-          {/* Clear Filters */}
-          {hasActiveFilters && (
+        {/* Clear Filters */}
+        {hasActiveFilters && (
+          <div className="flex justify-end">
             <Button
               variant="ghost"
               size="sm"
@@ -511,13 +651,46 @@ export default function ProjectV3Page() {
               <X className="h-3 w-3" aria-hidden="true" />
               Clear Filters
             </Button>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Sprint 2F: Selected items summary */}
+        {checkedIds.size > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground font-medium">
+              Selected:
+            </span>
+            {[...checkedIds].slice(0, 8).map((id) => {
+              const mat = allMaterials.find((m) => m.document.id === id);
+              return mat ? (
+                <Badge
+                  key={id}
+                  variant="secondary"
+                  className="text-[10px]"
+                >
+                  {mat.document.specSectionTitle}
+                </Badge>
+              ) : null;
+            })}
+            {checkedIds.size > 8 && (
+              <span className="text-xs text-muted-foreground">
+                +{checkedIds.size - 8} more
+              </span>
+            )}
+            <button
+              type="button"
+              className="text-xs text-primary hover:underline ml-1"
+              onClick={clearChecks}
+            >
+              &times; Clear all
+            </button>
+          </div>
+        )}
       </section>
 
       {/* ── Status Counts Bar ─────────────────────────────────────────────── */}
       <section
-        className="flex items-center gap-5 text-sm"
+        className="flex items-center gap-5 text-sm px-0"
         aria-label="Status summary"
       >
         <div className="flex items-center gap-1.5">
@@ -564,6 +737,41 @@ export default function ProjectV3Page() {
         </span>
       </section>
 
+      {/* ── Sprint 2E: Batch actions bar ──────────────────────────────────── */}
+      {checkedIds.size > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-primary/5 border border-primary/10 px-4 py-2">
+          <span className="text-sm font-medium">
+            {checkedIds.size} item(s) selected
+          </span>
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={batchApprove}>
+              <CheckCircle2 className="h-4 w-4 mr-1" /> Approve
+            </Button>
+            <Button size="sm" variant="outline" onClick={batchRevisit}>
+              <RotateCcw className="h-4 w-4 mr-1" /> Reject
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={batchToggleAlternative}
+              className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+            >
+              <Replace className="h-4 w-4 mr-1" /> Alternate
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setCommentDialogOpen(true)}
+            >
+              <MessageSquare className="h-4 w-4 mr-1" /> Comment
+            </Button>
+            <Button size="sm" variant="ghost" onClick={clearChecks}>
+              <X className="h-4 w-4 mr-1" /> Clear
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* ── Table or Empty State ──────────────────────────────────────────── */}
       {filteredMaterials.length === 0 ? (
         <EmptyState
@@ -582,23 +790,47 @@ export default function ProjectV3Page() {
         </EmptyState>
       ) : (
         <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+          {/* Sprint 1C: overflow-x-auto on wrapper */}
           <div className="overflow-x-auto">
             <table
-              className="w-full"
+              className="w-full table-fixed"
               aria-label="Trade-grouped material specifications"
             >
+              {/* Sprint 1C: colgroup for fixed widths */}
+              <colgroup>
+                <col className="w-[40px]" />   {/* Checkbox */}
+                <col className="w-[40px]" />   {/* Chevron */}
+                <col className="w-[100px]" />  {/* Spec Section */}
+                <col />                         {/* Catalogue Title (flex) */}
+                <col />                         {/* Description (flex) */}
+                <col className="w-[80px]" />   {/* Size */}
+                <col className="w-[90px]" />   {/* Trade */}
+                <col className="w-[120px]" />  {/* Subcategory */}
+                <col className="w-[100px]" />  {/* Material Type */}
+                <col className="w-[130px]" />  {/* AI Status */}
+                <col className="w-[50px]" />   {/* Alt */}
+                <col className="w-[50px]" />   {/* View */}
+              </colgroup>
               <thead>
                 <tr className="border-b bg-muted/30">
-                  <th scope="col" className="p-3 w-10" aria-label="Expand" />
+                  {/* Sprint 2B: Select All checkbox */}
+                  <th scope="col" className="p-3" aria-label="Select all">
+                    <Checkbox
+                      checked={allFilteredChecked}
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all filtered items"
+                    />
+                  </th>
+                  <th scope="col" className="p-3" aria-label="Expand" />
                   <th
                     scope="col"
-                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[120px]"
+                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                   >
-                    Spec Section #
+                    Spec Section
                   </th>
                   <th
                     scope="col"
-                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[180px]"
+                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                   >
                     Catalogue Title
                   </th>
@@ -610,39 +842,47 @@ export default function ProjectV3Page() {
                   </th>
                   <th
                     scope="col"
-                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[100px]"
+                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                   >
                     Size
                   </th>
                   <th
                     scope="col"
-                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[130px]"
+                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                   >
                     Trade
                   </th>
                   <th
                     scope="col"
-                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[140px]"
+                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                   >
                     Subcategory
                   </th>
                   <th
                     scope="col"
-                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[120px]"
+                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                   >
                     Material Type
                   </th>
                   <th
                     scope="col"
-                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[140px]"
+                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                   >
                     AI Status
                   </th>
+                  {/* Sprint 2C: Alt column header */}
                   <th
                     scope="col"
-                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[90px]"
+                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                   >
-                    SP#
+                    Alt
+                  </th>
+                  {/* Sprint 2D: View column header */}
+                  <th
+                    scope="col"
+                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                  >
+                    View
                   </th>
                 </tr>
               </thead>
@@ -659,6 +899,12 @@ export default function ProjectV3Page() {
                       updateDecision={updateDecision}
                       activeCategory={activeCategory}
                       setActiveCategory={setActiveCategory}
+                      checkedIds={checkedIds}
+                      toggleCheck={toggleCheck}
+                      alternativeIds={alternativeIds}
+                      toggleAlternative={toggleAlternative}
+                      matrixFiles={matrixFiles}
+                      onView={handleView}
                     />
                   )
                 )}
@@ -667,6 +913,45 @@ export default function ProjectV3Page() {
           </div>
         </div>
       )}
+
+      {/* ── Generate Binding button ───────────────────────────────────────── */}
+      <div className="flex justify-end">
+        <Button
+          onClick={() => router.push("/project-v3/preview-cover")}
+          className="gap-2"
+        >
+          <FileText className="h-4 w-4" />
+          Generate Binding
+        </Button>
+      </div>
+
+      {/* ── Comment Dialog (Sprint 2E) ────────────────────────────────────── */}
+      <Dialog open={commentDialogOpen} onOpenChange={setCommentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Add Comment to {checkedIds.size} item(s)
+            </DialogTitle>
+          </DialogHeader>
+          <Textarea
+            placeholder="Enter your comment..."
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            rows={4}
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCommentDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCommentSubmit} disabled={!commentText.trim()}>
+              Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
@@ -684,18 +969,30 @@ function TradeGroup({
   updateDecision,
   activeCategory,
   setActiveCategory,
+  checkedIds,
+  toggleCheck,
+  alternativeIds,
+  toggleAlternative,
+  matrixFiles,
+  onView,
 }: {
   trade: string;
   items: MaterialItem[];
   expandedId: string | null;
   onToggleExpand: (id: string) => void;
-  decisions: Record<string, import("@/data/types").DecisionStatus>;
+  decisions: Record<string, DecisionStatus>;
   updateDecision: (
     documentId: string,
-    decision: import("@/data/types").DecisionStatus
+    decision: DecisionStatus
   ) => void;
   activeCategory: ValidationCategory;
   setActiveCategory: (category: ValidationCategory) => void;
+  checkedIds: Set<string>;
+  toggleCheck: (id: string) => void;
+  alternativeIds: Set<string>;
+  toggleAlternative: (id: string) => void;
+  matrixFiles: MatrixFile[];
+  onView: (matrixFileId: string) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -708,7 +1005,7 @@ function TradeGroup({
         role="row"
         aria-label={`${trade} trade group — ${items.length} entries`}
       >
-        <td colSpan={10} className="px-4 py-2.5">
+        <td colSpan={TOTAL_COLS} className="px-4 py-2.5">
           <div className="flex items-center gap-2">
             <ChevronDown
               className={cn(
@@ -739,6 +1036,13 @@ function TradeGroup({
             ? VALIDATION_STATUS_CONFIG[validationStatus]
             : null;
           const materialCat = item.document.materialCategory ?? "n/a";
+          const isChecked = checkedIds.has(item.document.id);
+          const isAlt = alternativeIds.has(item.document.id);
+
+          // Derive matrixFileId for this item
+          const matrixFileForItem = matrixFiles.find((mf) =>
+            mf.documentIds.includes(item.document.id)
+          );
 
           return (
             <React.Fragment key={item.document.id}>
@@ -746,7 +1050,8 @@ function TradeGroup({
                 className={cn(
                   "border-b hover:bg-muted/30 transition-colors cursor-pointer group",
                   isExpanded &&
-                    "bg-nav-accent/5 border-b-0 border-l-2 border-l-nav-accent"
+                    "bg-nav-accent/5 border-b-0 border-l-2 border-l-nav-accent",
+                  isAlt && "bg-yellow-50/30 dark:bg-yellow-900/10"
                 )}
                 onClick={() => onToggleExpand(item.document.id)}
                 tabIndex={0}
@@ -760,8 +1065,19 @@ function TradeGroup({
                   }
                 }}
               >
+                {/* 0. Checkbox (Sprint 2B) */}
+                <td className="p-3">
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={isChecked}
+                      onCheckedChange={() => toggleCheck(item.document.id)}
+                      aria-label={`Select ${item.document.fileName}`}
+                    />
+                  </div>
+                </td>
+
                 {/* 1. Chevron */}
-                <td className="p-3 w-10">
+                <td className="p-3">
                   <ChevronDown
                     className={cn(
                       "h-4 w-4 text-muted-foreground transition-transform duration-200",
@@ -772,16 +1088,16 @@ function TradeGroup({
                 </td>
 
                 {/* 2. Spec Section # */}
-                <td className="p-3 w-[120px]">
+                <td className="p-3">
                   <span className="font-mono text-[11px] text-muted-foreground group-hover:text-nav-accent transition-colors">
                     {item.document.specSection}
                   </span>
                 </td>
 
                 {/* 3. Catalogue Title */}
-                <td className="p-3 w-[180px]">
+                <td className="p-3">
                   <span
-                    className="text-xs text-muted-foreground truncate block max-w-[170px]"
+                    className="text-xs text-muted-foreground truncate block"
                     title={item.document.specSectionTitle}
                   >
                     {item.document.specSectionTitle}
@@ -791,7 +1107,7 @@ function TradeGroup({
                 {/* 4. Description (fileName without extension) */}
                 <td className="p-3">
                   <p
-                    className="text-sm font-medium truncate max-w-[300px]"
+                    className="text-sm font-medium truncate"
                     title={removeFileExtension(item.document.fileName)}
                   >
                     {removeFileExtension(item.document.fileName)}
@@ -799,14 +1115,14 @@ function TradeGroup({
                 </td>
 
                 {/* 5. Size */}
-                <td className="p-3 w-[100px]">
+                <td className="p-3">
                   <span className="text-xs text-muted-foreground">
-                    {item.document.sizes ?? "—"}
+                    {item.document.sizes ?? "\u2014"}
                   </span>
                 </td>
 
                 {/* 6. Trade */}
-                <td className="p-3 w-[130px]">
+                <td className="p-3">
                   <Badge
                     variant="secondary"
                     className={cn(
@@ -814,22 +1130,22 @@ function TradeGroup({
                       TRADE_COLORS[item.document.trade ?? ""] ?? ""
                     )}
                   >
-                    {item.document.trade ?? "—"}
+                    {item.document.trade ?? "\u2014"}
                   </Badge>
                 </td>
 
                 {/* 7. Subcategory */}
-                <td className="p-3 w-[140px]">
+                <td className="p-3">
                   <span
-                    className="text-xs text-muted-foreground truncate block max-w-[130px]"
+                    className="text-xs text-muted-foreground truncate block"
                     title={item.document.indexSubcategory ?? ""}
                   >
-                    {item.document.indexSubcategory ?? "—"}
+                    {item.document.indexSubcategory ?? "\u2014"}
                   </span>
                 </td>
 
                 {/* 8. Material Type */}
-                <td className="p-3 w-[120px]">
+                <td className="p-3">
                   {materialCat !== "n/a" ? (
                     <Badge
                       variant="secondary"
@@ -845,13 +1161,13 @@ function TradeGroup({
                       className="text-xs text-muted-foreground/50"
                       aria-label="Not applicable"
                     >
-                      —
+                      {"\u2014"}
                     </span>
                   )}
                 </td>
 
                 {/* 9. AI Status */}
-                <td className="p-3 w-[140px]">
+                <td className="p-3">
                   {statusConfig ? (
                     <div className="flex items-center gap-1.5">
                       <span
@@ -873,37 +1189,66 @@ function TradeGroup({
                       </Badge>
                     </div>
                   ) : (
-                    <span className="text-xs text-muted-foreground/50">—</span>
+                    <span className="text-xs text-muted-foreground/50">
+                      {"\u2014"}
+                    </span>
                   )}
                 </td>
 
-                {/* 10. SP# */}
-                <td className="p-3 w-[90px]">
-                  {validationStatus === "pre_approved" ? (
-                    <span className="text-xs font-mono text-status-pre-approved">
-                      SP#Rev1
-                    </span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground/50">—</span>
-                  )}
+                {/* 10. Alt toggle (Sprint 2C) */}
+                <td className="p-3">
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={isAlt}
+                      onCheckedChange={() =>
+                        toggleAlternative(item.document.id)
+                      }
+                      aria-label={`Mark ${item.document.fileName} as alternative`}
+                      className={cn(
+                        "h-4 w-4",
+                        isAlt && "bg-yellow-50 border-yellow-300"
+                      )}
+                    />
+                  </div>
+                </td>
+
+                {/* 11. View button (Sprint 2D) */}
+                <td className="p-3">
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      className="p-1 rounded hover:bg-muted transition-colors"
+                      onClick={() => {
+                        if (matrixFileForItem) {
+                          onView(matrixFileForItem.id);
+                        }
+                      }}
+                      aria-label={`View ${item.document.fileName} in overview`}
+                      disabled={!matrixFileForItem}
+                    >
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </div>
                 </td>
               </tr>
 
-              {/* Inline expansion row with EvidencePanel */}
+              {/* Inline expansion row with EvidencePanel (Sprint 1D) */}
               {isExpanded && (
                 <tr className="border-b">
-                  <td colSpan={10} className="p-0">
-                    <div className="bg-muted/40 border-t border-l-2 border-l-nav-accent/40 max-h-[600px] overflow-y-auto">
-                      <EvidencePanel
-                        material={item}
-                        decision={decisions[item.document.id]}
-                        onDecide={(decision) =>
-                          updateDecision(item.document.id, decision)
-                        }
-                        activeCategory={activeCategory}
-                        onCategoryChange={setActiveCategory}
-                        projectId="proj-2"
-                      />
+                  <td colSpan={TOTAL_COLS} className="p-0">
+                    <div className="overflow-hidden max-w-full">
+                      <div className="bg-muted/40 border-t border-l-2 border-l-nav-accent/40 overflow-y-auto max-h-[500px]">
+                        <EvidencePanel
+                          material={item}
+                          decision={decisions[item.document.id]}
+                          onDecide={(decision) =>
+                            updateDecision(item.document.id, decision)
+                          }
+                          activeCategory={activeCategory}
+                          onCategoryChange={setActiveCategory}
+                          projectId="proj-2"
+                        />
+                      </div>
                     </div>
                   </td>
                 </tr>

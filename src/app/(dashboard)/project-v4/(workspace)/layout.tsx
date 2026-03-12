@@ -162,20 +162,22 @@ export default function V4WorkspaceLayout({
 
   return (
     <WorkspaceProvider project={project} version={version}>
-      <VersionInfoHeader
-        version={version}
-        project={project}
-        onProjectNameClick={handleProjectNameClick}
-        backHref="/project-v4"
-        actions={<HeaderActions project={project} />}
-      />
-      <MilestoneProgressBar
-        currentStage={version.workflowStage}
-        projectId={project.id}
-        versionId={version.id}
-        basePath="/project-v4"
-      />
-      <main className="flex-1 min-h-0 overflow-hidden relative">{children}</main>
+      <div className="flex flex-col h-[calc(100vh-3.5rem)]">
+        <VersionInfoHeader
+          version={version}
+          project={project}
+          onProjectNameClick={handleProjectNameClick}
+          backHref="/project-v4"
+          actions={<HeaderActions project={project} />}
+        />
+        <MilestoneProgressBar
+          currentStage={version.workflowStage}
+          projectId={project.id}
+          versionId={version.id}
+          basePath="/project-v4"
+        />
+        <main className="flex-1 min-h-0 overflow-hidden relative">{children}</main>
+      </div>
       <ProjectDetailSheet project={project} open={detailOpen} onOpenChange={setDetailOpen} />
     </WorkspaceProvider>
   );

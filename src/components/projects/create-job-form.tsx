@@ -199,9 +199,11 @@ const mockProjectSpecFiles = [
 
 interface CreateJobFormProps {
   initialDraft?: DraftData;
+  /** Where to redirect after create / cancel / discard (defaults to "/projects") */
+  redirectPath?: string;
 }
 
-export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
+export function CreateJobForm({ initialDraft, redirectPath = "/projects" }: CreateJobFormProps) {
   const router = useRouter();
   const { addDraft } = useDrafts();
 
@@ -351,14 +353,14 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
     toast.success("Project created!", {
       description: "Document extraction has started. We'll notify you when it's ready.",
     });
-    router.push("/projects");
+    router.push(redirectPath);
   };
 
   const handleCancel = () => {
     if (hasData) {
       setCancelDialogOpen(true);
     } else {
-      router.push("/projects");
+      router.push(redirectPath);
     }
   };
 
@@ -385,12 +387,12 @@ export function CreateJobForm({ initialDraft }: CreateJobFormProps) {
       })),
     });
     setCancelDialogOpen(false);
-    router.push("/projects");
+    router.push(redirectPath);
   };
 
   const handleDiscard = () => {
     setCancelDialogOpen(false);
-    router.push("/projects");
+    router.push(redirectPath);
   };
 
   /* ---------------------------------------------------------------------- */

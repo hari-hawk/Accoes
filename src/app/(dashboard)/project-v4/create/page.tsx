@@ -58,6 +58,7 @@ export default function V4CreateJobPage() {
       <CreateJobForm
         key={loadedDraft?.id ?? "new"}
         initialDraft={loadedDraft}
+        redirectPath="/project-v4"
       />
 
       {/* Drafts side panel */}

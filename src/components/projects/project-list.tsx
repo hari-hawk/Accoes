@@ -92,7 +92,7 @@ function getInitials(name: string) {
 /*  Hero Section — with business-impact metric cards                           */
 /* -------------------------------------------------------------------------- */
 
-function HeroSection() {
+function HeroSection({ createHref = "/projects/create" }: { createHref?: string }) {
   /* ---- Computed metrics ---- */
   const activeCount = mockProjects.filter((p) => p.status === "active").length;
   const inProgressCount = mockProjects.filter((p) => p.status === "in_progress").length;
@@ -156,7 +156,7 @@ function HeroSection() {
             Export
           </Button>
           <Link
-            href="/projects/create"
+            href={createHref}
             className="inline-flex items-center gap-1.5 h-8 px-4 rounded-md text-xs font-semibold gradient-action text-white border-0 hover:opacity-90 transition-opacity"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -1380,7 +1380,7 @@ export function ProjectList({
   return (
     <div className="px-6 py-6 space-y-6 max-w-[1400px] mx-auto">
       {/* Hero section */}
-      <HeroSection />
+      <HeroSection createHref={createHref} />
 
       {/* Filters */}
       <ProjectFilters

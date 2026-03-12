@@ -101,7 +101,7 @@ function MaterialListItem({
   return (
     <div
       className={cn(
-        "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-inset outline-none",
+        "flex items-start gap-3 px-4 py-2.5 cursor-pointer transition-colors border-b focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-inset outline-none",
         isSelected
           ? "bg-background shadow-[inset_3px_0_0_var(--color-primary)] border-b-primary/10"
           : "hover:bg-background/80"
@@ -127,7 +127,7 @@ function MaterialListItem({
       />
 
       <div className="flex-1 min-w-0 overflow-hidden">
-        {/* Material name */}
+        {/* Material name + Alternate radio toggle */}
         <div className="flex items-center gap-1.5">
           {status && (
             <span
@@ -137,9 +137,31 @@ function MaterialListItem({
               )}
             />
           )}
-          <p className="text-sm font-medium leading-tight truncate">
+          <p className="text-sm font-medium leading-tight truncate flex-1 min-w-0">
             {item.document.fileName.replace(/\.[^/.]+$/, "")}
           </p>
+          {onToggleAlternative && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onToggleAlternative(); }}
+              className={cn(
+                "flex items-center gap-1 shrink-0 text-[10px] font-semibold rounded-full px-2 py-0.5 transition-all cursor-pointer border",
+                isAlternative
+                  ? "bg-yellow-50 border-yellow-300 text-yellow-700"
+                  : "bg-transparent border-transparent text-muted-foreground hover:text-yellow-700 hover:bg-yellow-50/50"
+              )}
+              aria-label={`Mark ${item.document.fileName} as alternate`}
+              aria-pressed={!!isAlternative}
+            >
+              <span className={cn(
+                "h-3 w-3 rounded-full border-2 flex items-center justify-center shrink-0",
+                isAlternative ? "border-yellow-500" : "border-muted-foreground/40"
+              )}>
+                {isAlternative && <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />}
+              </span>
+              Alt
+            </button>
+          )}
         </div>
 
         {/* Sub-text: spec section */}
@@ -152,7 +174,7 @@ function MaterialListItem({
         </p>
 
         {/* Score chips + status/decision badges */}
-        <div className="flex items-center gap-2 mt-2 flex-wrap">
+        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
           {/* Score chips — left side */}
           {hasSubScores ? (
             <>
@@ -212,26 +234,7 @@ function MaterialListItem({
           </div>
         )}
 
-        {/* Alternate toggle — distinct row for clear visual separation */}
-        {onToggleAlternative && (
-          <label
-            className={cn(
-              "flex items-center gap-2 mt-2 px-2 py-1 rounded-md cursor-pointer transition-all border",
-              isAlternative
-                ? "bg-yellow-50 border-yellow-300 text-yellow-800"
-                : "bg-transparent border-transparent text-muted-foreground hover:bg-yellow-50/50 hover:border-yellow-200 hover:text-yellow-700"
-            )}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Checkbox
-              checked={!!isAlternative}
-              onCheckedChange={onToggleAlternative}
-              className="h-3.5 w-3.5"
-              aria-label={`Mark ${item.document.fileName} as alternate`}
-            />
-            <span className="text-[11px] font-semibold">Alternate</span>
-          </label>
-        )}
+        {/* Alternate toggle moved to title row as compact radio */}
       </div>
     </div>
   );

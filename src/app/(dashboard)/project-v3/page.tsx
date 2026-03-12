@@ -43,7 +43,6 @@ import { EvidencePanel } from "@/components/workspace/evidence-panel";
 import { useMaterials } from "@/hooks/use-materials";
 import type { MaterialItem } from "@/hooks/use-materials";
 import { getMatrixFilesByVersion } from "@/data/mock-documents";
-import type { MatrixFile } from "@/data/mock-documents";
 import { mockProjects } from "@/data/mock-projects";
 import { VALIDATION_STATUS_CONFIG } from "@/lib/constants";
 import type { ValidationCategory, DecisionStatus } from "@/data/types";
@@ -75,16 +74,6 @@ const MATERIAL_COLORS: Record<string, string> = {
 const TRADE_ORDER = ["Mechanical", "Electrical", "Plumbing", "Fire Protection"];
 
 /* -------------------------------------------------------------------------- */
-/*  Status dot colors (for the counts bar and AI Status column)                */
-/* -------------------------------------------------------------------------- */
-
-const STATUS_DOT_COLORS: Record<string, string> = {
-  pre_approved: "bg-status-pre-approved",
-  review_required: "bg-status-review-required",
-  action_mandatory: "bg-status-action-mandatory",
-};
-
-/* -------------------------------------------------------------------------- */
 /*  Helpers                                                                     */
 /* -------------------------------------------------------------------------- */
 
@@ -93,7 +82,7 @@ function removeFileExtension(fileName: string): string {
 }
 
 /** Total number of columns in the table (used for colSpan on trade header & expanded rows) */
-const TOTAL_COLS = 12;
+const TOTAL_COLS = 11;
 
 /* -------------------------------------------------------------------------- */
 /*  Main Page Component                                                        */
@@ -140,6 +129,12 @@ export default function ProjectV3Page() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [commentDialogOpen, setCommentDialogOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
+
+  /* ── Derive selected project ─────────────────────────────────────────── */
+  const selectedProject = useMemo(
+    () => mockProjects.find((p) => p.id === projectFilter) ?? null,
+    [projectFilter]
+  );
 
   /* ── Derive matrix files (Sprint 3B: dynamic based on activeVersionId) ── */
   const matrixFiles = useMemo(
@@ -390,13 +385,6 @@ export default function ProjectV3Page() {
     });
   }, []);
 
-  const handleView = useCallback(
-    (matrixFileId: string) => {
-      router.push(`/project-v3/overview?file=${matrixFileId}`);
-    },
-    [router]
-  );
-
   const handleCommentSubmit = useCallback(() => {
     // In real app, this would save comments. For now, just close.
     setCommentText("");
@@ -428,7 +416,7 @@ export default function ProjectV3Page() {
       </section>
 
       {/* ── Filter Section ────────────────────────────────────────────────── */}
-      <section className="space-y-3 px-0" aria-label="Filters">
+      <section className="rounded-xl border bg-card shadow-card p-4 space-y-3" aria-label="Filters">
         {/* Search bar — full width (Sprint 1B: removed max-w-xl) */}
         <div className="relative w-full">
           <Search
@@ -459,7 +447,7 @@ export default function ProjectV3Page() {
 
         {/* Filter row — Sprint 1B: responsive grid */}
         <div
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2 min-w-0"
           role="search"
           aria-label="Filter controls"
         >
@@ -654,38 +642,49 @@ export default function ProjectV3Page() {
           </div>
         )}
 
-        {/* Sprint 2F: Selected items summary */}
-        {checkedIds.size > 0 && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-muted-foreground font-medium">
-              Selected:
-            </span>
-            {[...checkedIds].slice(0, 8).map((id) => {
-              const mat = allMaterials.find((m) => m.document.id === id);
-              return mat ? (
-                <Badge
-                  key={id}
-                  variant="secondary"
-                  className="text-[10px]"
-                >
-                  {mat.document.specSectionTitle}
-                </Badge>
-              ) : null;
-            })}
-            {checkedIds.size > 8 && (
-              <span className="text-xs text-muted-foreground">
-                +{checkedIds.size - 8} more
-              </span>
-            )}
-            <button
-              type="button"
-              className="text-xs text-primary hover:underline ml-1"
-              onClick={clearChecks}
-            >
-              &times; Clear all
-            </button>
+        {/* ── Project Metrics ──────────────────────── */}
+        <div className="flex items-center gap-4 pt-3 border-t text-sm">
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-foreground">{selectedProject?.totalDocuments ?? 0}</span>
+            <span className="text-muted-foreground">Total Docs</span>
           </div>
-        )}
+          <div className="h-4 w-px bg-border" />
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-emerald-600">{selectedProject?.confidenceSummary?.preApproved ?? 0}</span>
+            <span className="text-muted-foreground">Pre-Approved</span>
+          </div>
+          <div className="h-4 w-px bg-border" />
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-amber-600">{selectedProject?.confidenceSummary?.reviewRequired ?? 0}</span>
+            <span className="text-muted-foreground">Review Required</span>
+          </div>
+          <div className="h-4 w-px bg-border" />
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-rose-600">{selectedProject?.confidenceSummary?.actionMandatory ?? 0}</span>
+            <span className="text-muted-foreground">Action Mandatory</span>
+          </div>
+          <div className="h-4 w-px bg-border" />
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-blue-600">{selectedProject?.confidenceSummary?.overallConfidence ?? 0}%</span>
+            <span className="text-muted-foreground">Confidence</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Project Info ─────────────────────────── */}
+      <section className="rounded-xl border bg-card shadow-card p-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">{selectedProject?.name ?? "Project"}</h2>
+          <p className="text-sm text-muted-foreground">{selectedProject?.client ?? ""} {selectedProject?.location ? `• ${selectedProject.location}` : ""}</p>
+        </div>
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={() => router.push("/project-v3/overview")}
+        >
+          <Eye className="h-4 w-4" />
+          View Overview
+        </Button>
       </section>
 
       {/* ── Status Counts Bar ─────────────────────────────────────────────── */}
@@ -694,39 +693,18 @@ export default function ProjectV3Page() {
         aria-label="Status summary"
       >
         <div className="flex items-center gap-1.5">
-          <span
-            className={cn(
-              "inline-block h-2.5 w-2.5 rounded-full",
-              STATUS_DOT_COLORS.pre_approved
-            )}
-            aria-hidden="true"
-          />
           <span className="text-muted-foreground">
             {statusCounts.pre_approved}{" "}
             <span className="hidden sm:inline">Pre-Approved</span>
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span
-            className={cn(
-              "inline-block h-2.5 w-2.5 rounded-full",
-              STATUS_DOT_COLORS.review_required
-            )}
-            aria-hidden="true"
-          />
           <span className="text-muted-foreground">
             {statusCounts.review_required}{" "}
             <span className="hidden sm:inline">Review Required</span>
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span
-            className={cn(
-              "inline-block h-2.5 w-2.5 rounded-full",
-              STATUS_DOT_COLORS.action_mandatory
-            )}
-            aria-hidden="true"
-          />
           <span className="text-muted-foreground">
             {statusCounts.action_mandatory}{" "}
             <span className="hidden sm:inline">Action Required</span>
@@ -809,7 +787,6 @@ export default function ProjectV3Page() {
                 <col className="w-[100px]" />  {/* Material Type */}
                 <col className="w-[130px]" />  {/* AI Status */}
                 <col className="w-[50px]" />   {/* Alt */}
-                <col className="w-[50px]" />   {/* View */}
               </colgroup>
               <thead>
                 <tr className="border-b bg-muted/30">
@@ -877,13 +854,6 @@ export default function ProjectV3Page() {
                   >
                     Alt
                   </th>
-                  {/* Sprint 2D: View column header */}
-                  <th
-                    scope="col"
-                    className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
-                  >
-                    View
-                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -903,8 +873,6 @@ export default function ProjectV3Page() {
                       toggleCheck={toggleCheck}
                       alternativeIds={alternativeIds}
                       toggleAlternative={toggleAlternative}
-                      matrixFiles={matrixFiles}
-                      onView={handleView}
                     />
                   )
                 )}
@@ -919,6 +887,7 @@ export default function ProjectV3Page() {
         <Button
           onClick={() => router.push("/project-v3/preview-cover")}
           className="gap-2"
+          disabled={checkedIds.size === 0}
         >
           <FileText className="h-4 w-4" />
           Generate Binding
@@ -973,8 +942,6 @@ function TradeGroup({
   toggleCheck,
   alternativeIds,
   toggleAlternative,
-  matrixFiles,
-  onView,
 }: {
   trade: string;
   items: MaterialItem[];
@@ -991,8 +958,6 @@ function TradeGroup({
   toggleCheck: (id: string) => void;
   alternativeIds: Set<string>;
   toggleAlternative: (id: string) => void;
-  matrixFiles: MatrixFile[];
-  onView: (matrixFileId: string) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -1038,11 +1003,6 @@ function TradeGroup({
           const materialCat = item.document.materialCategory ?? "n/a";
           const isChecked = checkedIds.has(item.document.id);
           const isAlt = alternativeIds.has(item.document.id);
-
-          // Derive matrixFileId for this item
-          const matrixFileForItem = matrixFiles.find((mf) =>
-            mf.documentIds.includes(item.document.id)
-          );
 
           return (
             <React.Fragment key={item.document.id}>
@@ -1169,25 +1129,16 @@ function TradeGroup({
                 {/* 9. AI Status */}
                 <td className="p-3">
                   {statusConfig ? (
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={cn(
-                          "inline-block h-2 w-2 rounded-full shrink-0",
-                          STATUS_DOT_COLORS[validationStatus!] ?? ""
-                        )}
-                        aria-hidden="true"
-                      />
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          "text-[10px]",
-                          statusConfig.bgColor,
-                          statusConfig.color
-                        )}
-                      >
-                        {statusConfig.label}
-                      </Badge>
-                    </div>
+                    <Badge
+                      variant="secondary"
+                      className={cn(
+                        "text-[10px]",
+                        statusConfig.bgColor,
+                        statusConfig.color
+                      )}
+                    >
+                      {statusConfig.label}
+                    </Badge>
                   ) : (
                     <span className="text-xs text-muted-foreground/50">
                       {"\u2014"}
@@ -1195,38 +1146,21 @@ function TradeGroup({
                   )}
                 </td>
 
-                {/* 10. Alt toggle (Sprint 2C) */}
-                <td className="p-3">
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <Checkbox
-                      checked={isAlt}
-                      onCheckedChange={() =>
-                        toggleAlternative(item.document.id)
-                      }
-                      aria-label={`Mark ${item.document.fileName} as alternative`}
-                      className={cn(
-                        "h-4 w-4",
-                        isAlt && "bg-yellow-50 border-yellow-300"
-                      )}
-                    />
-                  </div>
-                </td>
-
-                {/* 11. View button (Sprint 2D) */}
+                {/* 10. Alt toggle — radio style */}
                 <td className="p-3">
                   <div onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
-                      className="p-1 rounded hover:bg-muted transition-colors"
-                      onClick={() => {
-                        if (matrixFileForItem) {
-                          onView(matrixFileForItem.id);
-                        }
-                      }}
-                      aria-label={`View ${item.document.fileName} in overview`}
-                      disabled={!matrixFileForItem}
+                      onClick={() => toggleAlternative(item.document.id)}
+                      aria-label={`Mark ${item.document.fileName} as alternative`}
+                      className={cn(
+                        "h-4 w-4 rounded-full border-2 flex items-center justify-center transition-colors",
+                        isAlt
+                          ? "border-yellow-500 bg-yellow-500"
+                          : "border-muted-foreground/40 bg-transparent hover:border-yellow-400"
+                      )}
                     >
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      {isAlt && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
                     </button>
                   </div>
                 </td>

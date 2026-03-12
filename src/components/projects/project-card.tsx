@@ -22,6 +22,9 @@ import { getVersionsByProject } from "@/data/mock-versions";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/data/types";
 
+/* HIDDEN: Generate Submittal — re-enable when needed */
+const SHOW_GENERATE_SUBMITTAL = false;
+
 function getInitials(name: string) {
   return name
     .split(" ")
@@ -200,11 +203,16 @@ export function ProjectCard({
               <Download className="h-3 w-3" aria-hidden="true" />
               Download Report
             </span>
-            <div className="w-px h-3.5 bg-border mx-3" aria-hidden="true" />
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground/60 font-medium cursor-not-allowed">
-              <FileText className="h-3 w-3" aria-hidden="true" />
-              Generate Submittal
-            </span>
+            {/* HIDDEN: Generate Submittal — re-enable when needed */}
+            {SHOW_GENERATE_SUBMITTAL && (
+              <>
+                <div className="w-px h-3.5 bg-border mx-3" aria-hidden="true" />
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground/60 font-medium cursor-not-allowed">
+                  <FileText className="h-3 w-3" aria-hidden="true" />
+                  Generate Submittal
+                </span>
+              </>
+            )}
           </>
         ) : (
           <>
@@ -226,26 +234,31 @@ export function ProjectCard({
               <Download className="h-3 w-3" aria-hidden="true" />
               Download Report
             </button>
-            {/* Pipe separator */}
-            <div className="w-px h-3.5 bg-border mx-3" aria-hidden="true" />
-            <button
-              type="button"
-              className={cn(
-                "flex items-center gap-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-sm outline-none px-0.5",
-                hasDocuments
-                  ? "text-muted-foreground hover:text-nav-accent"
-                  : "text-muted-foreground/60 cursor-not-allowed"
-              )}
-              disabled={!hasDocuments}
-              onClick={(e) => {
-                e.preventDefault();
-                if (hasDocuments) onGenerateSubmittal?.(project);
-              }}
-              aria-label={hasDocuments ? `Generate submittal for ${project.name}` : `No documents available for ${project.name}`}
-            >
-              <FileText className="h-3 w-3" aria-hidden="true" />
-              Generate Submittal
-            </button>
+            {/* HIDDEN: Generate Submittal — re-enable when needed */}
+            {SHOW_GENERATE_SUBMITTAL && (
+              <>
+                {/* Pipe separator */}
+                <div className="w-px h-3.5 bg-border mx-3" aria-hidden="true" />
+                <button
+                  type="button"
+                  className={cn(
+                    "flex items-center gap-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 rounded-sm outline-none px-0.5",
+                    hasDocuments
+                      ? "text-muted-foreground hover:text-nav-accent"
+                      : "text-muted-foreground/60 cursor-not-allowed"
+                  )}
+                  disabled={!hasDocuments}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (hasDocuments) onGenerateSubmittal?.(project);
+                  }}
+                  aria-label={hasDocuments ? `Generate submittal for ${project.name}` : `No documents available for ${project.name}`}
+                >
+                  <FileText className="h-3 w-3" aria-hidden="true" />
+                  Generate Submittal
+                </button>
+              </>
+            )}
           </>
         )}
       </div>

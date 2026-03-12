@@ -9,6 +9,14 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useWorkspace } from "@/providers/workspace-provider";
 
 /* -------------------------------------------------------------------------- */
@@ -414,6 +422,7 @@ export default function SubmittalBinderPage() {
   /* Loading state */
   const [loading, setLoading] = useState(true);
   const [currentVisiblePage, setCurrentVisiblePage] = useState(1);
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   useEffect(() => {
@@ -484,6 +493,31 @@ export default function SubmittalBinderPage() {
       {/* Stacked PDF pages */}
       {!loading && (
         <div className="max-w-[1400px] mx-auto px-6 py-8 space-y-8 animate-fade-up">
+          {/* Page Header — mirrors preview-cover style */}
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl gradient-accent flex items-center justify-center">
+                <BookOpen className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold tracking-tight">
+                  Submittal Binder
+                </h1>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {TOTAL_PAGES}-page binder for {project.name} &mdash; {version.name}
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export
+            </Button>
+          </div>
+
           {/* Page 1: Binder Cover */}
           <div ref={(el) => setPageRef(1, el)}>
             <PaperPage pageNumber={1} id="page-1">
@@ -619,13 +653,43 @@ export default function SubmittalBinderPage() {
             <Button
               size="lg"
               className="gradient-action text-white border-0 gap-2 font-semibold px-8"
+              onClick={() => setShowGenerateDialog(true)}
             >
-              <Download className="h-4 w-4" />
-              Generate Export PDF
+              <BookOpen className="h-4 w-4" />
+              Generate
             </Button>
           </div>
         </div>
       )}
+
+      {/* Generate Confirmation Dialog */}
+      <Dialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Generate Submittal Binder</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to generate this binding?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowGenerateDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="gradient-action text-white border-0"
+              onClick={() => {
+                // TODO: trigger actual generate logic here
+                setShowGenerateDialog(false);
+              }}
+            >
+              Proceed
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

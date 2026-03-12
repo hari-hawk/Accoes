@@ -36,6 +36,7 @@ import {
   Briefcase,
   User,
   Hash,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -555,11 +556,9 @@ function MaterialIndexGridCard({
 
 function ProjectInsightsSection({
   project,
-  confidence,
   confidenceSummary,
 }: {
-  project: { stage: string; memberIds: string[]; createdAt: string; updatedAt: string; totalDocuments: number };
-  confidence: number;
+  project: { memberIds: string[]; createdAt: string; updatedAt: string };
   confidenceSummary: { total: number; preApproved: number; reviewRequired: number; actionMandatory: number };
 }) {
   const totalDocs = confidenceSummary.total;
@@ -572,18 +571,6 @@ function ProjectInsightsSection({
         (1000 * 60 * 60 * 24)
     )
   );
-
-  // Determine stage progress (4 stages: review_required → action_mandatory → pre_approved → approved)
-  const stageOrder = ["review_required", "action_mandatory", "pre_approved", "approved"];
-  const stageIndex = stageOrder.indexOf(project.stage);
-  const stageProgress = stageIndex >= 0 ? stageIndex + 1 : 1;
-  const stageLabels = ["Review Required", "Action Required", "Pre-Approved", "Approved"];
-
-  // Verified count derived from confidence
-  const verifiedDocs =
-    confidence > 0 && totalDocs > 0
-      ? Math.round((confidence / 100) * totalDocs)
-      : 0;
 
   const completedCount = confidenceSummary.preApproved;
   const outstandingCount = confidenceSummary.reviewRequired + confidenceSummary.actionMandatory;
@@ -599,19 +586,8 @@ function ProjectInsightsSection({
         <h3 className="font-semibold text-sm">Project Insights</h3>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 divide-x divide-y lg:divide-y-0">
-        {/* Stat 1: Conformance — total items count */}
-        <div className="p-4">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
-            Material Matrix
-          </p>
-          <p className="text-2xl font-bold">{totalDocs}</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {totalDocs > 0 ? "Total items tracked" : "No items uploaded yet"}
-          </p>
-        </div>
-
-        {/* Stat 2: Completion Rate */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 divide-x divide-y lg:divide-y-0">
+        {/* Stat 1: Completion Rate */}
         <div className="p-4">
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
             Completion Rate
@@ -641,7 +617,7 @@ function ProjectInsightsSection({
           </p>
         </div>
 
-        {/* Stat 3: Validation Status — breakdown badges */}
+        {/* Stat 2: Validation Status — breakdown badges */}
         <div className="p-4">
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
             Validation Status
@@ -670,56 +646,8 @@ function ProjectInsightsSection({
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Second row */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 divide-x border-t">
-        {/* Stat 4: Workflow Stage */}
-        <div className="p-4">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
-            Workflow Stage
-          </p>
-          <p className="text-lg font-bold">
-            {stageLabels[stageIndex] ?? project.stage}
-          </p>
-          <div className="flex items-center gap-1 mt-2">
-            {stageOrder.map((s, i) => (
-              <div
-                key={s}
-                className={cn(
-                  "h-1.5 flex-1 rounded-full transition-colors",
-                  i < stageProgress ? "bg-nav-accent" : "bg-muted"
-                )}
-                aria-hidden="true"
-              />
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Stage {stageProgress} of {stageOrder.length}
-          </p>
-        </div>
-
-        {/* Stat 5: Documents Verified */}
-        <div className="p-4">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
-            Documents Verified
-          </p>
-          <p className="text-lg font-bold">
-            {verifiedDocs}{" "}
-            <span className="text-sm font-normal text-muted-foreground">/ {totalDocs}</span>
-          </p>
-          <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-2">
-            <div
-              className="h-full rounded-full bg-status-pre-approved transition-all duration-500"
-              style={{ width: totalDocs > 0 ? `${(verifiedDocs / totalDocs) * 100}%` : "0%" }}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {totalDocs > 0 ? `${Math.round((verifiedDocs / totalDocs) * 100)}% verified` : "No documents yet"}
-          </p>
-        </div>
-
-        {/* Stat 6: Project Timeline */}
+        {/* Stat 3: Project Timeline */}
         <div className="p-4">
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
             Project Timeline
@@ -883,7 +811,6 @@ export default function VersionOverviewPage() {
       {/* Project Insights — full-width stats section */}
       <ProjectInsightsSection
         project={project}
-        confidence={confidence}
         confidenceSummary={confidenceSummary}
       />
 
@@ -1155,6 +1082,18 @@ export default function VersionOverviewPage() {
           )}
         </div>
       )}
+
+      {/* Next CTA */}
+      <div className="flex justify-end pt-2 pb-4">
+        <Button
+          size="lg"
+          className="gradient-accent text-white border-0 gap-2 px-6"
+          onClick={() => router.push(`/projects/${project.id}/versions/${version.id}/review`)}
+        >
+          Next
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </div>
 
       {/* ------------------------------------------------------------------ */}
       {/*  Upload Files Dialog (Conformance)                            */}

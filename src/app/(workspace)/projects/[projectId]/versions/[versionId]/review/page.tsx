@@ -86,6 +86,10 @@ export default function ReviewPage() {
     }).length;
   }, [allMaterials, decisions]);
   const allDecided = totalMaterials > 0 && decidedCount === totalMaterials;
+  const approvedCount = useMemo(() => {
+    return allMaterials.filter((m) => decisions[m.document.id] === "approved").length;
+  }, [allMaterials, decisions]);
+  const hasApproved = approvedCount > 0;
   const progressPercent = totalMaterials > 0 ? Math.round((decidedCount / totalMaterials) * 100) : 0;
 
   // Comment dialog state
@@ -281,11 +285,11 @@ export default function ReviewPage() {
             <Button
               size="sm"
               className={`shrink-0 transition-all duration-300 ${
-                allDecided
+                hasApproved
                   ? "gradient-accent text-white border-0 shadow-glow hover:opacity-90"
                   : "opacity-50 cursor-not-allowed"
               }`}
-              disabled={!allDecided}
+              disabled={!hasApproved}
               onClick={() =>
                 router.push(
                   `/projects/${project.id}/versions/${version.id}/preview-cover`
@@ -293,7 +297,7 @@ export default function ReviewPage() {
               }
             >
               <BookOpen className="mr-1.5 h-3.5 w-3.5" />
-              Proceed to Preview Cover Page
+              Proceed to Preview Cover ({approvedCount} approved)
               <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
             </Button>
           </div>

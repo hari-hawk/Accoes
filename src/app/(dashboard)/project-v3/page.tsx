@@ -434,185 +434,199 @@ export default function ProjectV3Page() {
           )}
         </div>
 
-        {/* Filter row — Sprint 1B: responsive grid */}
+        {/* Filter row — 7 equal-width columns wrapped in explicit divs */}
         <div
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2 [&>*]:min-w-0"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2"
           role="search"
           aria-label="Filter controls"
         >
-          {/* 1. Project Name (Sprint 3A) */}
-          <Select
-            value={projectFilter}
-            onValueChange={(v) => setProjectFilter(v)}
-          >
-            <SelectTrigger aria-label="Filter by project">
-              <SelectValue placeholder="Select Project" />
-            </SelectTrigger>
-            <SelectContent>
-              {mockProjects.map((proj) => (
-                <SelectItem key={proj.id} value={proj.id}>
-                  {proj.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* 1. Project Name */}
+          <div className="min-w-0">
+            <Select
+              value={projectFilter}
+              onValueChange={(v) => setProjectFilter(v)}
+            >
+              <SelectTrigger className="w-full" aria-label="Filter by project">
+                <SelectValue placeholder="Select Project" />
+              </SelectTrigger>
+              <SelectContent>
+                {mockProjects.map((proj) => (
+                  <SelectItem key={proj.id} value={proj.id}>
+                    {proj.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          {/* 2. Matrix Files — multi-select Popover (Sprint 3B: renamed) */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="h-9 gap-1.5 text-sm font-normal w-full justify-between"
-                aria-label="Filter by matrix files"
-              >
-                <span className="flex items-center gap-1.5 truncate">
-                  <Filter className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {selectedFileCount > 0
-                    ? `${selectedFileCount} file${selectedFileCount !== 1 ? "s" : ""}`
-                    : "Matrix Files"}
-                </span>
-                <ChevronDown className="h-3 w-3 opacity-50 shrink-0" aria-hidden="true" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-3" align="start">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Matrix Index Grid Files
-              </p>
-
-              {/* All Documents toggle (Sprint 3B) */}
-              <label className="flex items-start gap-2.5 cursor-pointer group mb-2 pb-2 border-b">
-                <Checkbox
-                  checked={documentFilter.size === 0}
-                  onCheckedChange={handleToggleAllDocuments}
-                  aria-label="Show all documents"
-                  className="mt-0.5"
-                />
-                <span className="text-sm leading-snug font-medium group-hover:text-foreground text-muted-foreground transition-colors">
-                  All Documents
-                </span>
-              </label>
-
-              <div className="space-y-2">
-                {matrixFiles.map((mf) => {
-                  const isChecked = mf.documentIds.every((id) =>
-                    documentFilter.has(id)
-                  );
-                  return (
-                    <label
-                      key={mf.id}
-                      className="flex items-start gap-2.5 cursor-pointer group"
-                    >
-                      <Checkbox
-                        checked={isChecked}
-                        onCheckedChange={() =>
-                          handleToggleMatrixFile(mf.documentIds)
-                        }
-                        aria-label={`Select ${mf.fileName}`}
-                        className="mt-0.5"
-                      />
-                      <span className="text-sm leading-snug group-hover:text-foreground text-muted-foreground transition-colors">
-                        {mf.fileName}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-              {documentFilter.size > 0 && (
+          {/* 2. Matrix Files */}
+          <div className="min-w-0">
+            <Popover>
+              <PopoverTrigger asChild>
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs h-7 mt-2 w-full"
-                  onClick={() => setDocumentFilter(new Set())}
+                  variant="outline"
+                  className="h-9 gap-1.5 text-sm font-normal w-full justify-between"
+                  aria-label="Filter by matrix files"
                 >
-                  Clear file selection
+                  <span className="flex items-center gap-1.5 truncate">
+                    <Filter className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    {selectedFileCount > 0
+                      ? `${selectedFileCount} file${selectedFileCount !== 1 ? "s" : ""}`
+                      : "Matrix Files"}
+                  </span>
+                  <ChevronDown className="h-3 w-3 opacity-50 shrink-0" aria-hidden="true" />
                 </Button>
-              )}
-            </PopoverContent>
-          </Popover>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-3" align="start">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Matrix Index Grid Files
+                </p>
+
+                {/* All Documents toggle */}
+                <label className="flex items-start gap-2.5 cursor-pointer group mb-2 pb-2 border-b">
+                  <Checkbox
+                    checked={documentFilter.size === 0}
+                    onCheckedChange={handleToggleAllDocuments}
+                    aria-label="Show all documents"
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm leading-snug font-medium group-hover:text-foreground text-muted-foreground transition-colors">
+                    All Documents
+                  </span>
+                </label>
+
+                <div className="space-y-2">
+                  {matrixFiles.map((mf) => {
+                    const isChecked = mf.documentIds.every((id) =>
+                      documentFilter.has(id)
+                    );
+                    return (
+                      <label
+                        key={mf.id}
+                        className="flex items-start gap-2.5 cursor-pointer group"
+                      >
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={() =>
+                            handleToggleMatrixFile(mf.documentIds)
+                          }
+                          aria-label={`Select ${mf.fileName}`}
+                          className="mt-0.5"
+                        />
+                        <span className="text-sm leading-snug group-hover:text-foreground text-muted-foreground transition-colors">
+                          {mf.fileName}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {documentFilter.size > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7 mt-2 w-full"
+                    onClick={() => setDocumentFilter(new Set())}
+                  >
+                    Clear file selection
+                  </Button>
+                )}
+              </PopoverContent>
+            </Popover>
+          </div>
 
           {/* 3. Trade */}
-          <Select
-            value={tradeFilter}
-            onValueChange={(v) => setTradeFilter(v)}
-          >
-            <SelectTrigger aria-label="Filter by trade">
-              <SelectValue placeholder="All Trades" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Trades</SelectItem>
-              {uniqueTrades.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {t}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="min-w-0">
+            <Select
+              value={tradeFilter}
+              onValueChange={(v) => setTradeFilter(v)}
+            >
+              <SelectTrigger className="w-full" aria-label="Filter by trade">
+                <SelectValue placeholder="All Trades" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Trades</SelectItem>
+                {uniqueTrades.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* 4. Category */}
-          <Select
-            value={categoryFilter}
-            onValueChange={(v) => setCategoryFilter(v)}
-          >
-            <SelectTrigger aria-label="Filter by index category">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {uniqueCategories.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="min-w-0">
+            <Select
+              value={categoryFilter}
+              onValueChange={(v) => setCategoryFilter(v)}
+            >
+              <SelectTrigger className="w-full" aria-label="Filter by index category">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {uniqueCategories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          {/* 5. System (Sprint 3C: dynamic) */}
-          <Select
-            value={systemFilter}
-            onValueChange={(v) => setSystemFilter(v)}
-          >
-            <SelectTrigger aria-label="Filter by system category">
-              <SelectValue placeholder="All Systems" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Systems</SelectItem>
-              {uniqueSystems.map((sys) => (
-                <SelectItem key={sys} value={sys}>
-                  {sys}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* 5. System */}
+          <div className="min-w-0">
+            <Select
+              value={systemFilter}
+              onValueChange={(v) => setSystemFilter(v)}
+            >
+              <SelectTrigger className="w-full" aria-label="Filter by system category">
+                <SelectValue placeholder="All Systems" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Systems</SelectItem>
+                {uniqueSystems.map((sys) => (
+                  <SelectItem key={sys} value={sys}>
+                    {sys}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          {/* 6. Material (Sprint 3C: dynamic) */}
-          <Select
-            value={materialFilter}
-            onValueChange={(v) => setMaterialFilter(v)}
-          >
-            <SelectTrigger aria-label="Filter by material category">
-              <SelectValue placeholder="All Materials" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Materials</SelectItem>
-              {uniqueMaterials.map((mat) => (
-                <SelectItem key={mat} value={mat}>
-                  {mat === "n/a" ? "N/A" : mat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* 6. Material */}
+          <div className="min-w-0">
+            <Select
+              value={materialFilter}
+              onValueChange={(v) => setMaterialFilter(v)}
+            >
+              <SelectTrigger className="w-full" aria-label="Filter by material category">
+                <SelectValue placeholder="All Materials" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Materials</SelectItem>
+                {uniqueMaterials.map((mat) => (
+                  <SelectItem key={mat} value={mat}>
+                    {mat === "n/a" ? "N/A" : mat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* 7. Sort */}
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v)}>
-            <SelectTrigger aria-label="Sort order">
-              <SelectValue placeholder="Name A-Z" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name-asc">Name A-Z</SelectItem>
-              <SelectItem value="name-desc">Name Z-A</SelectItem>
-              <SelectItem value="index-category">Index Category</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="min-w-0">
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v)}>
+              <SelectTrigger className="w-full" aria-label="Sort order">
+                <SelectValue placeholder="Name A-Z" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name-asc">Name A-Z</SelectItem>
+                <SelectItem value="name-desc">Name Z-A</SelectItem>
+                <SelectItem value="index-category">Index Category</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Clear Filters */}
@@ -1086,12 +1100,12 @@ function TradeGroup({
                 </td>
 
                 {/* 9. AI Status */}
-                <td className="p-3">
+                <td className="p-3 overflow-hidden">
                   {statusConfig ? (
                     <Badge
                       variant="secondary"
                       className={cn(
-                        "text-[10px]",
+                        "text-[10px] truncate max-w-full",
                         statusConfig.bgColor,
                         statusConfig.color
                       )}
@@ -1106,14 +1120,14 @@ function TradeGroup({
                 </td>
 
                 {/* 10. Alternate toggle — explicit text with radio indicator */}
-                <td className="p-3">
+                <td className="p-3 overflow-hidden">
                   <div onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={() => toggleAlternative(item.document.id)}
                       aria-label={`Mark ${item.document.fileName} as alternative`}
                       className={cn(
-                        "flex items-center gap-1.5 text-[10px] px-2 py-1 rounded-full border transition-colors whitespace-nowrap",
+                        "inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border transition-colors whitespace-nowrap",
                         isAlt
                           ? "border-yellow-400 bg-yellow-50 text-yellow-700 font-medium"
                           : "border-muted-foreground/30 text-muted-foreground hover:border-yellow-400 hover:text-yellow-600"

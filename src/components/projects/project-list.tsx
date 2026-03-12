@@ -50,6 +50,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  AvatarGroup,
+  AvatarGroupCount,
+} from "@/components/ui/avatar";
 import { SearchInput } from "@/components/shared/search-input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatusIndicator } from "@/components/shared/status-indicator";
@@ -64,9 +71,22 @@ import { TeamAccessSheet } from "./team-access-sheet";
 import { useProjects } from "@/hooks/use-projects";
 import { useMaterials } from "@/hooks/use-materials";
 import { mockProjects } from "@/data/mock-projects";
+import { mockUsers } from "@/data/mock-users";
 import { getDocumentsByVersion } from "@/data/mock-documents";
 import { getVersionsByProject } from "@/data/mock-versions";
 import type { Project } from "@/data/types";
+
+/* HIDDEN: Generate Submittal — re-enable when needed */
+const SHOW_GENERATE_SUBMITTAL = false;
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Hero Section — with business-impact metric cards                           */
@@ -361,6 +381,13 @@ function ProjectListRow({
     getVersionsByProject(project.id).find((v) => v.id === project.latestVersionId)?.id ?? ""
   ).length > 0;
 
+  // Resolve member IDs to user objects (show max 3)
+  const members = project.memberIds
+    .map((id) => mockUsers.find((u) => u.id === id))
+    .filter(Boolean);
+  const visibleMembers = members.slice(0, 3);
+  const overflowCount = members.length - visibleMembers.length;
+
   const handleRowClick = () => {
     if (hasVersions) {
       router.push(overviewHref);
@@ -369,11 +396,16 @@ function ProjectListRow({
     }
   };
 
+  const priorityColors: Record<string, string> = {
+    high: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    medium: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    low: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  };
+
   return (
-    <div
-      className="flex items-center gap-4 px-4 py-3 border-b last:border-b-0 hover:bg-muted/30 transition-colors cursor-pointer"
+    <tr
+      className="border-b last:border-b-0 hover:bg-muted/30 transition-colors cursor-pointer"
       onClick={handleRowClick}
-      role="row"
       tabIndex={0}
       aria-label={`${project.name}, Job ${project.jobId}, ${confidence > 0 ? `${confidence}% confidence` : "Pending"}`}
       onKeyDown={(e) => {
@@ -384,131 +416,172 @@ function ProjectListRow({
       }}
     >
       {/* Name + Job ID */}
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium truncate">
-          <button
-            type="button"
-            className="hover:underline hover:text-nav-accent cursor-pointer transition-colors text-left"
-            onClick={(e) => {
-              e.stopPropagation();
-              onNameClick(project);
-            }}
-          >
-            {project.name}
-          </button>
-        </p>
-        <p className="text-xs font-mono text-muted-foreground truncate">{project.jobId}</p>
-      </div>
+      <td className="px-3 py-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium truncate">
+            <button
+              type="button"
+              className="hover:underline hover:text-nav-accent cursor-pointer transition-colors text-left"
+              onClick={(e) => {
+                e.stopPropagation();
+                onNameClick(project);
+              }}
+            >
+              {project.name}
+            </button>
+          </p>
+          <p className="text-xs font-mono text-muted-foreground truncate">{project.jobId}</p>
+        </div>
+      </td>
+
+      {/* Type */}
+      <td className="px-3 py-3">
+        <span className="text-xs text-foreground whitespace-nowrap">
+          {project.projectType === "dr" ? "Discrepancy Report" : "Design Job"}
+        </span>
+      </td>
+
+      {/* Location */}
+      <td className="px-3 py-3">
+        <span className="text-xs text-foreground truncate block max-w-[140px]" title={project.location}>
+          {project.location}
+        </span>
+      </td>
+
+      {/* Company */}
+      <td className="px-3 py-3">
+        <div className="min-w-0">
+          <p className="text-xs text-foreground truncate max-w-[140px]" title={project.client}>{project.client}</p>
+          {project.owner && (
+            <p className="text-[11px] text-muted-foreground truncate max-w-[140px]" title={project.owner}>
+              {project.owner}
+            </p>
+          )}
+        </div>
+      </td>
 
       {/* Status */}
-      <div className="shrink-0">
+      <td className="px-3 py-3">
         <StatusIndicator status={project.status} />
-      </div>
+      </td>
+
+      {/* Priority */}
+      <td className="px-3 py-3">
+        <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize", priorityColors[project.priority] ?? "bg-muted text-muted-foreground")}>
+          {project.priority}
+        </span>
+      </td>
+
+      {/* Team */}
+      <td className="px-3 py-3">
+        <AvatarGroup>
+          {visibleMembers.map((user) => (
+            <Avatar key={user!.id} size="sm">
+              {user!.avatarUrl && <AvatarImage src={user!.avatarUrl} alt={user!.name} />}
+              <AvatarFallback className="text-[9px] font-medium">{getInitials(user!.name)}</AvatarFallback>
+            </Avatar>
+          ))}
+          {overflowCount > 0 && (
+            <AvatarGroupCount className="text-[9px]">+{overflowCount}</AvatarGroupCount>
+          )}
+        </AvatarGroup>
+      </td>
 
       {/* Confidence */}
-      <div className="shrink-0 w-16 text-right">
-        <span className={`text-sm font-medium ${confidence > 0 ? "text-foreground" : "text-muted-foreground"}`} aria-label={confidence > 0 ? `${confidence}% confidence` : "Pending"}>
-          {confidence > 0 ? `${confidence}%` : "—"}
+      <td className="px-3 py-3 text-right">
+        <span className={cn("text-sm font-medium tabular-nums", confidence > 0 ? "text-foreground" : "text-muted-foreground")} aria-label={confidence > 0 ? `${confidence}% confidence` : "Pending"}>
+          {confidence > 0 ? `${confidence}%` : "\u2014"}
         </span>
-      </div>
-
-      {/* Created date */}
-      <div className="shrink-0 w-24 text-right text-xs text-muted-foreground hidden lg:block">
-        <time dateTime={project.createdAt}>
-          {new Date(project.createdAt).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })}
-        </time>
-      </div>
+      </td>
 
       {/* Actions */}
-      <div
-        className="shrink-0 flex items-center gap-0.5"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
-        role="group"
-        aria-label="Project actions"
-      >
-        {/* Download Report */}
-        {hasVersions ? (
-          <button
-            type="button"
-            className={cn(
-              "inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none",
-              hasDocuments
-                ? "text-muted-foreground hover:text-nav-accent hover:bg-muted/50"
-                : "text-muted-foreground/60 cursor-not-allowed"
-            )}
-            aria-label={
-              hasDocuments
-                ? `Download report for ${project.name}`
-                : `No documents available for ${project.name}`
-            }
-            disabled={!hasDocuments}
-            onClick={() => {
-              if (hasDocuments) onDownloadReport(project);
-            }}
-          >
-            <Download className="h-4 w-4" aria-hidden="true" />
-          </button>
-        ) : (
-          <span
-            className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/60 cursor-not-allowed"
-            role="img"
-            aria-label="Download report unavailable — no versions"
-          >
-            <Download className="h-4 w-4" aria-hidden="true" />
-          </span>
-        )}
+      <td className="px-3 py-3">
+        <div
+          className="flex items-center gap-0.5"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          role="group"
+          aria-label="Project actions"
+        >
+          {/* Download Report */}
+          {hasVersions ? (
+            <button
+              type="button"
+              className={cn(
+                "inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none",
+                hasDocuments
+                  ? "text-muted-foreground hover:text-nav-accent hover:bg-muted/50"
+                  : "text-muted-foreground/60 cursor-not-allowed"
+              )}
+              aria-label={
+                hasDocuments
+                  ? `Download report for ${project.name}`
+                  : `No documents available for ${project.name}`
+              }
+              disabled={!hasDocuments}
+              onClick={() => {
+                if (hasDocuments) onDownloadReport(project);
+              }}
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+            </button>
+          ) : (
+            <span
+              className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/60 cursor-not-allowed"
+              role="img"
+              aria-label="Download report unavailable — no versions"
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+            </span>
+          )}
 
-        {/* Generate Submittal */}
-        {hasVersions ? (
-          <button
-            type="button"
-            className={cn(
-              "inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none",
-              hasDocuments
-                ? "text-muted-foreground hover:text-nav-accent hover:bg-muted/50"
-                : "text-muted-foreground/60 cursor-not-allowed"
-            )}
-            aria-label={
-              hasDocuments
-                ? `Generate submittal for ${project.name}`
-                : `No documents available for ${project.name}`
-            }
-            disabled={!hasDocuments}
-            onClick={() => {
-              if (hasDocuments) onGenerateSubmittal?.(project);
-            }}
-          >
-            <FileText className="h-4 w-4" aria-hidden="true" />
-          </button>
-        ) : (
-          <span
-            className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/60 cursor-not-allowed"
-            role="img"
-            aria-label="Generate submittal unavailable — no versions"
-          >
-            <FileText className="h-4 w-4" aria-hidden="true" />
-          </span>
-        )}
+          {/* HIDDEN: Generate Submittal — re-enable when needed */}
+          {SHOW_GENERATE_SUBMITTAL && (hasVersions ? (
+            <button
+              type="button"
+              className={cn(
+                "inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none",
+                hasDocuments
+                  ? "text-muted-foreground hover:text-nav-accent hover:bg-muted/50"
+                  : "text-muted-foreground/60 cursor-not-allowed"
+              )}
+              aria-label={
+                hasDocuments
+                  ? `Generate submittal for ${project.name}`
+                  : `No documents available for ${project.name}`
+              }
+              disabled={!hasDocuments}
+              onClick={() => {
+                if (hasDocuments) onGenerateSubmittal?.(project);
+              }}
+            >
+              <FileText className="h-4 w-4" aria-hidden="true" />
+            </button>
+          ) : (
+            <span
+              className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground/60 cursor-not-allowed"
+              role="img"
+              aria-label="Generate submittal unavailable — no versions"
+            >
+              <FileText className="h-4 w-4" aria-hidden="true" />
+            </span>
+          ))}
 
-        {/* Manage Team (admin only) */}
-        {isAdmin && (
-          <button
-            type="button"
-            className="inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none text-muted-foreground hover:text-nav-accent hover:bg-muted/50"
-            aria-label={`Manage team for ${project.name}`}
-            title="Manage team"
-            onClick={() => onManageTeam?.(project)}
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-          </button>
-        )}
-      </div>
-    </div>
+          {/* Manage Team (admin only) */}
+          {isAdmin && (
+            <button
+              type="button"
+              className="inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-nav-accent focus-visible:ring-offset-1 outline-none text-muted-foreground hover:text-nav-accent hover:bg-muted/50"
+              aria-label={`Manage team for ${project.name}`}
+              title="Manage team"
+              onClick={() => onManageTeam?.(project)}
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
   );
 }
 
@@ -1341,26 +1414,46 @@ export function ProjectList() {
         </div>
       ) : (
         /* List View */
-        <div className="rounded-xl border bg-card shadow-card overflow-hidden" role="table" aria-label="Projects list">
-          {/* List header */}
-          <div className="flex items-center gap-4 px-4 py-2.5 border-b bg-muted/30 text-xs font-medium text-muted-foreground" role="row" aria-label="Column headers">
-            <div className="flex-1" role="columnheader">Project</div>
-            <div className="shrink-0" role="columnheader">Status</div>
-            <div className="shrink-0 w-16 text-right" role="columnheader" aria-label="Confidence">Conf.</div>
-            <div className="shrink-0 w-24 text-right hidden lg:block" role="columnheader">Created</div>
-            <div className="shrink-0 w-28" role="columnheader" aria-label="Actions" />
-          </div>
-          {enrichedProjects.map((project) => (
-            <ProjectListRow
-              key={project.id}
-              project={project}
-              onNameClick={handleCardClick}
-              onDownloadReport={handleDownloadReport}
-              onGenerateSubmittal={handleGenerateSubmittal}
-              onManageTeam={handleManageTeam}
-              isAdmin={true}
-            />
-          ))}
+        <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+          <table className="w-full table-fixed" aria-label="Projects list">
+            <colgroup>
+              <col className="w-[18%]" /> {/* Project */}
+              <col className="w-[12%]" /> {/* Type */}
+              <col className="w-[11%]" /> {/* Location */}
+              <col className="w-[13%]" /> {/* Company */}
+              <col className="w-[10%]" /> {/* Status */}
+              <col className="w-[8%]" />  {/* Priority */}
+              <col className="w-[10%]" /> {/* Team */}
+              <col className="w-[7%]" />  {/* Confidence */}
+              <col className="w-[11%]" /> {/* Actions */}
+            </colgroup>
+            <thead>
+              <tr className="border-b bg-muted/30 text-xs font-medium text-muted-foreground">
+                <th className="px-3 py-2.5 text-left font-medium">Project</th>
+                <th className="px-3 py-2.5 text-left font-medium">Type</th>
+                <th className="px-3 py-2.5 text-left font-medium">Location</th>
+                <th className="px-3 py-2.5 text-left font-medium">Company</th>
+                <th className="px-3 py-2.5 text-left font-medium">Status</th>
+                <th className="px-3 py-2.5 text-left font-medium">Priority</th>
+                <th className="px-3 py-2.5 text-left font-medium">Team</th>
+                <th className="px-3 py-2.5 text-right font-medium">Conf.</th>
+                <th className="px-3 py-2.5 text-left font-medium"><span className="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {enrichedProjects.map((project) => (
+                <ProjectListRow
+                  key={project.id}
+                  project={project}
+                  onNameClick={handleCardClick}
+                  onDownloadReport={handleDownloadReport}
+                  onGenerateSubmittal={handleGenerateSubmittal}
+                  onManageTeam={handleManageTeam}
+                  isAdmin={true}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -1378,12 +1471,14 @@ export function ProjectList() {
         onOpenChange={setReportSheetOpen}
       />
 
-      {/* Generate Submittal Sheet */}
-      <GenerateSubmittalSheet
-        project={submittalProject}
-        open={submittalSheetOpen}
-        onOpenChange={setSubmittalSheetOpen}
-      />
+      {/* HIDDEN: Generate Submittal Sheet — re-enable when needed */}
+      {SHOW_GENERATE_SUBMITTAL && (
+        <GenerateSubmittalSheet
+          project={submittalProject}
+          open={submittalSheetOpen}
+          onOpenChange={setSubmittalSheetOpen}
+        />
+      )}
 
       {/* Team Access Sheet */}
       <TeamAccessSheet

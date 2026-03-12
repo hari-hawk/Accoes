@@ -38,7 +38,7 @@ const statusColors: Record<string, string> = {
   action_mandatory: "bg-status-action-mandatory",
 };
 
-/** Score chip — displays "PS: 98%" or "PI: 74%" with color coding */
+/** Score chip — displays "PS: Pre-Approved" or "PI: Review Required" with color coding */
 function ScoreChip({
   label,
   score,
@@ -47,6 +47,12 @@ function ScoreChip({
   score: number | undefined;
 }) {
   if (score === undefined) return null;
+  const statusText =
+    score >= 80
+      ? "Pre-Approved"
+      : score >= 40
+        ? "Review Required"
+        : "Action Required";
   const color =
     score >= 80
       ? "bg-status-pre-approved-bg text-status-pre-approved"
@@ -57,11 +63,11 @@ function ScoreChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-bold tabular-nums",
+        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold",
         color
       )}
     >
-      {label}: {score}%
+      {label}: {statusText}
     </span>
   );
 }

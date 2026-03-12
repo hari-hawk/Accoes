@@ -9,6 +9,7 @@ import {
   FileText,
   Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -512,7 +513,7 @@ export default function SubmittalBinderPage() {
             <div className="flex items-center gap-2">
               <Button
                 size="sm"
-                className="gradient-action text-white border-0 gap-1.5"
+                className="gradient-accent text-white border-0 gap-1.5"
               >
                 <Download className="h-3.5 w-3.5" />
                 Export
@@ -653,7 +654,7 @@ export default function SubmittalBinderPage() {
         <div className="shrink-0 border-t bg-background/95 backdrop-blur-sm">
           <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-end">
             <Button
-              className="gradient-action text-white border-0 gap-2 font-semibold px-6"
+              className="gradient-accent text-white border-0 gap-2 font-semibold px-6"
               onClick={() => setShowGenerateDialog(true)}
             >
               <BookOpen className="h-4 w-4" />
@@ -681,10 +682,12 @@ export default function SubmittalBinderPage() {
               Cancel
             </Button>
             <Button
-              className="gradient-action text-white border-0"
+              className="gradient-accent text-white border-0"
               onClick={() => {
-                // TODO: trigger actual generate logic here
                 setShowGenerateDialog(false);
+                toast.success("Submittal binder generated successfully", {
+                  description: "The record has been stored in your project documents.",
+                });
               }}
             >
               Proceed

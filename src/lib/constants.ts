@@ -69,17 +69,17 @@ export const VALIDATION_STATUS_CONFIG: Record<
   { label: string; color: string; bgColor: string }
 > = {
   pre_approved: {
-    label: "Pre-Approved (80-100%)",
+    label: "Pre-Approved",
     color: "text-status-pre-approved",
     bgColor: "bg-status-pre-approved-bg",
   },
   review_required: {
-    label: "Review Required (70-79%)",
+    label: "Review Required",
     color: "text-status-review-required",
     bgColor: "bg-status-review-required-bg",
   },
   action_mandatory: {
-    label: "Action Required (0-69%)",
+    label: "Action Required",
     color: "text-status-action-mandatory",
     bgColor: "bg-status-action-mandatory-bg",
   },
@@ -90,7 +90,7 @@ export const DECISION_STATUS_CONFIG: Record<
   { label: string; color: string }
 > = {
   pending: { label: "Pending", color: "bg-muted text-muted-foreground" },
-  approved: { label: "Approved (100%)", color: "bg-status-pre-approved-bg text-status-pre-approved" },
+  approved: { label: "Approved", color: "bg-status-pre-approved-bg text-status-pre-approved" },
   approved_with_notes: { label: "Approved with Notes", color: "bg-status-pre-approved-bg text-status-pre-approved" },
   revision_requested: { label: "Revision Requested", color: "bg-status-review-required-bg text-status-review-required" },
   rejected: { label: "Rejected", color: "bg-status-action-mandatory-bg text-status-action-mandatory" },

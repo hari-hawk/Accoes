@@ -109,7 +109,7 @@ export function ProjectCard({
         </div>
 
         {/* Row 2: 2-column metadata grid */}
-        <div className="mt-2.5 grid grid-cols-2 gap-2.5 gap-x-4">
+        <div className="mt-3.5 grid grid-cols-2 gap-3 gap-x-5">
           <div>
             <div className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Type</div>
             <div className="text-xs text-foreground">
@@ -156,24 +156,24 @@ export function ProjectCard({
         </div>
 
         {/* Row 3: Status counts */}
-        <div className="mt-2.5 flex items-center gap-3 flex-wrap" aria-label="Validation breakdown">
+        <div className="mt-3.5 pt-3 border-t border-border/40 flex items-center gap-4 flex-wrap" aria-label="Validation breakdown">
           {isExtracting ? (
             <span className="text-xs text-muted-foreground italic">Processing documents...</span>
           ) : total > 0 ? (
             <>
-              <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground" aria-label={`${preApproved} pre-approved`}>
-                <span className="h-1.5 w-1.5 rounded-full bg-status-pre-approved shrink-0" aria-hidden="true" />
-                <span className="font-semibold text-foreground">{preApproved}</span>
+              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground" aria-label={`${preApproved} pre-approved`}>
+                <span className="h-2 w-2 rounded-full bg-status-pre-approved shrink-0" aria-hidden="true" />
+                <span className="font-bold text-sm text-foreground">{preApproved}</span>
                 Pre-Approved
               </span>
-              <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground" aria-label={`${reviewRequired} review required`}>
-                <span className="h-1.5 w-1.5 rounded-full bg-status-review-required shrink-0" aria-hidden="true" />
-                <span className="font-semibold text-foreground">{reviewRequired}</span>
+              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground" aria-label={`${reviewRequired} review required`}>
+                <span className="h-2 w-2 rounded-full bg-status-review-required shrink-0" aria-hidden="true" />
+                <span className="font-bold text-sm text-foreground">{reviewRequired}</span>
                 Review Required
               </span>
-              <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground" aria-label={`${actionMandatory} action required`}>
-                <span className="h-1.5 w-1.5 rounded-full bg-status-action-mandatory shrink-0" aria-hidden="true" />
-                <span className="font-semibold text-foreground">{actionMandatory}</span>
+              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground" aria-label={`${actionMandatory} action required`}>
+                <span className="h-2 w-2 rounded-full bg-status-action-mandatory shrink-0" aria-hidden="true" />
+                <span className="font-bold text-sm text-foreground">{actionMandatory}</span>
                 Action Required
               </span>
             </>

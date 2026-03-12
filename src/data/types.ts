@@ -142,6 +142,10 @@ export interface Document {
   specSectionTitle: string;
   indexCategory?: string;   // L1 group: "Hangers & Supports", "Fittings", etc.
   systemCategory?: string;  // System: "All Systems", "Chilled Water", etc.
+  trade?: string;              // "Mechanical" | "Electrical" | "Plumbing" | "Fire Protection"
+  sizes?: string;              // pipe/fitting sizes e.g. "1/2-4\""
+  indexSubcategory?: string;   // e.g. "Coatings", "Hangers", "Anchors"
+  materialCategory?: string;   // "Carbon Steel" | "Copper" | "n/a"
   previewUrl?: string;
 }
 

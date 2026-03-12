@@ -41,6 +41,7 @@ export function ProjectCard({
   onGenerateSubmittal,
   onManageTeam,
   isAdmin = false,
+  overviewHrefOverride,
 }: {
   project: Project;
   onNameClick?: (project: Project) => void;
@@ -48,6 +49,8 @@ export function ProjectCard({
   onGenerateSubmittal?: (project: Project) => void;
   onManageTeam?: (project: Project) => void;
   isAdmin?: boolean;
+  /** Override the default overview navigation href */
+  overviewHrefOverride?: string;
 }) {
   const { preApproved, reviewRequired, actionMandatory, total } = project.confidenceSummary;
 
@@ -68,9 +71,9 @@ export function ProjectCard({
   const overflowCount = members.length - visibleMembers.length;
 
   // Navigation href — always goes to overview page when versions exist
-  const overviewHref = hasVersions
+  const overviewHref = overviewHrefOverride ?? (hasVersions
     ? `/projects/${project.id}/versions/${project.latestVersionId}`
-    : "#";
+    : "#");
 
   // Card content (shared between Link and div wrappers)
   const cardContent = (

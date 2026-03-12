@@ -97,13 +97,21 @@ export function MilestoneProgressBar({
   currentStage,
   projectId,
   versionId,
+  basePath,
 }: {
   currentStage: WorkflowStage;
   projectId: string;
   versionId: string;
+  /** Override base URL for all milestone links (e.g. "/project-v4") */
+  basePath?: string;
 }) {
   const pathname = usePathname();
-  const base = `/projects/${projectId}/versions/${versionId}`;
+  const base = basePath ?? `/projects/${projectId}/versions/${versionId}`;
+
+  // When basePath is provided, overview lives at /overview instead of root
+  const milestones = basePath
+    ? MILESTONES.map((m) => (m.key === "overview" ? { ...m, path: "/overview" } : m))
+    : MILESTONES;
   const activeMilestone = getActiveMilestone(pathname);
   const completedUpTo = getCompletedIndex(currentStage, pathname, projectId);
 
@@ -112,8 +120,8 @@ export function MilestoneProgressBar({
       className="flex items-center justify-center px-4 py-2 border-b bg-muted/30 shrink-0"
       aria-label="Project milestones"
     >
-      <div className="grid w-full max-w-4xl" style={{ gridTemplateColumns: `repeat(${MILESTONES.length}, 1fr)` }}>
-        {MILESTONES.map((milestone, index) => {
+      <div className="grid w-full max-w-4xl" style={{ gridTemplateColumns: `repeat(${milestones.length}, 1fr)` }}>
+        {milestones.map((milestone, index) => {
           const isActive = milestone.key === activeMilestone;
           const isCompleted = index < completedUpTo;
           // Milestone is unlocked if the workflow stage naturally allows it,

@@ -362,6 +362,7 @@ function ProjectListRow({
   onGenerateSubmittal,
   onManageTeam,
   isAdmin = false,
+  overviewHrefOverride,
 }: {
   project: Project;
   onNameClick: (project: Project) => void;
@@ -369,12 +370,14 @@ function ProjectListRow({
   onGenerateSubmittal?: (project: Project) => void;
   onManageTeam?: (project: Project) => void;
   isAdmin?: boolean;
+  /** Override the default overview navigation href */
+  overviewHrefOverride?: string;
 }) {
   const router = useRouter();
   const confidence = project.confidenceSummary.overallConfidence;
 
   const hasVersions = !!project.latestVersionId;
-  const overviewHref = `/projects/${project.id}/versions/${project.latestVersionId}`;
+  const overviewHref = overviewHrefOverride ?? `/projects/${project.id}/versions/${project.latestVersionId}`;
 
   // Check if project has documents in its latest version
   const hasDocuments = hasVersions && getDocumentsByVersion(
@@ -1280,7 +1283,15 @@ function DownloadReportSheet({
 /*  Main Component                                                             */
 /* -------------------------------------------------------------------------- */
 
-export function ProjectList() {
+export function ProjectList({
+  overviewBasePath,
+  createHref,
+}: {
+  /** When provided, all project cards navigate to `${overviewBasePath}/overview` */
+  overviewBasePath?: string;
+  /** Override the "Create New Project" link href (defaults to "/projects/create") */
+  createHref?: string;
+} = {}) {
   const {
     projects,
     search,
@@ -1391,7 +1402,7 @@ export function ProjectList() {
           description="Try adjusting your search or filters, or create a new project to get started."
         >
           <Link
-            href="/projects/create"
+            href={createHref ?? "/projects/create"}
             className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md text-sm font-semibold gradient-action text-white border-0 hover:opacity-90 transition-opacity"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
@@ -1409,6 +1420,7 @@ export function ProjectList() {
               onGenerateSubmittal={handleGenerateSubmittal}
               onManageTeam={handleManageTeam}
               isAdmin={true}
+              overviewHrefOverride={overviewBasePath ? `${overviewBasePath}/overview` : undefined}
             />
           ))}
         </div>
@@ -1450,6 +1462,7 @@ export function ProjectList() {
                   onGenerateSubmittal={handleGenerateSubmittal}
                   onManageTeam={handleManageTeam}
                   isAdmin={true}
+                  overviewHrefOverride={overviewBasePath ? `${overviewBasePath}/overview` : undefined}
                 />
               ))}
             </tbody>

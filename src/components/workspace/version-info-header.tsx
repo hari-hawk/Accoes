@@ -55,18 +55,21 @@ export function VersionInfoHeader({
   project,
   onProjectNameClick,
   actions,
+  backHref,
 }: {
   version: Version;
   project: Project;
   onProjectNameClick?: () => void;
   /** Optional action buttons rendered on the right side */
   actions?: React.ReactNode;
+  /** Override back button destination (defaults to "/projects") */
+  backHref?: string;
 }) {
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b bg-background shrink-0">
       <div className="flex items-center gap-3 min-w-0">
         <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" asChild>
-          <Link href="/projects" aria-label="Back to projects">
+          <Link href={backHref ?? "/projects"} aria-label="Back to projects">
             <ArrowLeft className="h-3.5 w-3.5" />
           </Link>
         </Button>

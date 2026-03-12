@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   CheckCircle2,
   AlertTriangle,
@@ -147,17 +147,17 @@ function MaterialListItem({
               className={cn(
                 "flex items-center gap-1 shrink-0 text-[10px] font-semibold rounded-full px-2 py-0.5 transition-all cursor-pointer border",
                 isAlternative
-                  ? "bg-yellow-50 border-yellow-300 text-yellow-700"
-                  : "bg-transparent border-transparent text-muted-foreground hover:text-yellow-700 hover:bg-yellow-50/50"
+                  ? "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700 text-yellow-700 dark:text-yellow-400"
+                  : "bg-transparent border-transparent text-muted-foreground hover:text-yellow-700 dark:hover:text-yellow-400 hover:bg-yellow-50/50 dark:hover:bg-yellow-900/20"
               )}
               aria-label={`Mark ${item.document.fileName} as alternate`}
               aria-pressed={!!isAlternative}
             >
               <span className={cn(
                 "h-3 w-3 rounded-full border-2 flex items-center justify-center shrink-0",
-                isAlternative ? "border-yellow-500" : "border-muted-foreground/40"
+                isAlternative ? "border-yellow-500 dark:border-yellow-400" : "border-muted-foreground/40"
               )}>
-                {isAlternative && <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />}
+                {isAlternative && <span className="h-1.5 w-1.5 rounded-full bg-yellow-500 dark:bg-yellow-400" />}
               </span>
               Alternate
             </button>
@@ -222,12 +222,12 @@ function MaterialListItem({
         {(item.document.indexCategory || item.document.systemCategory) && (
           <div className="flex items-center gap-1.5 mt-1.5">
             {item.document.indexCategory && (
-              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200">
+              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-200 dark:ring-blue-800">
                 {item.document.indexCategory}
               </span>
             )}
             {item.document.systemCategory && (
-              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200">
+              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 ring-1 ring-inset ring-slate-200 dark:ring-slate-700">
                 {item.document.systemCategory}
               </span>
             )}
@@ -360,6 +360,22 @@ export function MaterialList({
     alternative: alternativeCount,
   };
 
+  // Scroll selected item into view
+  const listRef = useRef<HTMLDivElement>(null);
+  const scrollToSelected = useCallback(() => {
+    if (!selectedId || !listRef.current) return;
+    const el = listRef.current.querySelector(`[data-item-id="${selectedId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [selectedId]);
+
+  useEffect(() => {
+    // Small delay so layout settles after render
+    const t = setTimeout(scrollToSelected, 50);
+    return () => clearTimeout(t);
+  }, [scrollToSelected]);
+
   const allChecked =
     materials.length > 0 &&
     materials.every((m) => checkedIds.has(m.document.id));
@@ -372,7 +388,7 @@ export function MaterialList({
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background" role="region" aria-label="Material list panel">
       {/* Filter header */}
-      <div className="border-b p-3 space-y-2 shrink-0 bg-background" role="search" aria-label="Filter materials">
+      <div className="border-b p-3 space-y-2 shrink-0 bg-muted/30" role="search" aria-label="Filter materials">
         {/* Row 1: Search + Sort */}
         <div className="flex items-center gap-2">
           <SearchInput
@@ -610,7 +626,7 @@ export function MaterialList({
             ))}
             {/* Index category chips */}
             {[...indexCategoryFilter].map((cat) => (
-              <span key={`idx-${cat}`} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-blue-50 text-blue-700">
+              <span key={`idx-${cat}`} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
                 {cat}
                 <button type="button" className="hover:opacity-70 transition-opacity" onClick={() => onIndexCategoryToggle(cat)} aria-label={`Remove ${cat} filter`}>
                   <X className="h-2.5 w-2.5" />
@@ -619,7 +635,7 @@ export function MaterialList({
             ))}
             {/* System category chips */}
             {[...systemCategoryFilter].map((sys) => (
-              <span key={`sys-${sys}`} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-slate-100 text-slate-600">
+              <span key={`sys-${sys}`} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300">
                 {sys}
                 <button type="button" className="hover:opacity-70 transition-opacity" onClick={() => onSystemCategoryToggle(sys)} aria-label={`Remove ${sys} filter`}>
                   <X className="h-2.5 w-2.5" />
@@ -672,19 +688,20 @@ export function MaterialList({
       {/* Material items — scrollable */}
       <div className="flex-1 min-h-0 overflow-hidden relative">
         <ScrollArea className="absolute inset-0">
-          <div className="w-full" role="list" aria-label="Material items">
+          <div ref={listRef} className="w-full" role="list" aria-label="Material items">
             {materials.map((item) => (
-              <MaterialListItem
-                key={item.document.id}
-                item={item}
-                isSelected={selectedId === item.document.id}
-                isChecked={checkedIds.has(item.document.id)}
-                decision={decisions[item.document.id]}
-                isAlternative={alternativeIds?.has(item.document.id)}
-                onSelect={() => onSelect(item.document.id)}
-                onToggleCheck={() => onToggleCheck(item.document.id)}
-                onToggleAlternative={onToggleAlternative ? () => onToggleAlternative(item.document.id) : undefined}
-              />
+              <div key={item.document.id} data-item-id={item.document.id}>
+                <MaterialListItem
+                  item={item}
+                  isSelected={selectedId === item.document.id}
+                  isChecked={checkedIds.has(item.document.id)}
+                  decision={decisions[item.document.id]}
+                  isAlternative={alternativeIds?.has(item.document.id)}
+                  onSelect={() => onSelect(item.document.id)}
+                  onToggleCheck={() => onToggleCheck(item.document.id)}
+                  onToggleAlternative={onToggleAlternative ? () => onToggleAlternative(item.document.id) : undefined}
+                />
+              </div>
             ))}
             {materials.length === 0 && (
               <div className="p-8 text-center text-sm text-muted-foreground">

@@ -173,7 +173,7 @@ export default function ReviewPage() {
               size="sm"
               variant="outline"
               onClick={batchToggleAlternative}
-              className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+              className="border-yellow-300 dark:border-yellow-700 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
             >
               <Replace className="mr-1.5 h-3.5 w-3.5" />
               Alternate

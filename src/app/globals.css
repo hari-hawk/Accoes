@@ -237,10 +237,33 @@
   --sidebar-border: #3a4050;
   --sidebar-ring: #787878;
 
-  /* Dark mode status background variants */
+  /* Dark mode status colors — lighter for contrast on dark backgrounds */
+  --status-pre-approved: #34D399;
+  --status-review-required: #FB923C;
+  --status-action-mandatory: #F87171;
   --status-pre-approved-bg: #1a3029;
   --status-review-required-bg: #2e2118;
   --status-action-mandatory-bg: #2e1a1a;
+
+  /* Confidence — match status */
+  --confidence-high: #34D399;
+  --confidence-medium: #FB923C;
+  --confidence-low: #F87171;
+
+  /* Design system neutrals — inverted for dark backgrounds */
+  --color-ds-neutral-900: #F0F0F0;
+  --color-ds-neutral-800: #D8D8D8;
+  --color-ds-neutral-700: #C0C0C0;
+  --color-ds-neutral-600: #A8A8A8;
+  --color-ds-neutral-500: #838383;
+  --color-ds-neutral-400: #616161;
+  --color-ds-neutral-300: #4A4A4A;
+  --color-ds-neutral-200: #3a4050;
+  --color-ds-neutral-100: #2a3040;
+
+  /* Design system backgrounds */
+  --color-ds-bg-gray: #2a3040;
+  --color-ds-bg-gray-light: #222838;
 }
 
 @layer base {
@@ -321,6 +344,9 @@
   }
   .gradient-page {
     background: linear-gradient(180deg, #EFF4FF 0%, #F9FAFB 100%);
+  }
+  .dark .gradient-page {
+    background: linear-gradient(180deg, #1a1f2e 0%, #222838 100%);
   }
   .text-gradient {
     background: linear-gradient(135deg, #00529B, #1A7FD4);

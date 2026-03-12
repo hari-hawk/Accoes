@@ -708,7 +708,7 @@ export default function ProjectV3Page() {
               size="sm"
               variant="outline"
               onClick={batchToggleAlternative}
-              className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+              className="border-yellow-300 dark:border-yellow-700 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
             >
               <Replace className="h-4 w-4 mr-1" /> Alternate
             </Button>
@@ -1132,15 +1132,15 @@ function TradeGroup({
                       className={cn(
                         "inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border transition-colors whitespace-nowrap",
                         isAlt
-                          ? "border-yellow-400 bg-yellow-50 text-yellow-700 font-medium"
-                          : "border-muted-foreground/30 text-muted-foreground hover:border-yellow-400 hover:text-yellow-600"
+                          ? "border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 font-medium"
+                          : "border-muted-foreground/30 text-muted-foreground hover:border-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-400"
                       )}
                     >
                       <span
                         className={cn(
                           "h-3 w-3 rounded-full border-2 flex items-center justify-center shrink-0",
                           isAlt
-                            ? "border-yellow-500 bg-yellow-500"
+                            ? "border-yellow-500 dark:border-yellow-400 bg-yellow-500 dark:bg-yellow-400"
                             : "border-muted-foreground/40 bg-transparent"
                         )}
                       >

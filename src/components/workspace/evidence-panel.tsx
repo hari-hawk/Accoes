@@ -97,7 +97,7 @@ function PSTabContent({
       </div>
 
       {/* AI Analysis card */}
-      <div className="rounded-md border border-border/70 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3.5 space-y-2.5">
+      <div className="rounded-md border border-border/70 bg-card shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3.5 space-y-2.5">
         <h4 className="text-[11px] text-ds-neutral-600 font-medium uppercase tracking-wider">
           AI Analysis
         </h4>
@@ -139,7 +139,7 @@ function PSTabContent({
         </div>
 
         {validation.evidenceItems.map((ev) => (
-          <div key={ev.id} className="rounded-md border border-border/70 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3 space-y-2">
+          <div key={ev.id} className="rounded-md border border-border/70 bg-card shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-ds-neutral-600">
                 {ev.sourceFileName}
@@ -247,7 +247,7 @@ function PITabContent({
             <AccordionItem
               key={match.id}
               value={`match-${index}`}
-              className="rounded-md border border-border/70 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden"
+              className="rounded-md border border-border/70 bg-card shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden"
             >
               <AccordionTrigger className="px-3.5 py-2.5 hover:no-underline [&[data-state=open]>svg]:rotate-180">
                 <MatchCardHeader match={match} index={index + 1} total={matchCount} />
@@ -261,7 +261,7 @@ function PITabContent({
       ) : (
         <div className="space-y-2">
           {displayMatches.map((match, index) => (
-            <div key={match.id} className="rounded-md border border-border/70 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div key={match.id} className="rounded-md border border-border/70 bg-card shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
               <div className="px-3.5 py-2.5">
                 <MatchCardHeader match={match} index={index + 1} total={matchCount} />
               </div>
@@ -273,7 +273,7 @@ function PITabContent({
 
       {/* Discrepancy cards — still shown if evidence contradicts */}
       {validation.evidenceItems.some((ev) => ev.relevance === "contradicts") && (
-        <div className="rounded-md border border-border/70 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+        <div className="rounded-md border border-border/70 bg-card shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
           <div className="flex items-center gap-2 px-3.5 py-2.5 border-b bg-status-action-mandatory/5">
             <AlertTriangle className="h-3.5 w-3.5 text-status-action-mandatory" />
             <span className="text-[13px] font-medium text-ds-neutral-900">Discrepancy Found</span>

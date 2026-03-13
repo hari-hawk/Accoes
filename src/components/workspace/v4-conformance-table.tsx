@@ -611,6 +611,7 @@ export function V4ConformanceSection() {
   const [commentItemId, setCommentItemId] = useState<string | null>(null);
   const [pdfPreviewRef, setPdfPreviewRef] = useState<string | null>(null);
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, ValidationStatus>>({});
 
   /* Unique filter options */
   const uniqueTrades = useMemo(
@@ -691,20 +692,29 @@ export function V4ConformanceSection() {
     return result;
   }, [search, tradeFilter, categoryFilter, systemFilter, materialTypeFilter, allSystemFilter, statusFilter, sortBy]);
 
+  /* Apply status overrides so approve/revisit actions reflect in the table */
+  const effectiveData = useMemo(() => {
+    const hasOverrides = Object.keys(statusOverrides).length > 0;
+    if (!hasOverrides) return filteredData;
+    return filteredData.map((item) =>
+      statusOverrides[item.id] ? { ...item, aiStatus: statusOverrides[item.id] } : item
+    );
+  }, [filteredData, statusOverrides]);
+
   /* Trade-grouped data */
   const groupedByTrade = useMemo(() => {
     const map = new Map<string, V4ConformanceItem[]>();
     for (const trade of V4_TRADE_ORDER) {
-      const items = filteredData.filter((m) => m.trade === trade);
+      const items = effectiveData.filter((m) => m.trade === trade);
       if (items.length > 0) {
         map.set(trade, items);
       }
     }
     return map;
-  }, [filteredData]);
+  }, [effectiveData]);
 
   /* Status counts */
-  const statusCounts = useMemo(() => getV4StatusCounts(filteredData), [filteredData]);
+  const statusCounts = useMemo(() => getV4StatusCounts(effectiveData), [effectiveData]);
 
   /* Selected item */
   const selectedItem = useMemo(
@@ -1025,7 +1035,18 @@ export function V4ConformanceSection() {
             <Button
               size="sm"
               onClick={() => {
-                toast.success(`${checkedIds.size} item(s) approved`);
+                const ids = Array.from(checkedIds);
+                setStatusOverrides((prev) => {
+                  const next = { ...prev };
+                  for (const id of ids) next[id] = "pre_approved";
+                  return next;
+                });
+                setReviewedIds((prev) => {
+                  const next = new Set(prev);
+                  for (const id of ids) next.add(id);
+                  return next;
+                });
+                toast.success(`${ids.length} item(s) approved`);
                 setCheckedIds(new Set());
               }}
             >
@@ -1035,7 +1056,18 @@ export function V4ConformanceSection() {
               size="sm"
               variant="outline"
               onClick={() => {
-                toast.success(`${checkedIds.size} item(s) marked for revisit`);
+                const ids = Array.from(checkedIds);
+                setStatusOverrides((prev) => {
+                  const next = { ...prev };
+                  for (const id of ids) next[id] = "review_required";
+                  return next;
+                });
+                setReviewedIds((prev) => {
+                  const next = new Set(prev);
+                  for (const id of ids) next.add(id);
+                  return next;
+                });
+                toast.success(`${ids.length} item(s) marked for revisit`);
                 setCheckedIds(new Set());
               }}
             >
@@ -1155,11 +1187,11 @@ export function V4ConformanceSection() {
         <Button
           className={cn(
             "shrink-0",
-            reviewedIds.size > 0 && reviewedIds.size >= filteredData.length
+            reviewedIds.size > 0
               ? "gradient-accent text-white shadow-glow"
               : "bg-muted text-muted-foreground cursor-not-allowed"
           )}
-          disabled={reviewedIds.size === 0 || reviewedIds.size < filteredData.length}
+          disabled={reviewedIds.size === 0}
           onClick={() => toast.success("Proceeding to Preview Cover...")}
         >
           <Eye className="h-4 w-4 mr-1" />

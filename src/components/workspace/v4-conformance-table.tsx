@@ -17,6 +17,9 @@ import {
   Download,
   Send,
   Eye,
+  ArrowUpDown,
+  ArrowDownAZ,
+  ArrowUpAZ,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +48,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   v4ConformanceData,
   V4_TRADE_ORDER,
@@ -279,10 +287,8 @@ const MOCK_COMMENTS = [
 
 function V4ItemComments({
   item,
-  onClose,
 }: {
   item: V4ConformanceItem | null;
-  onClose: () => void;
 }) {
   const [newComment, setNewComment] = useState("");
 
@@ -292,12 +298,7 @@ function V4ItemComments({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="px-5 py-4 border-b shrink-0 space-y-1">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold">Comments</h4>
-          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+        <h4 className="text-sm font-semibold">Comments</h4>
         <p className="text-xs text-muted-foreground font-mono">{item.accoMaterialId}</p>
         <p className="text-xs text-muted-foreground truncate">{item.description}</p>
       </div>
@@ -333,26 +334,33 @@ function V4ItemComments({
         </ScrollArea>
       </div>
 
-      {/* Comment input */}
-      <div className="shrink-0 border-t p-4 space-y-2">
-        <Textarea
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Add a comment..."
-          rows={2}
-          className="resize-none text-sm"
-        />
-        <div className="flex justify-end">
-          <Button
-            size="sm"
+      {/* Comment input — inline send icon */}
+      <div className="shrink-0 border-t p-4">
+        <div className="relative">
+          <Textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Add a comment..."
+            rows={2}
+            className="resize-none text-sm pr-10"
+          />
+          <button
+            type="button"
             disabled={!newComment.trim()}
             onClick={() => {
               toast.success("Comment added");
               setNewComment("");
             }}
+            className={cn(
+              "absolute right-2 bottom-2 h-7 w-7 rounded-md flex items-center justify-center transition-colors",
+              newComment.trim()
+                ? "bg-primary text-white hover:bg-primary/90"
+                : "bg-muted text-muted-foreground cursor-not-allowed"
+            )}
+            aria-label="Send comment"
           >
-            <Send className="h-3.5 w-3.5 mr-1" /> Send
-          </Button>
+            <Send className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
     </div>
@@ -552,7 +560,7 @@ function V4TradeGroup({
                     >
                       {isAlt && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
                     </span>
-                    Alt
+                    Alternate
                   </button>
                 </div>
               </td>
@@ -589,6 +597,7 @@ export function V4ConformanceSection() {
   const [materialTypeFilter, setMaterialTypeFilter] = useState<string>("all");
   const [allSystemFilter, setAllSystemFilter] = useState<string>("all");
   const [matrixFileFilter, setMatrixFileFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("category");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
@@ -648,6 +657,9 @@ export function V4ConformanceSection() {
       const isAll = allSystemFilter === "yes";
       result = result.filter((m) => m.allSystem === isAll);
     }
+    if (statusFilter !== "all") {
+      result = result.filter((m) => m.aiStatus === statusFilter);
+    }
 
     // Sort
     result = [...result];
@@ -673,7 +685,7 @@ export function V4ConformanceSection() {
     }
 
     return result;
-  }, [search, tradeFilter, categoryFilter, systemFilter, materialTypeFilter, allSystemFilter, sortBy]);
+  }, [search, tradeFilter, categoryFilter, systemFilter, materialTypeFilter, allSystemFilter, statusFilter, sortBy]);
 
   /* Trade-grouped data */
   const groupedByTrade = useMemo(() => {
@@ -731,11 +743,12 @@ export function V4ConformanceSection() {
   }, []);
 
   const handleSelectRow = useCallback((id: string) => {
+    setCommentItemId(null);
     setSelectedId((prev) => (prev === id ? null : id));
   }, []);
 
   const hasActiveFilters =
-    search !== "" || tradeFilter !== "all" || categoryFilter !== "all" || systemFilter !== "all" || materialTypeFilter !== "all" || allSystemFilter !== "all" || matrixFileFilter !== "all" || sortBy !== "category";
+    search !== "" || tradeFilter !== "all" || categoryFilter !== "all" || systemFilter !== "all" || materialTypeFilter !== "all" || allSystemFilter !== "all" || matrixFileFilter !== "all" || statusFilter !== "all" || sortBy !== "category";
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
@@ -745,6 +758,7 @@ export function V4ConformanceSection() {
     setMaterialTypeFilter("all");
     setAllSystemFilter("all");
     setMatrixFileFilter("all");
+    setStatusFilter("all");
     setSortBy("category");
   }, []);
 
@@ -862,33 +876,65 @@ export function V4ConformanceSection() {
             </Select>
           </div>
 
-          {/* Sort */}
+          {/* AI Status */}
           <div className="min-w-0">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full" aria-label="Sort order">
-                <SelectValue placeholder="Sort by" />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full" aria-label="Filter by AI status">
+                <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="category">Index Category</SelectItem>
-                <SelectItem value="description-asc">Description A-Z</SelectItem>
-                <SelectItem value="description-desc">Description Z-A</SelectItem>
-                <SelectItem value="material-id">Material ID</SelectItem>
-                <SelectItem value="status">Status</SelectItem>
-                <SelectItem value="material-type">Material Type</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="pre_approved">Pre-Approved</SelectItem>
+                <SelectItem value="review_required">Review Required</SelectItem>
+                <SelectItem value="action_mandatory">Action Required</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        {/* Clear Filters */}
-        {hasActiveFilters && (
-          <div className="flex justify-end">
+        {/* Sort + Clear Filters */}
+        <div className="flex items-center justify-between">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+                <ArrowUpDown className="h-3.5 w-3.5" />
+                {sortBy === "category" ? "Sort" : sortBy === "description-asc" ? "A → Z" : sortBy === "description-desc" ? "Z → A" : sortBy === "material-id" ? "Material ID" : sortBy === "status" ? "Status" : "Type"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-1" align="start">
+              {[
+                { value: "category", label: "Default (Category)", icon: null },
+                { value: "description-asc", label: "Description A → Z", icon: ArrowDownAZ },
+                { value: "description-desc", label: "Description Z → A", icon: ArrowUpAZ },
+                { value: "material-id", label: "Material ID", icon: null },
+                { value: "status", label: "Status", icon: null },
+                { value: "material-type", label: "Material Type", icon: null },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setSortBy(opt.value)}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors text-left",
+                    sortBy === opt.value
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "hover:bg-muted text-foreground"
+                  )}
+                >
+                  {opt.icon ? <opt.icon className="h-3.5 w-3.5 shrink-0" /> : <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" />}
+                  {opt.label}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
+
+          {hasActiveFilters && (
             <Button variant="ghost" size="sm" className="text-xs h-8 gap-1" onClick={handleClearFilters}>
               <X className="h-3 w-3" aria-hidden="true" />
               Clear Filters
             </Button>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Status counts */}
         <div className="flex items-center gap-4 pt-3 border-t text-sm">
@@ -979,14 +1025,14 @@ export function V4ConformanceSection() {
           <div className="p-12 text-center">
             <Search className="h-8 w-8 text-muted-foreground/40 mx-auto mb-3" />
             <p className="text-sm font-medium text-muted-foreground">No entries match your filters</p>
-            <Button variant="outline" size="sm" className="mt-3" onClick={handleClearFilters}>
-              <X className="mr-1.5 h-4 w-4" /> Clear Filters
+            <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={handleClearFilters}>
+              <X className="h-4 w-4" /> Clear Filters
             </Button>
           </div>
         ) : (
           <div className="rounded-xl border bg-card shadow-card overflow-hidden">
             <table className="w-full table-fixed" aria-label="Trade-grouped conformance specifications">
-              <colgroup><col className="w-[40px]" /><col className="w-[32px]" /><col className="w-[160px]" /><col className="w-[80px]" /><col className="w-[120px]" /><col /><col className="w-[90px]" /><col className="w-[120px]" /><col className="w-[90px]" /><col className="w-[130px]" /><col className="w-[120px]" /><col className="w-[80px]" /><col className="w-[40px]" /><col className="w-[8px]" /></colgroup>
+              <colgroup><col className="w-[40px]" /><col className="w-[32px]" /><col className="w-[160px]" /><col className="w-[80px]" /><col className="w-[120px]" /><col /><col className="w-[90px]" /><col className="w-[120px]" /><col className="w-[90px]" /><col className="w-[130px]" /><col className="w-[120px]" /><col className="w-[100px]" /><col className="w-[40px]" /><col className="w-[8px]" /></colgroup>
               <thead className="sticky top-0 z-10 bg-card">
                 <tr className="border-b bg-muted/30">
                   <th scope="col" className="p-3" aria-label="Select all">
@@ -1036,7 +1082,7 @@ export function V4ConformanceSection() {
       </div>
 
       {/* Bottom static panel — review progress + Proceed CTA */}
-      <div className="shrink-0 border-t bg-card px-12 py-2.5 flex items-center justify-between gap-4">
+      <div className="shrink-0 border-t bg-card px-12 py-2.5 flex items-center justify-between gap-4 shadow-[0_-4px_12px_-2px_rgba(0,0,0,0.08)]">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <span className="text-sm font-medium whitespace-nowrap">
             <span className="font-semibold tabular-nums">{reviewedIds.size}</span>
@@ -1053,39 +1099,47 @@ export function V4ConformanceSection() {
           </span>
         </div>
         <Button
-          className="gradient-accent text-white shadow-glow shrink-0"
+          className={cn(
+            "shrink-0",
+            reviewedIds.size > 0 && reviewedIds.size >= filteredData.length
+              ? "gradient-accent text-white shadow-glow"
+              : "bg-muted text-muted-foreground cursor-not-allowed"
+          )}
+          disabled={reviewedIds.size === 0 || reviewedIds.size < filteredData.length}
           onClick={() => toast.success("Proceeding to Preview Cover...")}
         >
+          <Eye className="h-4 w-4 mr-1" />
           Proceed to Preview Cover
           <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
 
-      {/* Right-side overlay panel — Sheet (evidence or per-row comments) */}
-      <Sheet
-        open={!!selectedItem || !!commentItemId}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedId(null);
-            setCommentItemId(null);
-          }
-        }}
-      >
+      {/* Right-side overlay panel — Evidence Sheet */}
+      <Sheet open={!!selectedItem && !commentItemId} onOpenChange={(open) => { if (!open) setSelectedId(null); }}>
         <SheetContent side="right" className="w-[40vw] min-w-[480px] max-w-[720px] p-0 flex flex-col">
           <SheetHeader className="sr-only">
-            <SheetTitle>{commentItemId ? "Item Comments" : "Material Evidence"}</SheetTitle>
+            <SheetTitle>Material Evidence</SheetTitle>
           </SheetHeader>
-          {commentItemId ? (
-            <V4ItemComments
-              item={v4ConformanceData.find((m) => m.id === commentItemId) ?? null}
-              onClose={() => setCommentItemId(null)}
-            />
-          ) : selectedItem ? (
+          {selectedItem && (
             <V4EvidenceDetail
               item={selectedItem}
               onViewPdf={(ref) => setPdfPreviewRef(ref)}
             />
-          ) : null}
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Right-side overlay panel — Comments Sheet */}
+      <Sheet open={!!commentItemId} onOpenChange={(open) => { if (!open) setCommentItemId(null); }}>
+        <SheetContent side="right" className="w-[40vw] min-w-[480px] max-w-[720px] p-0 flex flex-col">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Item Comments</SheetTitle>
+          </SheetHeader>
+          {commentItemId && (
+            <V4ItemComments
+              item={v4ConformanceData.find((m) => m.id === commentItemId) ?? null}
+            />
+          )}
         </SheetContent>
       </Sheet>
 
@@ -1096,31 +1150,41 @@ export function V4ConformanceSection() {
             <DialogTitle>Add Comment to {checkedIds.size} Item(s)</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <Textarea
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Type your comment here..."
-              rows={4}
-              className="resize-none"
-            />
+            <div className="relative">
+              <Textarea
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Type your comment here..."
+                rows={4}
+                className="resize-none pr-10"
+              />
+              <button
+                type="button"
+                disabled={!commentText.trim()}
+                onClick={() => {
+                  toast.success(`Comment added to ${checkedIds.size} item(s)`);
+                  setCommentDialogOpen(false);
+                  setCommentText("");
+                  setCheckedIds(new Set());
+                }}
+                className={cn(
+                  "absolute right-2 bottom-2 h-8 w-8 rounded-md flex items-center justify-center transition-colors",
+                  commentText.trim()
+                    ? "bg-primary text-white hover:bg-primary/90"
+                    : "bg-muted text-muted-foreground cursor-not-allowed"
+                )}
+                aria-label="Send comment"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </div>
             <p className="text-xs text-muted-foreground">
               This comment will be added to all {checkedIds.size} selected item(s).
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setCommentDialogOpen(false); setCommentText(""); }}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                toast.success(`Comment added to ${checkedIds.size} item(s)`);
-                setCommentDialogOpen(false);
-                setCommentText("");
-                setCheckedIds(new Set());
-              }}
-              disabled={!commentText.trim()}
-            >
-              <Send className="h-4 w-4 mr-1" /> Send Comment
+              <X className="h-4 w-4 mr-1" /> Cancel
             </Button>
           </DialogFooter>
         </DialogContent>

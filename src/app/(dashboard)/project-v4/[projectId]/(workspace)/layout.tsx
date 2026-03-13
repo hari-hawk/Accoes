@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Share2, Link2, Mail, Check, Plus } from "lucide-react";
 import { MilestoneProgressBar } from "@/components/layout/milestone-progress-bar";
@@ -154,11 +155,20 @@ export default function V4WorkspaceLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const project = mockProjects.find((p) => p.id === "proj-1")!;
-  const version = getVersion("ver-1")!;
+  const params = useParams<{ projectId: string }>();
+  const project = mockProjects.find((p) => p.id === params.projectId);
+  const version = project ? getVersion(project.latestVersionId) : undefined;
 
   const [detailOpen, setDetailOpen] = useState(false);
   const handleProjectNameClick = () => setDetailOpen(true);
+
+  if (!project || !version) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <p className="text-muted-foreground">Project or version not found.</p>
+      </div>
+    );
+  }
 
   return (
     <WorkspaceProvider project={project} version={version}>
@@ -174,7 +184,7 @@ export default function V4WorkspaceLayout({
           currentStage={version.workflowStage}
           projectId={project.id}
           versionId={version.id}
-          basePath="/project-v4"
+          basePath={`/project-v4/${project.id}`}
         />
         <main className="flex-1 min-h-0 overflow-hidden relative">{children}</main>
       </div>

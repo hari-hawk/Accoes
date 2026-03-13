@@ -64,8 +64,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { mockProjects } from "@/data/mock-projects";
-import { getVersion } from "@/data/mock-versions";
+import { useWorkspace } from "@/providers/workspace-provider";
 import { FullScreenPdfViewer } from "@/components/documents/full-screen-pdf-viewer";
 import { FileUploadCard } from "@/components/projects/file-upload-card";
 import { mockUsers } from "@/data/mock-users";
@@ -689,8 +688,7 @@ function ProjectInsightsSection({
 /* -------------------------------------------------------------------------- */
 
 export default function ProjectV4OverviewPage() {
-  const project = mockProjects.find((p) => p.id === "proj-1")!;
-  const version = getVersion("ver-1")!;
+  const { project, version } = useWorkspace();
   const router = useRouter();
   const { confidenceSummary } = version;
 
@@ -824,10 +822,10 @@ export default function ProjectV4OverviewPage() {
           <MaterialIndexGridCard
             onUpload={() => setUploadDialogOpen(true)}
             onFileClick={() => {
-              router.push(`/project-v4/review`);
+              router.push(`/project-v4/${project.id}/review`);
             }}
             onHistoryFileClick={() => {
-              router.push(`/project-v4/review?mode=readonly`);
+              router.push(`/project-v4/${project.id}/review?mode=readonly`);
             }}
             versionId={version.id}
           />
@@ -1334,7 +1332,7 @@ export default function ProjectV4OverviewPage() {
       <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-end">
         <Button
           className="gradient-accent text-white border-0 gap-2 font-semibold px-6"
-          onClick={() => router.push(`/project-v4/review`)}
+          onClick={() => router.push(`/project-v4/${project.id}/review`)}
         >
           <BookOpen className="h-4 w-4" />
           Next

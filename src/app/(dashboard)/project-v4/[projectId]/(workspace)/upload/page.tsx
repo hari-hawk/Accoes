@@ -13,9 +13,11 @@ import {
 } from "@/components/ui/select";
 import { UploadDropzone } from "@/components/upload/upload-dropzone";
 import { FileList, type UploadFile } from "@/components/upload/file-list";
+import { useWorkspace } from "@/providers/workspace-provider";
 
 export default function V4UploadPage() {
   const router = useRouter();
+  const { project } = useWorkspace();
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [specVersion, setSpecVersion] = useState("rev-b");
 
@@ -90,7 +92,7 @@ export default function V4UploadPage() {
             className="w-full"
             disabled={!allComplete}
             onClick={() => {
-              router.push(`/project-v4/processing`);
+              router.push(`/project-v4/${project.id}/processing`);
             }}
           >
             <Rocket className="mr-2 h-4 w-4" />

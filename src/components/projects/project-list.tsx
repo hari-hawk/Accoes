@@ -1287,7 +1287,7 @@ export function ProjectList({
   overviewBasePath,
   createHref,
 }: {
-  /** When provided, all project cards navigate to `${overviewBasePath}/overview` */
+  /** When provided, project cards navigate to `${overviewBasePath}/${projectId}/overview` */
   overviewBasePath?: string;
   /** Override the "Create New Project" link href (defaults to "/projects/create") */
   createHref?: string;
@@ -1420,7 +1420,7 @@ export function ProjectList({
               onGenerateSubmittal={handleGenerateSubmittal}
               onManageTeam={handleManageTeam}
               isAdmin={true}
-              overviewHrefOverride={overviewBasePath ? `${overviewBasePath}/overview` : undefined}
+              overviewHrefOverride={overviewBasePath ? `${overviewBasePath}/${project.id}/overview` : undefined}
             />
           ))}
         </div>
@@ -1462,7 +1462,7 @@ export function ProjectList({
                   onGenerateSubmittal={handleGenerateSubmittal}
                   onManageTeam={handleManageTeam}
                   isAdmin={true}
-                  overviewHrefOverride={overviewBasePath ? `${overviewBasePath}/overview` : undefined}
+                  overviewHrefOverride={overviewBasePath ? `${overviewBasePath}/${project.id}/overview` : undefined}
                 />
               ))}
             </tbody>

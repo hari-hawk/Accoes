@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMockProcessing } from "@/hooks/use-mock-processing";
 import { PROCESSING_STEPS } from "@/lib/constants";
+import { useWorkspace } from "@/providers/workspace-provider";
 import { cn } from "@/lib/utils";
 
 export default function V4ProcessingPage() {
   const router = useRouter();
+  const { project } = useWorkspace();
   const processing = useMockProcessing();
 
   // Auto-start processing on mount
@@ -143,7 +145,7 @@ export default function V4ProcessingPage() {
           </p>
           <Button
             onClick={() =>
-              router.push(`/project-v4/review`)
+              router.push(`/project-v4/${project.id}/review`)
             }
           >
             Continue to Review

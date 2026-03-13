@@ -29,8 +29,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { mockProjects } from "@/data/mock-projects";
-import { getVersion } from "@/data/mock-versions";
+import { useWorkspace } from "@/providers/workspace-provider";
 import { mockUsers } from "@/data/mock-users";
 import { productIndexSections } from "@/data/mock-product-index";
 import { getDocumentsByVersion } from "@/data/mock-documents";
@@ -83,8 +82,7 @@ function FieldDisplay({
 /* -------------------------------------------------------------------------- */
 
 export default function ProjectV4PreviewCoverPage() {
-  const project = mockProjects.find((p) => p.id === "proj-1")!;
-  const version = getVersion("ver-1")!;
+  const { project, version } = useWorkspace();
   const router = useRouter();
 
   // Read alternative item IDs from localStorage (set on conformance page)
@@ -628,7 +626,7 @@ export default function ProjectV4PreviewCoverPage() {
             className="gradient-accent text-white border-0 gap-2 font-semibold px-6"
             onClick={() =>
               router.push(
-                `/project-v4/submittal-binder`
+                `/project-v4/${project.id}/submittal-binder`
               )
             }
           >

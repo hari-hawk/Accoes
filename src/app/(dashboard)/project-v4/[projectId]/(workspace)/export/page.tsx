@@ -16,13 +16,9 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { mockProjects } from "@/data/mock-projects";
-import { getVersion } from "@/data/mock-versions";
+import { useWorkspace } from "@/providers/workspace-provider";
 import { cn } from "@/lib/utils";
 import type { ExportFormat } from "@/data/types";
-
-const project = mockProjects.find((p) => p.id === "proj-1")!;
-const version = getVersion("ver-1")!;
 
 const formats: {
   key: ExportFormat;
@@ -51,6 +47,7 @@ const formats: {
 ];
 
 export default function V4ExportPage() {
+  const { project, version } = useWorkspace();
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>("pdf");
   const [includeEvidence, setIncludeEvidence] = useState(true);
   const [includeComments, setIncludeComments] = useState(true);

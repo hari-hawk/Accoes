@@ -19,8 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { mockProjects } from "@/data/mock-projects";
-import { getVersion } from "@/data/mock-versions";
+import { useWorkspace } from "@/providers/workspace-provider";
 
 /* -------------------------------------------------------------------------- */
 /*  Constants                                                                    */
@@ -420,8 +419,7 @@ const specRows2: string[][] = [
 /* -------------------------------------------------------------------------- */
 
 export default function ProjectV4SubmittalBinderPage() {
-  const project = mockProjects.find((p) => p.id === "proj-1")!;
-  const version = getVersion("ver-1")!;
+  const { project, version } = useWorkspace();
 
   /* Loading state */
   const [loading, setLoading] = useState(true);

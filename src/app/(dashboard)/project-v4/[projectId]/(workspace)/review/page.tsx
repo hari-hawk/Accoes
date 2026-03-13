@@ -32,8 +32,7 @@ import {
 } from "@/components/ui/resizable";
 import { MaterialList } from "@/components/workspace/material-list";
 import { EvidencePanel } from "@/components/workspace/evidence-panel";
-import { mockProjects } from "@/data/mock-projects";
-import { getVersion } from "@/data/mock-versions";
+import { useWorkspace } from "@/providers/workspace-provider";
 import { useMaterials } from "@/hooks/use-materials";
 
 
@@ -47,8 +46,7 @@ export default function ProjectV4ReviewPage() {
 
 function ProjectV4ReviewContent() {
   const router = useRouter();
-  const project = mockProjects.find((p) => p.id === "proj-1")!;
-  const version = getVersion("ver-1")!;
+  const { project, version } = useWorkspace();
   const searchParams = useSearchParams();
   const initialItemId = searchParams.get("item");
   const isReadOnly = searchParams.get("mode") === "readonly";
@@ -302,7 +300,7 @@ function ProjectV4ReviewContent() {
               disabled={!hasApproved}
               onClick={() =>
                 router.push(
-                  `/project-v4/preview-cover`
+                  `/project-v4/${project.id}/preview-cover`
                 )
               }
             >

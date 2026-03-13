@@ -83,6 +83,7 @@ const fileIconMap: Record<string, typeof FileText> = {
   csv: FileSpreadsheet,
 };
 
+
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
@@ -816,23 +817,17 @@ export default function ProjectV4OverviewPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left column: Material Matrix (top) + Project Specifications (bottom) */}
+        {/* Left column: Project Specifications + Material Matrix */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Material Matrix — current + history */}
-          <MaterialIndexGridCard
-            onUpload={() => setUploadDialogOpen(true)}
-            onFileClick={() => {
-              router.push(`/project-v4/${project.id}/review`);
-            }}
-            onHistoryFileClick={() => {
-              router.push(`/project-v4/${project.id}/review?mode=readonly`);
-            }}
-            versionId={version.id}
-          />
-
-          {/* Project Specifications — at the bottom */}
+          {/* Project Specifications */}
           <ProjectSpecificationsCard
             onPreview={(spec) => setPreviewSpec(spec)}
+          />
+
+          {/* Material Index Grid */}
+          <MaterialIndexGridCard
+            onUpload={() => setUploadDialogOpen(true)}
+            versionId={version.id}
           />
         </div>
 

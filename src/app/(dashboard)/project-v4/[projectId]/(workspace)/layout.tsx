@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Share2, Link2, Mail, Check, Plus } from "lucide-react";
+import { Share2, Link2, Mail, Check, Plus, ChevronDown, Flag, Activity } from "lucide-react";
 import { MilestoneProgressBar } from "@/components/layout/milestone-progress-bar";
 import { VersionInfoHeader } from "@/components/workspace/version-info-header";
 import { WorkspaceProvider } from "@/providers/workspace-provider";
@@ -15,6 +15,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Avatar,
   AvatarFallback,
   AvatarImage,
@@ -23,9 +30,26 @@ import {
 } from "@/components/ui/avatar";
 import { TeamAccessSheet } from "@/components/projects/team-access-sheet";
 import { mockUsers } from "@/data/mock-users";
-import type { Project } from "@/data/types";
+import type { Project, ProjectStatus } from "@/data/types";
 import { mockProjects } from "@/data/mock-projects";
 import { getVersion } from "@/data/mock-versions";
+
+/* -------------------------------------------------------------------------- */
+/*  Status & Priority configs                                                  */
+/* -------------------------------------------------------------------------- */
+
+const STATUS_OPTIONS: { value: ProjectStatus; label: string; color: string }[] = [
+  { value: "active", label: "Active", color: "bg-emerald-500" },
+  { value: "in_progress", label: "In Progress", color: "bg-blue-500" },
+  { value: "on_hold", label: "On Hold", color: "bg-amber-500" },
+  { value: "completed", label: "Completed", color: "bg-zinc-400" },
+];
+
+const PRIORITY_OPTIONS: { value: "high" | "medium" | "low"; label: string; color: string }[] = [
+  { value: "high", label: "High", color: "bg-red-500" },
+  { value: "medium", label: "Medium", color: "bg-amber-500" },
+  { value: "low", label: "Low", color: "bg-blue-500" },
+];
 
 /* -------------------------------------------------------------------------- */
 /*  Header Actions — Share + Team                                              */
@@ -40,7 +64,19 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
-function HeaderActions({ project }: { project: Project }) {
+function HeaderActions({
+  project,
+  projectStatus,
+  onStatusChange,
+  projectPriority,
+  onPriorityChange,
+}: {
+  project: Project;
+  projectStatus: ProjectStatus;
+  onStatusChange: (status: ProjectStatus) => void;
+  projectPriority: "high" | "medium" | "low";
+  onPriorityChange: (priority: "high" | "medium" | "low") => void;
+}) {
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [teamSheetOpen, setTeamSheetOpen] = useState(false);
@@ -67,8 +103,69 @@ function HeaderActions({ project }: { project: Project }) {
     setShareOpen(false);
   };
 
+  const currentStatus = STATUS_OPTIONS.find((s) => s.value === projectStatus) ?? STATUS_OPTIONS[0];
+  const currentPriority = PRIORITY_OPTIONS.find((p) => p.value === projectPriority) ?? PRIORITY_OPTIONS[1];
+
   return (
     <>
+      {/* Project Status Selector */}
+      <Select
+        value={projectStatus}
+        onValueChange={(v) => {
+          onStatusChange(v as ProjectStatus);
+          const label = STATUS_OPTIONS.find((s) => s.value === v)?.label ?? v;
+          toast.success(`Project status changed to ${label}`);
+        }}
+      >
+        <SelectTrigger className="h-7 w-auto min-w-[120px] text-xs gap-1.5 border-border/60" aria-label="Change project status">
+          <div className="flex items-center gap-1.5">
+            <span className={`h-2 w-2 rounded-full shrink-0 ${currentStatus.color}`} />
+            <SelectValue />
+          </div>
+        </SelectTrigger>
+        <SelectContent align="end">
+          {STATUS_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value} className="text-xs">
+              <div className="flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full shrink-0 ${opt.color}`} />
+                {opt.label}
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Project Priority Selector */}
+      <Select
+        value={projectPriority}
+        onValueChange={(v) => {
+          onPriorityChange(v as "high" | "medium" | "low");
+          const label = PRIORITY_OPTIONS.find((p) => p.value === v)?.label ?? v;
+          toast.success(`Priority changed to ${label}`);
+        }}
+      >
+        <SelectTrigger className="h-7 w-auto min-w-[100px] text-xs gap-1.5 border-border/60" aria-label="Change project priority">
+          <div className="flex items-center gap-1.5">
+            <Flag className={`h-3 w-3 shrink-0 ${
+              projectPriority === "high" ? "text-red-500" : projectPriority === "medium" ? "text-amber-500" : "text-blue-500"
+            }`} />
+            <SelectValue />
+          </div>
+        </SelectTrigger>
+        <SelectContent align="end">
+          {PRIORITY_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value} className="text-xs">
+              <div className="flex items-center gap-2">
+                <Flag className={`h-3 w-3 shrink-0 ${
+                  opt.value === "high" ? "text-red-500" : opt.value === "medium" ? "text-amber-500" : "text-blue-500"
+                }`} />
+                {opt.label}
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
       {/* Team member avatars */}
       <AvatarGroup>
         {visibleMembers.map((user) => (
@@ -160,6 +257,8 @@ export default function V4WorkspaceLayout({
   const version = project ? getVersion(project.latestVersionId) : undefined;
 
   const [detailOpen, setDetailOpen] = useState(false);
+  const [projectStatus, setProjectStatus] = useState(project?.status ?? "active");
+  const [projectPriority, setProjectPriority] = useState(project?.priority ?? "medium");
   const handleProjectNameClick = () => setDetailOpen(true);
 
   if (!project || !version) {
@@ -178,7 +277,15 @@ export default function V4WorkspaceLayout({
           project={project}
           onProjectNameClick={handleProjectNameClick}
           backHref="/project-v4"
-          actions={<HeaderActions project={project} />}
+          actions={
+            <HeaderActions
+              project={project}
+              projectStatus={projectStatus}
+              onStatusChange={setProjectStatus}
+              projectPriority={projectPriority}
+              onPriorityChange={setProjectPriority}
+            />
+          }
         />
         <MilestoneProgressBar
           currentStage={version.workflowStage}

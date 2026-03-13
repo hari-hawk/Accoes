@@ -34,6 +34,12 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
+const PRIORITY_PILL_CONFIG: Record<string, { label: string; className: string }> = {
+  high: { label: "High", className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800/40" },
+  medium: { label: "Medium", className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800/40" },
+  low: { label: "Low", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800/40" },
+};
+
 export function ProjectCard({
   project,
   onNameClick,
@@ -42,6 +48,7 @@ export function ProjectCard({
   onManageTeam,
   isAdmin = false,
   overviewHrefOverride,
+  showPriority = false,
 }: {
   project: Project;
   onNameClick?: (project: Project) => void;
@@ -51,6 +58,8 @@ export function ProjectCard({
   isAdmin?: boolean;
   /** Override the default overview navigation href */
   overviewHrefOverride?: string;
+  /** Show priority badge on the card (V4 only) */
+  showPriority?: boolean;
 }) {
   const { preApproved, reviewRequired, actionMandatory, total } = project.confidenceSummary;
 
@@ -108,7 +117,17 @@ export function ProjectCard({
               {project.jobId}
             </p>
           </div>
-          <StatusIndicator status={project.status} />
+          <div className="flex items-center gap-1.5 shrink-0">
+            {showPriority && project.priority && (
+              <span className={cn(
+                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border",
+                PRIORITY_PILL_CONFIG[project.priority]?.className ?? ""
+              )}>
+                {PRIORITY_PILL_CONFIG[project.priority]?.label ?? project.priority}
+              </span>
+            )}
+            <StatusIndicator status={project.status} />
+          </div>
         </div>
 
         {/* Row 2: 2-column metadata grid */}

@@ -7,6 +7,7 @@ export default function ProjectV4ListingPage() {
     <ProjectList
       overviewBasePath="/project-v4"
       createHref="/project-v4/create"
+      showPriority
     />
   );
 }

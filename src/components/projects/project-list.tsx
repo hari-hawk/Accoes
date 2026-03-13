@@ -1286,11 +1286,14 @@ function DownloadReportSheet({
 export function ProjectList({
   overviewBasePath,
   createHref,
+  showPriority = false,
 }: {
   /** When provided, project cards navigate to `${overviewBasePath}/${projectId}/overview` */
   overviewBasePath?: string;
   /** Override the "Create New Project" link href (defaults to "/projects/create") */
   createHref?: string;
+  /** Show priority badge on project cards (V4 only) */
+  showPriority?: boolean;
 } = {}) {
   const {
     projects,
@@ -1421,6 +1424,7 @@ export function ProjectList({
               onManageTeam={handleManageTeam}
               isAdmin={true}
               overviewHrefOverride={overviewBasePath ? `${overviewBasePath}/${project.id}/overview` : undefined}
+              showPriority={showPriority}
             />
           ))}
         </div>

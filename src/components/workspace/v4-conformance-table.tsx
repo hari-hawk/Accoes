@@ -352,7 +352,7 @@ function V4ItemComments({
               setNewComment("");
             }}
             className={cn(
-              "absolute right-2 bottom-2 h-7 w-7 rounded-md flex items-center justify-center transition-colors",
+              "absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-md flex items-center justify-center transition-colors",
               newComment.trim()
                 ? "bg-primary text-white hover:bg-primary/90"
                 : "bg-muted text-muted-foreground cursor-not-allowed"
@@ -766,25 +766,60 @@ export function V4ConformanceSection() {
     <div className="absolute inset-0 flex flex-col">
       {/* Filter bar — 48px horizontal padding at 1440px */}
       <div className="shrink-0 border-b bg-card px-12 py-4 space-y-3">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-          <Input
-            placeholder="Search descriptions, material IDs, categories, sections..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-8"
-            aria-label="Search conformance items"
-          />
-          {search && (
-            <button
-              type="button"
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full hover:bg-muted flex items-center justify-center"
-              onClick={() => setSearch("")}
-              aria-label="Clear search"
-            >
-              <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
-            </button>
-          )}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <Input
+              placeholder="Search descriptions, material IDs, categories..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 pr-8"
+              aria-label="Search conformance items"
+            />
+            {search && (
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full hover:bg-muted flex items-center justify-center"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+              >
+                <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+              </button>
+            )}
+          </div>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" aria-label="Sort items">
+                <ArrowUpDown className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-1" align="end">
+              {[
+                { value: "category", label: "Default (Category)", icon: null },
+                { value: "description-asc", label: "Description A → Z", icon: ArrowDownAZ },
+                { value: "description-desc", label: "Description Z → A", icon: ArrowUpAZ },
+                { value: "material-id", label: "Material ID", icon: null },
+                { value: "status", label: "Status", icon: null },
+                { value: "material-type", label: "Material Type", icon: null },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setSortBy(opt.value)}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors text-left",
+                    sortBy === opt.value
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "hover:bg-muted text-foreground"
+                  )}
+                >
+                  {opt.icon ? <opt.icon className="h-3.5 w-3.5 shrink-0" /> : <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" />}
+                  {opt.label}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2" role="search" aria-label="Filter controls">
@@ -892,49 +927,15 @@ export function V4ConformanceSection() {
           </div>
         </div>
 
-        {/* Sort + Clear Filters */}
-        <div className="flex items-center justify-between">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
-                <ArrowUpDown className="h-3.5 w-3.5" />
-                {sortBy === "category" ? "Sort" : sortBy === "description-asc" ? "A → Z" : sortBy === "description-desc" ? "Z → A" : sortBy === "material-id" ? "Material ID" : sortBy === "status" ? "Status" : "Type"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48 p-1" align="start">
-              {[
-                { value: "category", label: "Default (Category)", icon: null },
-                { value: "description-asc", label: "Description A → Z", icon: ArrowDownAZ },
-                { value: "description-desc", label: "Description Z → A", icon: ArrowUpAZ },
-                { value: "material-id", label: "Material ID", icon: null },
-                { value: "status", label: "Status", icon: null },
-                { value: "material-type", label: "Material Type", icon: null },
-              ].map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setSortBy(opt.value)}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors text-left",
-                    sortBy === opt.value
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "hover:bg-muted text-foreground"
-                  )}
-                >
-                  {opt.icon ? <opt.icon className="h-3.5 w-3.5 shrink-0" /> : <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-40" />}
-                  {opt.label}
-                </button>
-              ))}
-            </PopoverContent>
-          </Popover>
-
-          {hasActiveFilters && (
+        {/* Clear Filters */}
+        {hasActiveFilters && (
+          <div className="flex justify-end">
             <Button variant="ghost" size="sm" className="text-xs h-8 gap-1" onClick={handleClearFilters}>
               <X className="h-3 w-3" aria-hidden="true" />
               Clear Filters
             </Button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Status counts */}
         <div className="flex items-center gap-4 pt-3 border-t text-sm">
@@ -1116,7 +1117,7 @@ export function V4ConformanceSection() {
 
       {/* Right-side overlay panel — Evidence Sheet */}
       <Sheet open={!!selectedItem && !commentItemId} onOpenChange={(open) => { if (!open) setSelectedId(null); }}>
-        <SheetContent side="right" className="w-[40vw] min-w-[480px] max-w-[720px] p-0 flex flex-col">
+        <SheetContent side="right" className="w-[50vw] min-w-[540px] max-w-[840px] p-0 flex flex-col">
           <SheetHeader className="sr-only">
             <SheetTitle>Material Evidence</SheetTitle>
           </SheetHeader>
@@ -1131,7 +1132,7 @@ export function V4ConformanceSection() {
 
       {/* Right-side overlay panel — Comments Sheet */}
       <Sheet open={!!commentItemId} onOpenChange={(open) => { if (!open) setCommentItemId(null); }}>
-        <SheetContent side="right" className="w-[40vw] min-w-[480px] max-w-[720px] p-0 flex flex-col">
+        <SheetContent side="right" className="w-[50vw] min-w-[540px] max-w-[840px] p-0 flex flex-col">
           <SheetHeader className="sr-only">
             <SheetTitle>Item Comments</SheetTitle>
           </SheetHeader>
@@ -1168,7 +1169,7 @@ export function V4ConformanceSection() {
                   setCheckedIds(new Set());
                 }}
                 className={cn(
-                  "absolute right-2 bottom-2 h-8 w-8 rounded-md flex items-center justify-center transition-colors",
+                  "absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-md flex items-center justify-center transition-colors",
                   commentText.trim()
                     ? "bg-primary text-white hover:bg-primary/90"
                     : "bg-muted text-muted-foreground cursor-not-allowed"

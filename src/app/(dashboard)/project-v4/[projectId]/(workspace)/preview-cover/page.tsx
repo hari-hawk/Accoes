@@ -641,7 +641,7 @@ export default function ProjectV4PreviewCoverPage() {
       {/*  Edit Project Details — Right-side Sheet                            */}
       {/* ------------------------------------------------------------------ */}
       <Sheet open={editSheetOpen} onOpenChange={setEditSheetOpen}>
-        <SheetContent side="right" className="w-[420px] sm:w-[460px] flex flex-col p-0">
+        <SheetContent side="right" className="w-[50vw] min-w-[540px] max-w-[840px] flex flex-col p-0">
           <SheetHeader className="px-6 py-4 border-b shrink-0">
             <SheetTitle className="text-base">Edit Project Details</SheetTitle>
           </SheetHeader>

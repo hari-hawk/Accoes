@@ -932,12 +932,60 @@ export function V4ConformanceSection() {
           </div>
         </div>
 
-        {/* Clear Filters */}
+        {/* Active filter pills */}
         {hasActiveFilters && (
-          <div className="flex justify-end">
-            <Button variant="ghost" size="sm" className="text-xs h-8 gap-1" onClick={handleClearFilters}>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {matrixFileFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
+                {matrixFileFilter === "mechanical" ? "Mechanical" : matrixFileFilter === "plumbing" ? "Plumbing" : matrixFileFilter === "heating" ? "Heating" : matrixFileFilter}
+                <button type="button" onClick={() => setMatrixFileFilter("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove matrix file filter"><X className="h-2.5 w-2.5" /></button>
+              </span>
+            )}
+            {tradeFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
+                {tradeFilter}
+                <button type="button" onClick={() => setTradeFilter("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove trade filter"><X className="h-2.5 w-2.5" /></button>
+              </span>
+            )}
+            {categoryFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
+                {categoryFilter}
+                <button type="button" onClick={() => setCategoryFilter("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove category filter"><X className="h-2.5 w-2.5" /></button>
+              </span>
+            )}
+            {allSystemFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
+                {allSystemFilter === "yes" ? "All-System" : "System-Specific"}
+                <button type="button" onClick={() => setAllSystemFilter("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove system filter"><X className="h-2.5 w-2.5" /></button>
+              </span>
+            )}
+            {materialTypeFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
+                {materialTypeFilter}
+                <button type="button" onClick={() => setMaterialTypeFilter("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove material type filter"><X className="h-2.5 w-2.5" /></button>
+              </span>
+            )}
+            {systemFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
+                {systemFilter}
+                <button type="button" onClick={() => setSystemFilter("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove system category filter"><X className="h-2.5 w-2.5" /></button>
+              </span>
+            )}
+            {statusFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
+                {statusFilter === "pre_approved" ? "Pre-Approved" : statusFilter === "review_required" ? "Review Required" : "Action Required"}
+                <button type="button" onClick={() => setStatusFilter("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove status filter"><X className="h-2.5 w-2.5" /></button>
+              </span>
+            )}
+            {sortBy !== "category" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted text-muted-foreground pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
+                Sort: {sortBy === "description-asc" ? "A→Z" : sortBy === "description-desc" ? "Z→A" : sortBy === "material-id" ? "Material ID" : sortBy === "status" ? "Status" : "Type"}
+                <button type="button" onClick={() => setSortBy("category")} className="h-4 w-4 rounded-full hover:bg-muted-foreground/20 flex items-center justify-center" aria-label="Reset sort"><X className="h-2.5 w-2.5" /></button>
+              </span>
+            )}
+            <Button variant="ghost" size="sm" className="text-xs h-6 gap-1 px-2 text-muted-foreground" onClick={handleClearFilters}>
               <X className="h-3 w-3" aria-hidden="true" />
-              Clear Filters
+              Clear All
             </Button>
           </div>
         )}

@@ -118,10 +118,7 @@ function HeaderActions({
         }}
       >
         <SelectTrigger className="h-7 w-auto min-w-[120px] text-xs gap-1.5 border-border/60" aria-label="Change project status">
-          <div className="flex items-center gap-1.5">
-            <span className={`h-2 w-2 rounded-full shrink-0 ${currentStatus.color}`} />
-            <SelectValue />
-          </div>
+          <SelectValue />
         </SelectTrigger>
         <SelectContent align="end">
           {STATUS_OPTIONS.map((opt) => (
@@ -145,12 +142,7 @@ function HeaderActions({
         }}
       >
         <SelectTrigger className="h-7 w-auto min-w-[100px] text-xs gap-1.5 border-border/60" aria-label="Change project priority">
-          <div className="flex items-center gap-1.5">
-            <Flag className={`h-3 w-3 shrink-0 ${
-              projectPriority === "high" ? "text-red-500" : projectPriority === "medium" ? "text-amber-500" : "text-blue-500"
-            }`} />
-            <SelectValue />
-          </div>
+          <SelectValue />
         </SelectTrigger>
         <SelectContent align="end">
           {PRIORITY_OPTIONS.map((opt) => (

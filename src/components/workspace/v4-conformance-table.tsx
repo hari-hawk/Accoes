@@ -12,6 +12,11 @@ import {
   AlertTriangle,
   BookOpen,
   FileText,
+  RotateCcw,
+  MessageSquare,
+  Download,
+  Send,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +37,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
   v4ConformanceData,
   V4_TRADE_ORDER,
@@ -61,13 +74,13 @@ const MATCH_TYPE_COLORS: Record<string, string> = {
 };
 
 /** Total columns in conformance table */
-const V4_TOTAL_COLS = 13;
+const V4_TOTAL_COLS = 14;
 
 /* -------------------------------------------------------------------------- */
 /*  Evidence Detail Panel                                                       */
 /* -------------------------------------------------------------------------- */
 
-function V4EvidenceDetail({ item }: { item: V4ConformanceItem }) {
+function V4EvidenceDetail({ item, onViewPdf }: { item: V4ConformanceItem; onViewPdf?: (ref: string) => void }) {
   const [activeTab, setActiveTab] = useState<"spec" | "index">("spec");
   const evidence = useMemo(() => getV4ItemEvidence(item), [item]);
 
@@ -176,9 +189,21 @@ function V4EvidenceDetail({ item }: { item: V4ConformanceItem }) {
                   <h4 className="text-[13px] font-medium">Relevant References ({spec.references.length})</h4>
                   {spec.references.map((ref, i) => (
                     <div key={i} className="rounded-md border bg-card p-3 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-xs font-medium text-muted-foreground">{ref.source}</span>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span className="text-xs font-medium text-muted-foreground truncate">{ref.source}</span>
+                        </div>
+                        {onViewPdf && (
+                          <button
+                            type="button"
+                            className="shrink-0 inline-flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
+                            onClick={() => onViewPdf(ref.source)}
+                          >
+                            <Eye className="h-3 w-3" />
+                            View PDF
+                          </button>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground italic leading-relaxed">&ldquo;{ref.excerpt}&rdquo;</p>
                     </div>
@@ -238,6 +263,103 @@ function V4EvidenceDetail({ item }: { item: V4ConformanceItem }) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  V4 Per-Item Comments Panel (threaded, multi-user)                          */
+/* -------------------------------------------------------------------------- */
+
+const MOCK_USERS = [
+  { name: "Sarah Chen", initials: "SC", color: "bg-blue-500" },
+  { name: "Mark Johnson", initials: "MJ", color: "bg-emerald-500" },
+  { name: "You", initials: "YO", color: "bg-primary" },
+];
+
+const MOCK_COMMENTS = [
+  { user: 0, text: "This material specification needs further review — the rated pressure seems inconsistent with Section 15010.", time: "2h ago" },
+  { user: 1, text: "Agreed. I checked with the mechanical engineer and the spec calls for 150 PSI minimum. We should flag this as review required.", time: "1h ago" },
+];
+
+function V4ItemComments({
+  item,
+  onClose,
+}: {
+  item: V4ConformanceItem | null;
+  onClose: () => void;
+}) {
+  const [newComment, setNewComment] = useState("");
+
+  if (!item) return null;
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="px-5 py-4 border-b shrink-0 space-y-1">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-semibold">Comments</h4>
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground font-mono">{item.accoMaterialId}</p>
+        <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+      </div>
+
+      {/* Comments list */}
+      <div className="flex-1 min-h-0 overflow-hidden relative">
+        <ScrollArea className="absolute inset-0">
+          <div className="p-5 space-y-4">
+            {MOCK_COMMENTS.map((comment, i) => {
+              const user = MOCK_USERS[comment.user];
+              return (
+                <div key={i} className="flex gap-3">
+                  <div className={cn("h-7 w-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0", user.color)}>
+                    {user.initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold">{user.name}</span>
+                      <span className="text-[11px] text-muted-foreground">{comment.time}</span>
+                    </div>
+                    <p className="text-[13px] leading-relaxed mt-0.5">{comment.text}</p>
+                  </div>
+                </div>
+              );
+            })}
+            {MOCK_COMMENTS.length === 0 && (
+              <div className="text-center py-8">
+                <MessageSquare className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No comments yet</p>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
+
+      {/* Comment input */}
+      <div className="shrink-0 border-t p-4 space-y-2">
+        <Textarea
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder="Add a comment..."
+          rows={2}
+          className="resize-none text-sm"
+        />
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            disabled={!newComment.trim()}
+            onClick={() => {
+              toast.success("Comment added");
+              setNewComment("");
+            }}
+          >
+            <Send className="h-3.5 w-3.5 mr-1" /> Send
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /*  V4 Trade Group                                                              */
 /* -------------------------------------------------------------------------- */
 
@@ -250,6 +372,7 @@ function V4TradeGroup({
   toggleCheck,
   alternativeIds,
   toggleAlternative,
+  onOpenComments,
 }: {
   trade: string;
   items: V4ConformanceItem[];
@@ -259,6 +382,7 @@ function V4TradeGroup({
   toggleCheck: (id: string) => void;
   alternativeIds: Set<string>;
   toggleAlternative: (id: string) => void;
+  onOpenComments: (id: string) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -432,6 +556,20 @@ function V4TradeGroup({
                   </button>
                 </div>
               </td>
+
+              {/* Chat icon */}
+              <td className="p-3">
+                <div onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => onOpenComments(item.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 rounded-md flex items-center justify-center hover:bg-muted"
+                    aria-label={`Open comments for ${item.description}`}
+                  >
+                    <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                </div>
+              </td>
             </tr>
           );
         })}
@@ -455,6 +593,11 @@ export function V4ConformanceSection() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [alternativeIds, setAlternativeIds] = useState<Set<string>>(new Set());
+  const [commentDialogOpen, setCommentDialogOpen] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [commentItemId, setCommentItemId] = useState<string | null>(null);
+  const [pdfPreviewRef, setPdfPreviewRef] = useState<string | null>(null);
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
 
   /* Unique filter options */
   const uniqueTrades = useMemo(
@@ -791,6 +934,16 @@ export function V4ConformanceSection() {
             <Button
               size="sm"
               variant="outline"
+              onClick={() => {
+                toast.success(`${checkedIds.size} item(s) marked for revisit`);
+                setCheckedIds(new Set());
+              }}
+            >
+              <RotateCcw className="h-4 w-4 mr-1" /> Revisit
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
               className="border-yellow-300 dark:border-yellow-700 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
               onClick={() => {
                 for (const id of checkedIds) {
@@ -806,6 +959,13 @@ export function V4ConformanceSection() {
             >
               <Replace className="h-4 w-4 mr-1" /> Alternate
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setCommentDialogOpen(true)}
+            >
+              <MessageSquare className="h-4 w-4 mr-1" /> Comment
+            </Button>
             <Button size="sm" variant="ghost" onClick={() => setCheckedIds(new Set())}>
               <X className="h-4 w-4 mr-1" /> Clear
             </Button>
@@ -813,8 +973,8 @@ export function V4ConformanceSection() {
         </div>
       )}
 
-      {/* Table — scrollable area with 48px horizontal padding */}
-      <div className="flex-1 min-h-0 overflow-auto">
+      {/* Table — scrollable area inside V3-style card container */}
+      <div className="flex-1 min-h-0 overflow-auto px-12 py-4">
         {filteredData.length === 0 ? (
           <div className="p-12 text-center">
             <Search className="h-8 w-8 text-muted-foreground/40 mx-auto mb-3" />
@@ -824,9 +984,9 @@ export function V4ConformanceSection() {
             </Button>
           </div>
         ) : (
-          <div className="px-12">
+          <div className="rounded-xl border bg-card shadow-card overflow-hidden">
             <table className="w-full table-fixed" aria-label="Trade-grouped conformance specifications">
-              <colgroup><col className="w-[40px]" /><col className="w-[32px]" /><col className="w-[160px]" /><col className="w-[80px]" /><col className="w-[120px]" /><col /><col className="w-[90px]" /><col className="w-[120px]" /><col className="w-[90px]" /><col className="w-[130px]" /><col className="w-[120px]" /><col className="w-[80px]" /><col className="w-[13px]" /></colgroup>
+              <colgroup><col className="w-[40px]" /><col className="w-[32px]" /><col className="w-[160px]" /><col className="w-[80px]" /><col className="w-[120px]" /><col /><col className="w-[90px]" /><col className="w-[120px]" /><col className="w-[90px]" /><col className="w-[130px]" /><col className="w-[120px]" /><col className="w-[80px]" /><col className="w-[40px]" /><col className="w-[8px]" /></colgroup>
               <thead className="sticky top-0 z-10 bg-card">
                 <tr className="border-b bg-muted/30">
                   <th scope="col" className="p-3" aria-label="Select all">
@@ -846,7 +1006,8 @@ export function V4ConformanceSection() {
                   <th scope="col" className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Type</th>
                   <th scope="col" className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">System</th>
                   <th scope="col" className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                  <th scope="col" className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Alt</th>
+                  <th scope="col" className="p-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Alternate</th>
+                  <th scope="col" className="p-3" aria-label="Comments" />
                   <th scope="col" className="p-3" />
                 </tr>
               </thead>
@@ -862,6 +1023,10 @@ export function V4ConformanceSection() {
                     toggleCheck={toggleCheck}
                     alternativeIds={alternativeIds}
                     toggleAlternative={toggleAlternative}
+                    onOpenComments={(id) => {
+                      setSelectedId(null);
+                      setCommentItemId(id);
+                    }}
                   />
                 ))}
               </tbody>
@@ -870,15 +1035,121 @@ export function V4ConformanceSection() {
         )}
       </div>
 
-      {/* Right-side overlay panel — Sheet */}
-      <Sheet open={!!selectedItem} onOpenChange={(open) => { if (!open) setSelectedId(null); }}>
-        <SheetContent side="right" className="w-[520px] sm:w-[560px] p-0 flex flex-col">
+      {/* Bottom static panel — review progress + Proceed CTA */}
+      <div className="shrink-0 border-t bg-card px-12 py-2.5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="text-sm font-medium whitespace-nowrap">
+            <span className="font-semibold tabular-nums">{reviewedIds.size}</span>
+            <span className="text-muted-foreground">/{filteredData.length} reviewed</span>
+          </span>
+          <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden max-w-xs">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#00529B] to-[#003075] transition-all duration-500"
+              style={{ width: `${filteredData.length > 0 ? (reviewedIds.size / filteredData.length) * 100 : 0}%` }}
+            />
+          </div>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {filteredData.length > 0 ? Math.round((reviewedIds.size / filteredData.length) * 100) : 0}%
+          </span>
+        </div>
+        <Button
+          className="gradient-accent text-white shadow-glow shrink-0"
+          onClick={() => toast.success("Proceeding to Preview Cover...")}
+        >
+          Proceed to Preview Cover
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+
+      {/* Right-side overlay panel — Sheet (evidence or per-row comments) */}
+      <Sheet
+        open={!!selectedItem || !!commentItemId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedId(null);
+            setCommentItemId(null);
+          }
+        }}
+      >
+        <SheetContent side="right" className="w-[40vw] min-w-[480px] max-w-[720px] p-0 flex flex-col">
           <SheetHeader className="sr-only">
-            <SheetTitle>Material Evidence</SheetTitle>
+            <SheetTitle>{commentItemId ? "Item Comments" : "Material Evidence"}</SheetTitle>
           </SheetHeader>
-          {selectedItem && <V4EvidenceDetail item={selectedItem} />}
+          {commentItemId ? (
+            <V4ItemComments
+              item={v4ConformanceData.find((m) => m.id === commentItemId) ?? null}
+              onClose={() => setCommentItemId(null)}
+            />
+          ) : selectedItem ? (
+            <V4EvidenceDetail
+              item={selectedItem}
+              onViewPdf={(ref) => setPdfPreviewRef(ref)}
+            />
+          ) : null}
         </SheetContent>
       </Sheet>
+
+      {/* Batch comment dialog */}
+      <Dialog open={commentDialogOpen} onOpenChange={setCommentDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Comment to {checkedIds.size} Item(s)</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Textarea
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Type your comment here..."
+              rows={4}
+              className="resize-none"
+            />
+            <p className="text-xs text-muted-foreground">
+              This comment will be added to all {checkedIds.size} selected item(s).
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setCommentDialogOpen(false); setCommentText(""); }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                toast.success(`Comment added to ${checkedIds.size} item(s)`);
+                setCommentDialogOpen(false);
+                setCommentText("");
+                setCheckedIds(new Set());
+              }}
+              disabled={!commentText.trim()}
+            >
+              <Send className="h-4 w-4 mr-1" /> Send Comment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* PDF preview overlay — z-[60] to sit above Sheet (z-50) */}
+      {pdfPreviewRef && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-8">
+          <div className="relative bg-card rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b shrink-0">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{pdfPreviewRef}</span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setPdfPreviewRef(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex-1 flex items-center justify-center bg-muted/30 p-8">
+              <div className="text-center space-y-3">
+                <FileText className="h-12 w-12 text-muted-foreground/40 mx-auto" />
+                <p className="text-sm font-medium text-muted-foreground">PDF Preview</p>
+                <p className="text-xs text-muted-foreground">{pdfPreviewRef}</p>
+                <p className="text-xs text-muted-foreground/60">Full PDF viewer will connect to actual specification documents</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

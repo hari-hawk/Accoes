@@ -819,15 +819,15 @@ export default function ProjectV4OverviewPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left column: Project Specifications + Material Matrix */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Project Specifications */}
-          <ProjectSpecificationsCard
-            onPreview={(spec) => setPreviewSpec(spec)}
-          />
-
-          {/* Material Index Grid */}
+          {/* Material Index Grid — primary action, shown first */}
           <MaterialIndexGridCard
             onUpload={() => setUploadDialogOpen(true)}
             versionId={version.id}
+          />
+
+          {/* Project Specifications */}
+          <ProjectSpecificationsCard
+            onPreview={(spec) => setPreviewSpec(spec)}
           />
         </div>
 

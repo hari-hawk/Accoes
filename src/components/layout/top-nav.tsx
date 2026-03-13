@@ -45,7 +45,7 @@ import { cn } from "@/lib/utils";
 import { currentUser } from "@/data/mock-users";
 
 const mainNavItems = [
-  { title: "Project V4", href: "/project-v4", icon: Layers },
+  { title: "Project", href: "/project-v4", icon: Layers },
   { title: "User Management", href: "/user-management", icon: Users },
   { title: "Project Index", href: "/project-index", icon: FileStack },
 ];

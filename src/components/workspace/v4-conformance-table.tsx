@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Search,
@@ -592,7 +592,10 @@ function V4TradeGroup({
 
 export function V4ConformanceSection() {
   const searchParams = useSearchParams();
+  const params = useParams();
+  const router = useRouter();
   const initialMatrix = searchParams.get("matrix") ?? "all";
+  const projectId = params.projectId as string;
 
   const [search, setSearch] = useState("");
   const [tradeFilter, setTradeFilter] = useState<string>("all");
@@ -1192,7 +1195,7 @@ export function V4ConformanceSection() {
               : "bg-muted text-muted-foreground cursor-not-allowed"
           )}
           disabled={reviewedIds.size === 0}
-          onClick={() => toast.success("Proceeding to Preview Cover...")}
+          onClick={() => router.push(`/project-v4/${projectId}/preview-cover`)}
         >
           <Eye className="h-4 w-4 mr-1" />
           Proceed to Preview Cover

@@ -44,7 +44,7 @@ import { cn } from "@/lib/utils";
 import { currentUser } from "@/data/mock-users";
 
 const mainNavItems = [
-  { title: "Projects", href: "/projects", icon: FolderKanban },
+  { title: "Projects V1", href: "/projects", icon: FolderKanban },
   { title: "Projects v2", href: "/projects-v2", icon: Layers },
   { title: "Project V3", href: "/project-v3", icon: Layers },
   { title: "Project V4", href: "/project-v4", icon: Layers },

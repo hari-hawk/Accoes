@@ -781,8 +781,8 @@ export function V4ConformanceSection() {
 
   return (
     <div className="absolute inset-0 flex flex-col">
-      {/* Filter bar — 48px horizontal padding at 1440px */}
-      <div className="shrink-0 border-b bg-card px-12 py-4 space-y-3">
+      {/* Filter bar — responsive horizontal padding */}
+      <div className="shrink-0 border-b bg-card px-4 sm:px-6 lg:px-12 py-3 sm:py-4 space-y-3">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -839,7 +839,7 @@ export function V4ConformanceSection() {
           </Popover>
         </div>
 
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2" role="search" aria-label="Filter controls">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2" role="search" aria-label="Filter controls">
           {/* Matrix File */}
           <div className="min-w-0">
             <Select value={matrixFileFilter} onValueChange={setMatrixFileFilter}>
@@ -1004,27 +1004,27 @@ export function V4ConformanceSection() {
         )}
 
         {/* Status counts */}
-        <div className="flex items-center gap-4 pt-3 border-t text-sm">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-3 border-t text-sm">
           <div className="flex items-center gap-1.5">
             <span className="font-semibold text-foreground">{filteredData.length}</span>
             <span className="text-muted-foreground">Total Items</span>
           </div>
-          <div className="h-4 w-px bg-border" />
+          <div className="hidden sm:block h-4 w-px bg-border" />
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-status-pre-approved shrink-0" />
-            <span className="font-semibold text-emerald-600">{statusCounts.preApproved}</span>
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">{statusCounts.preApproved}</span>
             <span className="text-muted-foreground">Pre-Approved</span>
           </div>
-          <div className="h-4 w-px bg-border" />
+          <div className="hidden sm:block h-4 w-px bg-border" />
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-status-review-required shrink-0" />
-            <span className="font-semibold text-amber-600">{statusCounts.reviewRequired}</span>
+            <span className="font-semibold text-amber-600 dark:text-amber-400">{statusCounts.reviewRequired}</span>
             <span className="text-muted-foreground">Review Required</span>
           </div>
-          <div className="h-4 w-px bg-border" />
+          <div className="hidden sm:block h-4 w-px bg-border" />
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-status-action-mandatory shrink-0" />
-            <span className="font-semibold text-rose-600">{statusCounts.actionMandatory}</span>
+            <span className="font-semibold text-rose-600 dark:text-rose-400">{statusCounts.actionMandatory}</span>
             <span className="text-muted-foreground">Action Required</span>
           </div>
         </div>
@@ -1032,7 +1032,7 @@ export function V4ConformanceSection() {
 
       {/* Batch actions bar */}
       {checkedIds.size > 0 && (
-        <div className="shrink-0 flex items-center justify-between gap-3 border-b bg-primary/5 border-b-primary/10 px-12 py-2">
+        <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-b bg-primary/5 dark:bg-primary/10 border-b-primary/10 px-4 sm:px-6 lg:px-12 py-2">
           <span className="text-sm font-medium">{checkedIds.size} item(s) selected</span>
           <div className="flex items-center gap-2">
             <Button
@@ -1109,7 +1109,7 @@ export function V4ConformanceSection() {
       )}
 
       {/* Table — scrollable area inside V3-style card container */}
-      <div className="flex-1 min-h-0 overflow-auto px-12 py-4">
+      <div className="flex-1 min-h-0 overflow-auto px-4 sm:px-6 lg:px-12 py-4">
         {filteredData.length === 0 ? (
           <div className="p-12 text-center">
             <Search className="h-8 w-8 text-muted-foreground/40 mx-auto mb-3" />
@@ -1119,8 +1119,8 @@ export function V4ConformanceSection() {
             </Button>
           </div>
         ) : (
-          <div className="rounded-xl border bg-card shadow-card overflow-hidden">
-            <table className="w-full table-fixed" aria-label="Trade-grouped conformance specifications">
+          <div className="rounded-xl border bg-card shadow-card overflow-x-auto">
+            <table className="w-full table-fixed min-w-[1100px]" aria-label="Trade-grouped conformance specifications">
               <colgroup><col className="w-[40px]" /><col className="w-[32px]" /><col className="w-[160px]" /><col className="w-[80px]" /><col className="w-[120px]" /><col /><col className="w-[90px]" /><col className="w-[120px]" /><col className="w-[90px]" /><col className="w-[130px]" /><col className="w-[120px]" /><col className="w-[100px]" /><col className="w-[40px]" /><col className="w-[8px]" /></colgroup>
               <thead className="sticky top-0 z-10 bg-card">
                 <tr className="border-b bg-muted/30">
@@ -1171,7 +1171,7 @@ export function V4ConformanceSection() {
       </div>
 
       {/* Bottom static panel — review progress + Proceed CTA */}
-      <div className="shrink-0 border-t bg-card px-12 py-2.5 flex items-center justify-between gap-4 shadow-[0_-4px_12px_-2px_rgba(0,0,0,0.08)]">
+      <div className="shrink-0 border-t bg-card dark:bg-card px-4 sm:px-6 lg:px-12 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 shadow-[0_-4px_12px_-2px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_12px_-2px_rgba(0,0,0,0.3)]">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <span className="text-sm font-medium whitespace-nowrap">
             <span className="font-semibold tabular-nums">{reviewedIds.size}</span>
@@ -1205,7 +1205,7 @@ export function V4ConformanceSection() {
 
       {/* Right-side overlay panel — Evidence Sheet */}
       <Sheet open={!!selectedItem && !commentItemId} onOpenChange={(open) => { if (!open) setSelectedId(null); }}>
-        <SheetContent side="right" className="w-[50vw] min-w-[540px] max-w-[840px] p-0 flex flex-col">
+        <SheetContent side="right" className="w-full sm:w-[80vw] lg:w-[50vw] sm:min-w-[540px] max-w-[840px] p-0 flex flex-col">
           <SheetHeader className="sr-only">
             <SheetTitle>Material Evidence</SheetTitle>
           </SheetHeader>
@@ -1220,7 +1220,7 @@ export function V4ConformanceSection() {
 
       {/* Right-side overlay panel — Comments Sheet */}
       <Sheet open={!!commentItemId} onOpenChange={(open) => { if (!open) setCommentItemId(null); }}>
-        <SheetContent side="right" className="w-[50vw] min-w-[540px] max-w-[840px] p-0 flex flex-col">
+        <SheetContent side="right" className="w-full sm:w-[80vw] lg:w-[50vw] sm:min-w-[540px] max-w-[840px] p-0 flex flex-col">
           <SheetHeader className="sr-only">
             <SheetTitle>Item Comments</SheetTitle>
           </SheetHeader>

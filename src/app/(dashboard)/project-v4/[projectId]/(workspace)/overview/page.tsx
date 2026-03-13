@@ -71,6 +71,7 @@ import { mockUsers } from "@/data/mock-users";
 import { formatPercentage } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { ProjectStatus, ProjectType } from "@/data/types";
+import { getProjectOverviewData, type ProjectMaterialFile, type ProjectSpecFile, type ProjectActivity } from "@/data/mock-project-data";
 
 /* -------------------------------------------------------------------------- */
 /*  Constants                                                                   */
@@ -137,8 +138,10 @@ interface MockUploadFile {
 
 function ProjectSpecificationsCard({
   onPreview,
+  specs: mockProjectSpecs,
 }: {
-  onPreview: (spec: typeof mockProjectSpecs[number]) => void;
+  onPreview: (spec: ProjectSpecFile) => void;
+  specs: ProjectSpecFile[];
 }) {
   const [selectedSpecIds, setSelectedSpecIds] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
@@ -300,11 +303,15 @@ function MaterialIndexGridCard({
   onFileClick,
   onHistoryFileClick,
   versionId,
+  currentFiles: currentMaterialFiles,
+  historicalFiles: historicalMaterialFiles,
 }: {
   onUpload: () => void;
   onFileClick?: (fileId: string) => void;
   onHistoryFileClick?: (fileId: string) => void;
   versionId: string;
+  currentFiles: ProjectMaterialFile[];
+  historicalFiles: ProjectMaterialFile[];
 }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
@@ -527,7 +534,7 @@ function MaterialIndexGridCard({
                           {formatFileSize(file.fileSize)}
                         </span>
                         <span className="text-[11px] text-muted-foreground">
-                          Processed {new Date(file.processedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
+                          {file.processedAt ? `Processed ${new Date(file.processedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}` : ""}
                         </span>
                         <span className="text-[11px] text-muted-foreground font-medium">
                           {file.confidence}%
@@ -714,6 +721,13 @@ export default function ProjectV4OverviewPage() {
   const router = useRouter();
   const { confidenceSummary } = version;
 
+  // Per-project data
+  const projectData = getProjectOverviewData(project.id);
+  const projCurrentMaterialFiles = projectData.currentMaterialFiles;
+  const projHistoricalMaterialFiles = projectData.historicalMaterialFiles;
+  const projProjectSpecs = projectData.projectSpecs;
+  const projRecentActivity = projectData.recentActivity;
+
   // Upload dialog state (for Conformance)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadFiles, setUploadFiles] = useState<MockUploadFile[]>([]);
@@ -721,7 +735,7 @@ export default function ProjectV4OverviewPage() {
   const [uploading, setUploading] = useState(false);
 
   // PDF preview state for Project Specifications
-  const [previewSpec, setPreviewSpec] = useState<typeof mockProjectSpecs[number] | null>(null);
+  const [previewSpec, setPreviewSpec] = useState<ProjectSpecFile | null>(null);
 
   // Edit Sheet state for Project Details
   const [editSheetOpen, setEditSheetOpen] = useState(false);
@@ -844,13 +858,15 @@ export default function ProjectV4OverviewPage() {
           <MaterialIndexGridCard
             onUpload={() => setUploadDialogOpen(true)}
             versionId={version.id}
+            currentFiles={projCurrentMaterialFiles}
+            historicalFiles={projHistoricalMaterialFiles}
             onFileClick={(fileId) => {
-              const file = currentMaterialFiles.find((f) => f.id === fileId);
+              const file = projCurrentMaterialFiles.find((f) => f.id === fileId);
               const matrix = file?.trade?.toLowerCase() ?? "all";
               router.push(`/project-v4/${project.id}/review?matrix=${matrix}`);
             }}
             onHistoryFileClick={(fileId) => {
-              const file = historicalMaterialFiles.find((f) => f.id === fileId);
+              const file = projHistoricalMaterialFiles.find((f) => f.id === fileId);
               const trade = file?.fileName.includes("Plumbing") ? "plumbing" : file?.fileName.includes("Heating") ? "heating" : file?.fileName.includes("Mechanical") ? "mechanical" : "all";
               router.push(`/project-v4/${project.id}/review?matrix=${trade}`);
             }}
@@ -859,6 +875,7 @@ export default function ProjectV4OverviewPage() {
           {/* Project Specifications */}
           <ProjectSpecificationsCard
             onPreview={(spec) => setPreviewSpec(spec)}
+            specs={projProjectSpecs}
           />
         </div>
 
@@ -1040,7 +1057,7 @@ export default function ProjectV4OverviewPage() {
             </h3>
             <ScrollArea className="max-h-[280px]">
               <div className="space-y-3 pr-2">
-                {recentActivity.map((activity) => (
+                {projRecentActivity.map((activity) => (
                   <div key={activity.id} className="flex gap-3">
                     <div className={cn(
                       "mt-0.5 h-2 w-2 rounded-full shrink-0",

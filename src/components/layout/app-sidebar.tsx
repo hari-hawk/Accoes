@@ -40,7 +40,7 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
-        <Link href="/projects" className="flex items-center gap-2.5">
+        <Link href="/project-v4" className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
           </div>

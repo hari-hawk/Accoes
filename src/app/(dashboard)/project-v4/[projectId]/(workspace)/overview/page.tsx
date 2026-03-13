@@ -116,12 +116,12 @@ const currentMaterialFiles = [
 ];
 
 const historicalMaterialFiles = [
-  { id: "mig-1", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 524288, uploadedAt: "2026-02-05T10:00:00Z", version: "v1", processedAt: "2026-02-06T14:00:00Z", confidence: 72 },
-  { id: "mig-2", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 491520, uploadedAt: "2026-02-05T10:05:00Z", version: "v1", processedAt: "2026-02-06T14:05:00Z", confidence: 68 },
-  { id: "mig-3", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 458752, uploadedAt: "2026-02-05T10:10:00Z", version: "v1", processedAt: "2026-02-06T14:10:00Z", confidence: 75 },
-  { id: "mig-4", fileName: "UCD_Project9592330_Plumbing_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 537600, uploadedAt: "2026-02-10T10:15:00Z", version: "v2", processedAt: "2026-02-11T09:00:00Z", confidence: 81 },
-  { id: "mig-5", fileName: "UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 503808, uploadedAt: "2026-02-10T10:20:00Z", version: "v2", processedAt: "2026-02-11T09:05:00Z", confidence: 78 },
-  { id: "mig-6", fileName: "UCD_Project9592330_Mechanical_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 471040, uploadedAt: "2026-02-10T10:25:00Z", version: "v2", processedAt: "2026-02-11T09:10:00Z", confidence: 83 },
+  { id: "mig-1", fileName: "UCD_HobbsVet_Plumbing_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 524288, uploadedAt: "2026-02-05T10:00:00Z", trade: "Plumbing", version: "v1", processedAt: "2026-02-06T14:00:00Z", confidence: 72, approved: true },
+  { id: "mig-2", fileName: "UCD_HobbsVet_Heating_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 491520, uploadedAt: "2026-02-05T10:05:00Z", trade: "Heating", version: "v1", processedAt: "2026-02-06T14:05:00Z", confidence: 68, approved: true },
+  { id: "mig-3", fileName: "UCD_HobbsVet_Mechanical_Matrix_Index_Grid_v1.csv", fileType: "csv" as const, fileSize: 458752, uploadedAt: "2026-02-05T10:10:00Z", trade: "Mechanical", version: "v1", processedAt: "2026-02-06T14:10:00Z", confidence: 75, approved: true },
+  { id: "mig-4", fileName: "UCD_Project9592330_Plumbing_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 537600, uploadedAt: "2026-02-10T10:15:00Z", trade: "Plumbing", version: "v2", processedAt: "2026-02-11T09:00:00Z", confidence: 81, approved: true },
+  { id: "mig-5", fileName: "UCD_Project9592330_Heating_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 503808, uploadedAt: "2026-02-10T10:20:00Z", trade: "Heating", version: "v2", processedAt: "2026-02-11T09:05:00Z", confidence: 78, approved: false },
+  { id: "mig-6", fileName: "UCD_Project9592330_Mechanical_Matrix_Index_Grid_2026-02.csv", fileType: "csv" as const, fileSize: 471040, uploadedAt: "2026-02-10T10:25:00Z", trade: "Mechanical", version: "v2", processedAt: "2026-02-11T09:10:00Z", confidence: 83, approved: true },
 ];
 
 interface MockUploadFile {
@@ -534,11 +534,32 @@ function MaterialIndexGridCard({
                         </span>
                       </div>
                     </div>
+                    {/* Trade pill */}
+                    {file.trade && (
+                      <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-muted text-muted-foreground ring-1 ring-inset ring-border/40 shrink-0">
+                        {file.trade}
+                      </span>
+                    )}
+                    {/* Version pill */}
+                    {file.version && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-muted text-muted-foreground shrink-0">
+                        {file.version}
+                      </Badge>
+                    )}
+                    {/* Approved status */}
+                    <Badge variant="secondary" className={cn(
+                      "text-[10px] px-1.5 py-0 h-4 shrink-0",
+                      file.approved
+                        ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
+                        : "bg-muted text-muted-foreground"
+                    )}>
+                      {file.approved ? "Approved" : "Superseded"}
+                    </Badge>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <Badge variant="secondary" className="text-[11px] bg-muted text-muted-foreground">
+                      <Badge variant="secondary" className="text-[10px] bg-muted text-muted-foreground">
+                        <Eye className="h-3 w-3 mr-1" aria-hidden="true" />
                         View Only
                       </Badge>
-                      <Eye className="h-3.5 w-3.5 text-muted-foreground/0 group-hover/row:text-muted-foreground transition-colors" aria-hidden="true" />
                     </div>
                   </div>
                 );
@@ -823,6 +844,16 @@ export default function ProjectV4OverviewPage() {
           <MaterialIndexGridCard
             onUpload={() => setUploadDialogOpen(true)}
             versionId={version.id}
+            onFileClick={(fileId) => {
+              const file = currentMaterialFiles.find((f) => f.id === fileId);
+              const matrix = file?.trade?.toLowerCase() ?? "all";
+              router.push(`/project-v4/${project.id}/review?matrix=${matrix}`);
+            }}
+            onHistoryFileClick={(fileId) => {
+              const file = historicalMaterialFiles.find((f) => f.id === fileId);
+              const trade = file?.fileName.includes("Plumbing") ? "plumbing" : file?.fileName.includes("Heating") ? "heating" : file?.fileName.includes("Mechanical") ? "mechanical" : "all";
+              router.push(`/project-v4/${project.id}/review?matrix=${trade}`);
+            }}
           />
 
           {/* Project Specifications */}

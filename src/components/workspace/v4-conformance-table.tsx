@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   Search,
@@ -590,13 +591,16 @@ function V4TradeGroup({
 /* -------------------------------------------------------------------------- */
 
 export function V4ConformanceSection() {
+  const searchParams = useSearchParams();
+  const initialMatrix = searchParams.get("matrix") ?? "all";
+
   const [search, setSearch] = useState("");
   const [tradeFilter, setTradeFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [systemFilter, setSystemFilter] = useState<string>("all");
   const [materialTypeFilter, setMaterialTypeFilter] = useState<string>("all");
   const [allSystemFilter, setAllSystemFilter] = useState<string>("all");
-  const [matrixFileFilter, setMatrixFileFilter] = useState<string>("all");
+  const [matrixFileFilter, setMatrixFileFilter] = useState<string>(initialMatrix);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("category");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -833,6 +837,7 @@ export function V4ConformanceSection() {
                 <SelectItem value="all">All Matrix Files</SelectItem>
                 <SelectItem value="mechanical">Mechanical Template</SelectItem>
                 <SelectItem value="plumbing">Plumbing Template</SelectItem>
+                <SelectItem value="heating">Heating Template</SelectItem>
               </SelectContent>
             </Select>
           </div>

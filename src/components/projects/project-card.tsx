@@ -61,7 +61,7 @@ export function ProjectCard({
   /** Show priority badge on the card (V4 only) */
   showPriority?: boolean;
 }) {
-  const { preApproved, reviewRequired, actionMandatory, total } = project.confidenceSummary;
+  const { preApproved, reviewRequired, actionMandatory, total, overallConfidence } = project.confidenceSummary;
 
   const hasVersions = !!project.latestVersionId;
 
@@ -177,12 +177,20 @@ export function ProjectCard({
           </div>
         </div>
 
-        {/* Row 3: Status counts */}
+        {/* Row 3: Completion rate + Status counts */}
         <div className="mt-3.5 pt-3 border-t border-border/40 flex items-center gap-4 flex-wrap" aria-label="Validation breakdown">
           {isExtracting ? (
             <span className="text-xs text-muted-foreground italic">Processing documents...</span>
           ) : total > 0 ? (
             <>
+              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground" aria-label={`${overallConfidence}% completion rate`}>
+                <span className={cn(
+                  "font-bold text-sm tabular-nums",
+                  overallConfidence >= 80 ? "text-emerald-600 dark:text-emerald-400" : overallConfidence >= 50 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400"
+                )}>{overallConfidence}%</span>
+                Complete
+              </span>
+              <div className="h-3.5 w-px bg-border" aria-hidden="true" />
               <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground" aria-label={`${preApproved} pre-approved`}>
                 <span className="h-2 w-2 rounded-full bg-status-pre-approved shrink-0" aria-hidden="true" />
                 <span className="font-bold text-sm text-foreground">{preApproved}</span>

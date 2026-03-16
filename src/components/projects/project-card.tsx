@@ -203,14 +203,14 @@ export function ProjectCard({
               <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap" aria-label={`${reviewRequired} review required`}>
                 <span className="h-1.5 w-1.5 rounded-full bg-status-review-required shrink-0" aria-hidden="true" />
                 <span className="font-semibold text-[11px] tabular-nums text-foreground">{reviewRequired}</span>
-                <span className="font-medium">Review Required</span>
+                <span className="font-medium">Review Req.</span>
               </span>
               <div className="h-3 w-px bg-border" aria-hidden="true" />
               {/* Action Required */}
               <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap" aria-label={`${actionMandatory} action required`}>
                 <span className="h-1.5 w-1.5 rounded-full bg-status-action-mandatory shrink-0" aria-hidden="true" />
                 <span className="font-semibold text-[11px] tabular-nums text-foreground">{actionMandatory}</span>
-                <span className="font-medium">Action Required</span>
+                <span className="font-medium">Action Req.</span>
               </span>
             </>
           ) : (

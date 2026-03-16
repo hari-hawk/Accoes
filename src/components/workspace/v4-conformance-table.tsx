@@ -272,8 +272,13 @@ function V4EvidenceDetail({
             </ScrollArea>
           </ResizablePanel>
 
-          {/* Draggable divider */}
-          <ResizableHandle withHandle />
+          {/* Draggable divider — thicker hit area for vertical orientation */}
+          <ResizableHandle
+            withHandle
+            className="h-2 bg-muted/50 hover:bg-primary/10 active:bg-primary/20 transition-colors after:h-3"
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          />
 
           {/* Bottom: Project Index */}
           <ResizablePanel defaultSize={45} minSize={20}>
@@ -1280,7 +1285,12 @@ export function V4ConformanceSection() {
 
       {/* Right-side overlay panel — Evidence Sheet (wider for split view) */}
       <Sheet open={!!selectedItem && !commentItemId} onOpenChange={(open) => { if (!open) setSelectedId(null); }}>
-        <SheetContent side="right" className="w-full sm:w-[85vw] md:w-[60vw] lg:w-[50vw] sm:min-w-[480px] max-w-[720px] p-0 flex flex-col">
+        <SheetContent
+          side="right"
+          className="w-full sm:w-[85vw] md:w-[60vw] lg:w-[50vw] sm:min-w-[480px] max-w-[720px] p-0 flex flex-col"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <SheetHeader className="sr-only">
             <SheetTitle>Material Evidence</SheetTitle>
           </SheetHeader>

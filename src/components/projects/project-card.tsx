@@ -177,35 +177,40 @@ export function ProjectCard({
           </div>
         </div>
 
-        {/* Row 3: Completion rate + Status counts — single compact line */}
-        <div className="mt-3.5 pt-3 border-t border-border/40 flex items-center gap-2.5" aria-label="Validation breakdown">
+        {/* Row 3: Completed % | Pre-Approved # | Review Required # | Action Required # */}
+        <div className="mt-3.5 pt-3 border-t border-border/40 flex items-center gap-2" aria-label="Validation breakdown">
           {isExtracting ? (
             <span className="text-xs text-muted-foreground italic">Processing documents...</span>
           ) : total > 0 ? (
             <>
-              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap" aria-label={`${overallConfidence}% completion rate`}>
+              {/* Completed % */}
+              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap" aria-label={`${overallConfidence}% completed`}>
                 <span className={cn(
-                  "font-bold text-xs tabular-nums",
+                  "font-bold text-[11px] tabular-nums",
                   overallConfidence >= 80 ? "text-emerald-600 dark:text-emerald-400" : overallConfidence >= 50 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400"
                 )}>{overallConfidence}%</span>
+                <span className="font-medium">Completed</span>
               </span>
-              <div className="h-3 w-px bg-border/60" aria-hidden="true" />
-              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap" aria-label={`${preApproved} pre-approved`}>
+              <div className="h-3 w-px bg-border" aria-hidden="true" />
+              {/* Pre-Approved */}
+              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap" aria-label={`${preApproved} pre-approved`}>
                 <span className="h-1.5 w-1.5 rounded-full bg-status-pre-approved shrink-0" aria-hidden="true" />
-                <span className="font-semibold text-xs tabular-nums text-foreground">{preApproved}</span>
-                Approved
+                <span className="font-semibold text-[11px] tabular-nums text-foreground">{preApproved}</span>
+                <span className="font-medium">Pre-Approved</span>
               </span>
-              <div className="h-3 w-px bg-border/60" aria-hidden="true" />
-              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap" aria-label={`${reviewRequired} review required`}>
+              <div className="h-3 w-px bg-border" aria-hidden="true" />
+              {/* Review Required */}
+              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap" aria-label={`${reviewRequired} review required`}>
                 <span className="h-1.5 w-1.5 rounded-full bg-status-review-required shrink-0" aria-hidden="true" />
-                <span className="font-semibold text-xs tabular-nums text-foreground">{reviewRequired}</span>
-                Review
+                <span className="font-semibold text-[11px] tabular-nums text-foreground">{reviewRequired}</span>
+                <span className="font-medium">Review Required</span>
               </span>
-              <div className="h-3 w-px bg-border/60" aria-hidden="true" />
-              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap" aria-label={`${actionMandatory} action required`}>
+              <div className="h-3 w-px bg-border" aria-hidden="true" />
+              {/* Action Required */}
+              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap" aria-label={`${actionMandatory} action required`}>
                 <span className="h-1.5 w-1.5 rounded-full bg-status-action-mandatory shrink-0" aria-hidden="true" />
-                <span className="font-semibold text-xs tabular-nums text-foreground">{actionMandatory}</span>
-                Action
+                <span className="font-semibold text-[11px] tabular-nums text-foreground">{actionMandatory}</span>
+                <span className="font-medium">Action Required</span>
               </span>
             </>
           ) : (

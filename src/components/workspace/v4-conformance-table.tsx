@@ -1250,22 +1250,40 @@ export function V4ConformanceSection() {
         )}
       </div>
 
-      {/* Bottom static panel — review progress + Proceed CTA */}
+      {/* Bottom static panel — status summary + Proceed CTA */}
       <div className="shrink-0 border-t bg-card dark:bg-card px-4 sm:px-6 lg:px-12 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 shadow-[0_-4px_12px_-2px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_12px_-2px_rgba(0,0,0,0.3)]">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <span className="text-sm font-medium whitespace-nowrap">
-            <span className="font-semibold tabular-nums">{reviewedIds.size}</span>
-            <span className="text-muted-foreground">/{filteredData.length} reviewed</span>
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          {/* Pre-Approved + Approved count */}
+          <span className="inline-flex items-center gap-1.5 text-sm whitespace-nowrap">
+            <span className="h-2 w-2 rounded-full bg-status-pre-approved shrink-0" aria-hidden="true" />
+            <span className="font-semibold tabular-nums text-foreground">{statusCounts.preApproved}</span>
+            <span className="text-muted-foreground text-xs">Pre-Approved</span>
           </span>
-          <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden max-w-xs">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-[#00529B] to-[#003075] transition-all duration-500"
-              style={{ width: `${filteredData.length > 0 ? (reviewedIds.size / filteredData.length) * 100 : 0}%` }}
-            />
+          <div className="h-3.5 w-px bg-border/60" aria-hidden="true" />
+          <span className="inline-flex items-center gap-1.5 text-sm whitespace-nowrap">
+            <span className="h-2 w-2 rounded-full bg-status-review-required shrink-0" aria-hidden="true" />
+            <span className="font-semibold tabular-nums text-foreground">{statusCounts.reviewRequired}</span>
+            <span className="text-muted-foreground text-xs">Review</span>
+          </span>
+          <div className="h-3.5 w-px bg-border/60" aria-hidden="true" />
+          <span className="inline-flex items-center gap-1.5 text-sm whitespace-nowrap">
+            <span className="h-2 w-2 rounded-full bg-status-action-mandatory shrink-0" aria-hidden="true" />
+            <span className="font-semibold tabular-nums text-foreground">{statusCounts.actionMandatory}</span>
+            <span className="text-muted-foreground text-xs">Action</span>
+          </span>
+          <div className="h-3.5 w-px bg-border/60" aria-hidden="true" />
+          {/* Progress bar for overall completion */}
+          <div className="flex items-center gap-1.5">
+            <div className="h-2 w-16 sm:w-24 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#00529B] to-[#003075] transition-all duration-500"
+                style={{ width: `${statusCounts.total > 0 ? (statusCounts.preApproved / statusCounts.total) * 100 : 0}%` }}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground tabular-nums font-medium">
+              {statusCounts.total > 0 ? Math.round((statusCounts.preApproved / statusCounts.total) * 100) : 0}%
+            </span>
           </div>
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {filteredData.length > 0 ? Math.round((reviewedIds.size / filteredData.length) * 100) : 0}%
-          </span>
         </div>
         <Button
           className={cn(

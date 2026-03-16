@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   Download,
   Loader2,
   Plus,
   FileText,
+  Layers,
+  ChevronDown,
+  History,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -17,13 +21,21 @@ import {
 } from "@/components/ui/avatar";
 import { StatusIndicator } from "@/components/shared/status-indicator";
 import { mockUsers } from "@/data/mock-users";
+import { Badge } from "@/components/ui/badge";
 import { getDocumentsByVersion } from "@/data/mock-documents";
 import { getVersionsByProject } from "@/data/mock-versions";
+import { getProjectOverviewData } from "@/data/mock-project-data";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/data/types";
 
 /* HIDDEN: Generate Submittal — re-enable when needed */
 const SHOW_GENERATE_SUBMITTAL = false;
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 function getInitials(name: string) {
   return name
@@ -73,6 +85,12 @@ export function ProjectCard({
   ).length > 0;
 
   const isExtracting = project.status === "extracting";
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  // Material matrix files from per-project data
+  const projData = getProjectOverviewData(project.id);
+  const currentFiles = projData.currentMaterialFiles;
+  const historicalFiles = projData.historicalMaterialFiles;
 
   // Resolve member IDs to user objects (show max 3)
   const members = project.memberIds
@@ -219,6 +237,97 @@ export function ProjectCard({
             <span className="text-[10px] text-muted-foreground italic">No documents</span>
           )}
         </div>
+
+        {/* Row 4: Material Matrix — compact file list with history */}
+        {currentFiles.length > 0 && !isExtracting && (
+          <div className="mt-3 pt-2.5 border-t border-border/40">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Layers className="h-3 w-3 text-primary" aria-hidden="true" />
+              <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Material Matrix</span>
+              <Badge variant="secondary" className="text-[9px] px-1 py-0 h-3.5 ml-auto">
+                {currentFiles.length} {currentFiles.length === 1 ? "file" : "files"}
+              </Badge>
+            </div>
+            <div className="space-y-1" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+              {currentFiles.map((file) => (
+                <div key={file.id} className="flex items-center gap-2 py-1 px-1.5 rounded hover:bg-muted/40 transition-colors">
+                  <div className="h-5 w-5 rounded bg-status-pre-approved-bg flex items-center justify-center shrink-0">
+                    <FileText className="h-2.5 w-2.5 text-status-pre-approved" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-medium truncate leading-tight">{file.fileName}</p>
+                    <span className="text-[9px] text-muted-foreground">{formatFileSize(file.fileSize)}</span>
+                  </div>
+                  {file.trade && (
+                    <span className="inline-flex items-center rounded px-1 py-0 text-[8px] font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-700 shrink-0">
+                      {file.trade}
+                    </span>
+                  )}
+                  {file.version && (
+                    <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3.5 shrink-0">
+                      {file.version}
+                    </Badge>
+                  )}
+                </div>
+              ))}
+
+              {/* History toggle */}
+              {historicalFiles.length > 0 && (
+                <>
+                  <button
+                    type="button"
+                    className="w-full flex items-center justify-between gap-1.5 px-1.5 py-1 rounded hover:bg-muted/40 transition-colors text-left mt-1"
+                    onClick={(e) => { e.stopPropagation(); setHistoryOpen((prev) => !prev); }}
+                    aria-expanded={historyOpen}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <History className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                      <span className="text-[10px] font-semibold text-muted-foreground">History</span>
+                      <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3.5">
+                        {historicalFiles.length}
+                      </Badge>
+                    </span>
+                    <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", historyOpen && "rotate-180")} aria-hidden="true" />
+                  </button>
+
+                  {historyOpen && (
+                    <div className="space-y-0.5 pl-1">
+                      {historicalFiles.map((file) => (
+                        <div key={file.id} className="flex items-center gap-2 py-1 px-1.5 rounded hover:bg-muted/30 transition-colors">
+                          <div className="h-5 w-5 rounded bg-muted flex items-center justify-center shrink-0">
+                            <FileText className="h-2.5 w-2.5 text-muted-foreground" aria-hidden="true" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-medium truncate text-muted-foreground leading-tight">{file.fileName}</p>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[9px] text-muted-foreground">{formatFileSize(file.fileSize)}</span>
+                              {file.confidence != null && (
+                                <span className="text-[9px] text-muted-foreground font-medium">{file.confidence}%</span>
+                              )}
+                            </div>
+                          </div>
+                          {file.version && (
+                            <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3.5 bg-muted text-muted-foreground shrink-0">
+                              {file.version}
+                            </Badge>
+                          )}
+                          <Badge variant="secondary" className={cn(
+                            "text-[8px] px-1 py-0 h-3.5 shrink-0",
+                            file.approved
+                              ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
+                              : "bg-muted text-muted-foreground"
+                          )}>
+                            {file.approved ? "Approved" : "Superseded"}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer: Download Report | Generate Submittal */}

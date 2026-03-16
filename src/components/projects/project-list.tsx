@@ -19,6 +19,8 @@ import {
   RotateCcw,
   Clock,
   Users,
+  Layers,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -71,6 +73,7 @@ import { TeamAccessSheet } from "./team-access-sheet";
 import { useProjects } from "@/hooks/use-projects";
 import { useMaterials } from "@/hooks/use-materials";
 import { mockProjects } from "@/data/mock-projects";
+import { getProjectOverviewData } from "@/data/mock-project-data";
 import { mockUsers } from "@/data/mock-users";
 import { getDocumentsByVersion } from "@/data/mock-documents";
 import { getVersionsByProject } from "@/data/mock-versions";
@@ -687,11 +690,17 @@ function DownloadReportSheet({
   const [exporting, setExporting] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
   const [exportFormat, setExportFormat] = useState<"pdf" | "xlsx">("pdf");
+  const [matrixHistoryOpen, setMatrixHistoryOpen] = useState(false);
 
   /* ---- Data from hook ---- */
   // TODO: Phase 2 — extract a lighter read-only hook to avoid unused internal state
   const versionId = project?.latestVersionId ?? "";
   const { allMaterials } = useMaterials(versionId);
+
+  /* ---- Material matrix files (per-project) ---- */
+  const projData = project ? getProjectOverviewData(project.id) : null;
+  const currentMatrixFiles = projData?.currentMaterialFiles ?? [];
+  const historicalMatrixFiles = projData?.historicalMaterialFiles ?? [];
 
   /* ---- Local filtering ---- */
   const filteredMaterials = allMaterials.filter((m) => {
@@ -786,6 +795,7 @@ function DownloadReportSheet({
       setExporting(false);
       setExportComplete(false);
       setExportFormat("pdf");
+      setMatrixHistoryOpen(false);
     }
     onOpenChange(isOpen);
   };
@@ -851,293 +861,162 @@ function DownloadReportSheet({
               </TabsList>
             </div>
 
-            {/* Tab 1: Material Matrix — existing content */}
+            {/* Tab 1: Material Matrix — overall matrix files with version history */}
             <TabsContent value="material-matrix" className="flex-1 min-h-0 flex flex-col mt-0 data-[state=inactive]:hidden">
-              {/* Search + Filter Controls */}
-              <div className="px-4 pt-3 pb-2 space-y-2 border-b shrink-0 bg-muted/20">
-                <SearchInput
-                  placeholder="Search materials..."
-                  value={search}
-                  onChange={setSearch}
-                  className="[&_input]:h-8 [&_input]:text-xs"
-                />
-                {/* Row 1: Document dropdown + Status filter */}
-                <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
-                  <Select defaultValue="all">
-                    <SelectTrigger className="h-8 text-xs w-full">
-                      <SelectValue placeholder="All Documents" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Documents</SelectItem>
-                      <SelectItem value="mig-7">Plumbing Matrix Index Grid</SelectItem>
-                      <SelectItem value="mig-8">Heating Matrix Index Grid</SelectItem>
-                      <SelectItem value="mig-9">Mechanical Matrix Index Grid</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  {/* Status multi-select popover */}
-                  <Popover open={statusPopoverOpen} onOpenChange={setStatusPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={cn(
-                          "h-8 w-full text-xs justify-between font-normal px-3",
-                          activeFilterCount > 0 && "border-primary/40 bg-primary/5"
-                        )}
-                        aria-label={`Filter by status${activeFilterCount > 0 ? ` — ${activeFilterCount} selected` : ""}`}
-                      >
-                        <span className="truncate">
-                          {activeFilterCount === 0
-                            ? "All Status"
-                            : activeFilterCount === 1
-                              ? REPORT_STATUS_OPTIONS.find((s) => statusFilter.has(s.key))?.label ?? "1 Status"
-                              : `${activeFilterCount} Status`}
-                        </span>
-                        <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden="true" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-56 p-2" align="start">
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between px-2 py-1">
-                          <span className="text-xs font-semibold text-muted-foreground">Filter by Status</span>
-                          {activeFilterCount > 0 && (
-                            <button
-                              type="button"
-                              className="text-[11px] text-primary hover:underline font-medium"
-                              onClick={() => setStatusFilter(new Set())}
-                            >
-                              Clear all
-                            </button>
-                          )}
-                        </div>
-                        <div className="h-px bg-border" />
-                        {REPORT_STATUS_OPTIONS.map((opt) => {
-                          const Icon = opt.icon;
-                          const isActive = statusFilter.has(opt.key);
-                          const count = statusCountMap[opt.key];
-                          return (
-                            <label
-                              key={opt.key}
-                              className={cn(
-                                "flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors",
-                                isActive ? "bg-primary/5" : "hover:bg-muted/50"
-                              )}
-                            >
-                              <Checkbox
-                                checked={isActive}
-                                onCheckedChange={() => toggleStatusFilter(opt.key)}
-                                className="h-3.5 w-3.5"
-                              />
-                              <Icon className={cn("h-3.5 w-3.5 shrink-0", opt.color)} aria-hidden="true" />
-                              <span className="text-xs font-medium flex-1">{opt.label}</span>
-                              <span className="text-[11px] text-muted-foreground tabular-nums font-medium">{count}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* Active filter chips */}
-                {activeFilterCount > 0 && (
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {REPORT_STATUS_OPTIONS.filter((s) => statusFilter.has(s.key)).map((opt) => (
-                      <span
-                        key={opt.key}
-                        className={cn(
-                          "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                          opt.bgColor,
-                          opt.color
-                        )}
-                      >
-                        {opt.label}
-                        <button
-                          type="button"
-                          className="hover:opacity-70 transition-opacity"
-                          onClick={() => toggleStatusFilter(opt.key)}
-                          aria-label={`Remove ${opt.label} filter`}
-                        >
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                      </span>
-                    ))}
-                    <button
-                      type="button"
-                      className="text-[11px] text-muted-foreground hover:text-foreground transition-colors ml-1"
-                      onClick={() => setStatusFilter(new Set())}
-                    >
-                      Clear
-                    </button>
-                  </div>
-                )}
-
-                {/* Select all + status count badges */}
-                <div className="flex items-center gap-3 text-xs">
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <Checkbox
-                      checked={allSelected}
-                      onCheckedChange={toggleAll}
-                      className="h-3.5 w-3.5"
-                    />
-                    <span className="text-muted-foreground">Select all</span>
-                  </label>
-                  <div className="flex items-center gap-2 ml-auto" role="group" aria-label="Status counts">
-                    <span className="flex items-center gap-1 text-status-pre-approved" aria-label={`${statusCountMap.pre_approved} pre-approved`}>
-                      <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-                      {statusCountMap.pre_approved}
-                    </span>
-                    <span className="flex items-center gap-1 text-status-review-required" aria-label={`${statusCountMap.review_required} review required`}>
-                      <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                      {statusCountMap.review_required}
-                    </span>
-                    <span className="flex items-center gap-1 text-status-action-mandatory" aria-label={`${statusCountMap.action_mandatory} action required`}>
-                      <XCircle className="h-3 w-3" aria-hidden="true" />
-                      {statusCountMap.action_mandatory}
-                    </span>
-                  </div>
+              {/* Header */}
+              <div className="px-4 pt-3 pb-2 border-b shrink-0 bg-muted/20">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-primary" aria-hidden="true" />
+                  <span className="text-xs font-semibold">Material Matrix Files</span>
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 ml-auto">
+                    {currentMatrixFiles.length} {currentMatrixFiles.length === 1 ? "file" : "files"}
+                  </Badge>
                 </div>
               </div>
 
-              {/* Material items — scrollable */}
+              {/* File list — scrollable */}
               <ScrollArea className="flex-1 min-h-0">
-                <div role="list" aria-label="Materials for export">
-                  {filteredMaterials.length > 0 ? (
-                    filteredMaterials.map((item) => {
-                      const isChecked = selectedIds.has(item.document.id);
-                      const status = item.validation?.status;
-                      const effectiveDecision = item.validation?.decision;
-                      const psScore = item.paValidation?.confidenceScore;
-                      const piScore = item.piValidation?.confidenceScore;
-                      const overallScore = item.validation?.confidenceScore;
-                      const hasSubScores = psScore !== undefined || piScore !== undefined;
-
-                      return (
-                        <label
-                          key={item.document.id}
+                <div role="list" aria-label="Material matrix files">
+                  {currentMatrixFiles.length > 0 ? (
+                    <>
+                      {/* Current files */}
+                      {currentMatrixFiles.map((file) => (
+                        <div
+                          key={file.id}
                           role="listitem"
-                          className={cn(
-                            "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b",
-                            isChecked
-                              ? "bg-nav-accent/5 border-l-2 border-l-nav-accent"
-                              : "hover:bg-muted/30 border-l-2 border-l-transparent"
-                          )}
+                          className="flex items-center gap-3 px-4 py-3 border-b hover:bg-muted/30 transition-colors"
                         >
-                          <Checkbox
-                            checked={isChecked}
-                            onCheckedChange={() => toggleItem(item.document.id)}
-                            aria-label={`Select ${item.document.fileName}`}
-                            className="mt-1 shrink-0"
-                          />
-
-                          <div className="flex-1 min-w-0 overflow-hidden">
-                            {/* Material name */}
-                            <div className="flex items-center gap-1.5">
-                              {status && (
-                                <span
-                                  className={cn(
-                                    "h-2 w-2 rounded-full shrink-0",
-                                    REPORT_STATUS_OPTIONS.find((o) => o.key === status)?.dotColor
-                                  )}
-                                />
+                          <div className="h-9 w-9 rounded-lg bg-status-pre-approved-bg flex items-center justify-center shrink-0">
+                            <FileText className="h-4 w-4 text-status-pre-approved" aria-hidden="true" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate leading-tight">{file.fileName}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs text-muted-foreground">{formatReportFileSize(file.fileSize)}</span>
+                              {file.processedAt && (
+                                <span className="text-xs text-muted-foreground">
+                                  · {new Date(file.processedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                </span>
                               )}
-                              <p className="text-sm font-medium leading-tight truncate">
-                                {item.document.fileName.replace(/\.[^/.]+$/, "")}
-                              </p>
-                            </div>
-
-                            {/* Spec section */}
-                            <p className="text-xs text-muted-foreground mt-1 leading-tight truncate">
-                              <span className="font-mono font-semibold text-primary/80">
-                                {item.document.specSection}
-                              </span>
-                              {" — "}
-                              {item.document.specSectionTitle}
-                            </p>
-
-                            {/* Score chips + decision/status badge */}
-                            <div className="flex items-center gap-2 mt-2 flex-wrap">
-                              {hasSubScores ? (
-                                <>
-                                  <ReportScoreChip label="PS" score={psScore} />
-                                  <ReportScoreChip label="PI" score={piScore} />
-                                </>
-                              ) : (
-                                <ReportScoreChip label="Score" score={overallScore} />
-                              )}
-
-                              {/* Decision or validation status badge */}
-                              <div className="ml-auto flex items-center gap-1.5 shrink-0">
-                                {effectiveDecision && effectiveDecision !== "pending" ? (
-                                  <span
-                                    className={cn(
-                                      "inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold leading-none capitalize",
-                                      effectiveDecision === "approved"
-                                        ? "bg-status-pre-approved-bg text-status-pre-approved"
-                                        : effectiveDecision === "revisit"
-                                          ? "bg-status-review-required-bg text-status-review-required"
-                                          : "bg-muted text-muted-foreground"
-                                    )}
-                                  >
-                                    {effectiveDecision.replace(/_/g, " ")}
-                                  </span>
-                                ) : (
-                                  status && (
-                                    <span
-                                      className={cn(
-                                        "inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold leading-none",
-                                        VALIDATION_STATUS_CONFIG[status].bgColor,
-                                        VALIDATION_STATUS_CONFIG[status].color
-                                      )}
-                                    >
-                                      {VALIDATION_STATUS_CONFIG[status].label}
-                                    </span>
-                                  )
-                                )}
-                              </div>
                             </div>
                           </div>
-                        </label>
-                      );
-                    })
-                  ) : allMaterials.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="w-14 h-14 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
-                        <FileText className="h-6 w-6 text-muted-foreground/60" aria-hidden="true" />
-                      </div>
-                      <p className="text-sm font-medium text-muted-foreground">No documents available</p>
-                      <p className="text-xs text-muted-foreground/60 mt-1 max-w-[200px]">
-                        Upload documents to this project&apos;s latest version first
-                      </p>
-                    </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {file.trade && (
+                              <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:ring-slate-700">
+                                {file.trade}
+                              </span>
+                            )}
+                            {file.version && (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                                {file.version}
+                              </Badge>
+                            )}
+                            {file.confidence != null && (
+                              <Badge
+                                variant="secondary"
+                                className={cn(
+                                  "text-[10px] px-1.5 py-0 h-4",
+                                  file.confidence >= 80
+                                    ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
+                                    : file.confidence >= 70
+                                      ? "bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400"
+                                      : "bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400"
+                                )}
+                              >
+                                {file.confidence}%
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* History section */}
+                      {historicalMatrixFiles.length > 0 && (
+                        <div className="border-b">
+                          <button
+                            type="button"
+                            className="w-full flex items-center justify-between gap-2 px-4 py-2.5 hover:bg-muted/30 transition-colors text-left"
+                            onClick={() => setMatrixHistoryOpen((prev) => !prev)}
+                            aria-expanded={matrixHistoryOpen}
+                          >
+                            <span className="flex items-center gap-2">
+                              <History className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                              <span className="text-xs font-semibold text-muted-foreground">Version History</span>
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                                {historicalMatrixFiles.length}
+                              </Badge>
+                            </span>
+                            <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", matrixHistoryOpen && "rotate-180")} aria-hidden="true" />
+                          </button>
+
+                          {matrixHistoryOpen && (
+                            <div className="bg-muted/10">
+                              {historicalMatrixFiles.map((file) => (
+                                <div
+                                  key={file.id}
+                                  role="listitem"
+                                  className="flex items-center gap-3 px-4 py-2.5 border-t border-border/30 hover:bg-muted/20 transition-colors"
+                                >
+                                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                    <FileText className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium truncate text-muted-foreground leading-tight">{file.fileName}</p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <span className="text-[11px] text-muted-foreground">{formatReportFileSize(file.fileSize)}</span>
+                                      {file.confidence != null && (
+                                        <span className="text-[11px] text-muted-foreground font-medium">{file.confidence}%</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    {file.version && (
+                                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-muted text-muted-foreground">
+                                        {file.version}
+                                      </Badge>
+                                    )}
+                                    <Badge
+                                      variant="secondary"
+                                      className={cn(
+                                        "text-[10px] px-1.5 py-0 h-4",
+                                        file.approved
+                                          ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
+                                          : "bg-muted text-muted-foreground"
+                                      )}
+                                    >
+                                      {file.approved ? "Approved" : "Superseded"}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <div className="w-14 h-14 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
-                        <FileText className="h-6 w-6 text-muted-foreground/60" aria-hidden="true" />
+                        <Layers className="h-6 w-6 text-muted-foreground/60" aria-hidden="true" />
                       </div>
-                      <p className="text-sm font-medium text-muted-foreground">No materials match filters</p>
-                      <p className="text-xs text-muted-foreground/60 mt-1 max-w-[200px]">
-                        Try adjusting your search or status filters
+                      <p className="text-sm font-medium text-muted-foreground">No matrix files available</p>
+                      <p className="text-xs text-muted-foreground/60 mt-1 max-w-[220px]">
+                        Material matrix files will appear here once uploaded and processed
                       </p>
                     </div>
                   )}
                 </div>
               </ScrollArea>
 
-              {/* Footer — dual export CTAs */}
+              {/* Footer — export */}
               <SheetFooter className="px-6 py-4 border-t shrink-0">
                 <div className="flex items-center gap-3 w-full">
                   <Button
                     variant="outline"
                     onClick={() => handleExport("xlsx")}
-                    disabled={selectedIds.size === 0 || exporting}
+                    disabled={currentMatrixFiles.length === 0 || exporting}
                     className="flex-1"
-                    aria-label={
-                      selectedIds.size === 0
-                        ? "Select materials to export as Excel"
-                        : `Export ${selectedIds.size} material${selectedIds.size !== 1 ? "s" : ""} as Excel`
-                    }
+                    aria-label="Export material matrix as Excel"
                   >
                     {exporting && exportFormat === "xlsx" ? (
                       <>
@@ -1147,19 +1026,15 @@ function DownloadReportSheet({
                     ) : (
                       <>
                         <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                        Export Excel{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+                        Export Excel
                       </>
                     )}
                   </Button>
                   <Button
                     onClick={() => handleExport("pdf")}
-                    disabled={selectedIds.size === 0 || exporting}
+                    disabled={currentMatrixFiles.length === 0 || exporting}
                     className="flex-1 gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity"
-                    aria-label={
-                      selectedIds.size === 0
-                        ? "Select materials to export as PDF"
-                        : `Export ${selectedIds.size} material${selectedIds.size !== 1 ? "s" : ""} as PDF`
-                    }
+                    aria-label="Export material matrix as PDF"
                   >
                     {exporting && exportFormat === "pdf" ? (
                       <>
@@ -1169,7 +1044,7 @@ function DownloadReportSheet({
                     ) : (
                       <>
                         <FileText className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                        Export PDF{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+                        Export PDF
                       </>
                     )}
                   </Button>

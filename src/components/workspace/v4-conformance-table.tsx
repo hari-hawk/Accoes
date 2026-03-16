@@ -124,7 +124,7 @@ function V4EvidenceDetail({
   return (
     <div className="flex flex-col h-full">
       {/* Header — item info + status dropdown */}
-      <div className="px-5 py-4 border-b space-y-3 shrink-0">
+      <div className="px-5 py-4 pr-12 border-b space-y-3 shrink-0">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1 min-w-0 flex-1">
             <p className="text-xs text-muted-foreground font-mono">{item.accoMaterialId}</p>
@@ -135,32 +135,50 @@ function V4EvidenceDetail({
               {spec.specTitle}
             </p>
           </div>
+        </div>
 
-          {/* Status filter/change dropdown */}
+        {/* Confidence bar + status dropdown row */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <span className={cn("text-xs font-semibold whitespace-nowrap", scoreColor)}>
+              {isMatch ? "Matches Specification" : isPartial ? "Partial Match" : "No Match"}
+            </span>
+            <div className="flex items-center gap-1.5 ml-auto">
+              <div className="h-2 w-20 rounded-full bg-muted overflow-hidden">
+                <div className={cn("h-full rounded-full transition-all duration-500", barColor)} style={{ width: `${spec.confidence}%` }} />
+              </div>
+              <span className="text-[11px] text-muted-foreground tabular-nums">{spec.confidence}%</span>
+            </div>
+          </div>
+
+          {/* Status filter/change dropdown — clear of close button */}
           {onStatusChange && (
             <Select
               value={item.aiStatus}
               onValueChange={(v) => onStatusChange(item.id, v as ValidationStatus)}
             >
-              <SelectTrigger className="w-[160px] h-8 text-xs shrink-0">
+              <SelectTrigger
+                className="w-[160px] h-8 text-xs shrink-0"
+                aria-label="Change item status"
+              >
                 <SelectValue placeholder="Change status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="pre_approved" className="text-xs">
                   <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-status-pre-approved shrink-0" />
+                    <span className="h-2 w-2 rounded-full bg-status-pre-approved shrink-0" aria-hidden="true" />
                     Pre-Approved
                   </span>
                 </SelectItem>
                 <SelectItem value="review_required" className="text-xs">
                   <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-status-review-required shrink-0" />
+                    <span className="h-2 w-2 rounded-full bg-status-review-required shrink-0" aria-hidden="true" />
                     Review Required
                   </span>
                 </SelectItem>
                 <SelectItem value="action_mandatory" className="text-xs">
                   <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-status-action-mandatory shrink-0" />
+                    <span className="h-2 w-2 rounded-full bg-status-action-mandatory shrink-0" aria-hidden="true" />
                     Action Mandatory
                   </span>
                 </SelectItem>
@@ -168,35 +186,21 @@ function V4EvidenceDetail({
             </Select>
           )}
         </div>
-
-        {/* Confidence bar */}
-        <div className="flex items-center gap-2.5">
-          <span className={cn("text-xs font-semibold", scoreColor)}>
-            {isMatch ? "Matches Specification" : isPartial ? "Partial Match" : "No Match"}
-          </span>
-          <div className="flex items-center gap-1.5 ml-auto">
-            <div className="h-2 w-20 rounded-full bg-muted overflow-hidden">
-              <div className={cn("h-full rounded-full transition-all duration-500", barColor)} style={{ width: `${spec.confidence}%` }} />
-            </div>
-            <span className="text-[11px] text-muted-foreground tabular-nums">{spec.confidence}%</span>
-          </div>
-        </div>
-
-        {/* Section labels */}
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground pt-1">
-          <span>Project Specifications</span>
-          <span className="flex-1 border-b border-dashed border-muted-foreground/20" />
-          <span>Project Index</span>
-        </div>
       </div>
 
-      {/* Resizable split content — 50/50 horizontal on md+, stacked vertical on mobile */}
+      {/* Resizable split content — vertical stack (top/bottom) with draggable divider */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        <ResizablePanelGroup orientation="horizontal" className="h-full">
-          {/* Left: Project Specifications */}
-          <ResizablePanel defaultSize={50} minSize={20}>
-            <ScrollArea className="h-full">
-              <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+        <ResizablePanelGroup orientation="vertical" className="h-full">
+          {/* Top: Project Specifications */}
+          <ResizablePanel defaultSize={55} minSize={20}>
+            <div className="px-4 pt-3 pb-1">
+              <h5 className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-2">
+                <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+                Project Specifications
+              </h5>
+            </div>
+            <ScrollArea className="h-[calc(100%-28px)]">
+              <div className="p-3 sm:p-4 pt-2 space-y-3 sm:space-y-4">
                 {/* Match indicator */}
                 <div className="flex items-center gap-2">
                   {isMatch ? (
@@ -271,10 +275,16 @@ function V4EvidenceDetail({
           {/* Draggable divider */}
           <ResizableHandle withHandle />
 
-          {/* Right: Project Index */}
-          <ResizablePanel defaultSize={50} minSize={20}>
-            <ScrollArea className="h-full">
-              <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+          {/* Bottom: Project Index */}
+          <ResizablePanel defaultSize={45} minSize={20}>
+            <div className="px-4 pt-3 pb-1">
+              <h5 className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-2">
+                <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+                Project Index
+              </h5>
+            </div>
+            <ScrollArea className="h-[calc(100%-28px)]">
+              <div className="p-3 sm:p-4 pt-2 space-y-3 sm:space-y-4">
                 <p className="text-[13px] font-medium">
                   Found {evidence.indexMatches.length} match{evidence.indexMatches.length !== 1 ? "es" : ""}
                 </p>
@@ -1270,7 +1280,7 @@ export function V4ConformanceSection() {
 
       {/* Right-side overlay panel — Evidence Sheet (wider for split view) */}
       <Sheet open={!!selectedItem && !commentItemId} onOpenChange={(open) => { if (!open) setSelectedId(null); }}>
-        <SheetContent side="right" className="w-full sm:w-[90vw] lg:w-[70vw] xl:w-[65vw] sm:min-w-[640px] max-w-[1100px] p-0 flex flex-col">
+        <SheetContent side="right" className="w-full sm:w-[85vw] md:w-[60vw] lg:w-[50vw] sm:min-w-[480px] max-w-[720px] p-0 flex flex-col">
           <SheetHeader className="sr-only">
             <SheetTitle>Material Evidence</SheetTitle>
           </SheetHeader>
@@ -1349,24 +1359,40 @@ export function V4ConformanceSection() {
         </DialogContent>
       </Dialog>
 
-      {/* PDF preview overlay — z-[60] to sit above Sheet (z-50) */}
+      {/* PDF preview overlay — z-[60] to sit above Sheet (z-50), 90% screen */}
       {pdfPreviewRef && (
-        <div className="fixed inset-0 z-[60] bg-black/60 dark:bg-black/70 flex items-center justify-center p-4 sm:p-8">
-          <div className="relative bg-card rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden border dark:border-border">
+        <div
+          className="fixed inset-0 z-[60] bg-black/60 dark:bg-black/70 flex items-center justify-center p-3 sm:p-5"
+          onClick={() => setPdfPreviewRef(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="PDF Preview"
+        >
+          <div
+            className="relative bg-card rounded-xl shadow-2xl w-[95vw] sm:w-[92vw] md:w-[90vw] h-[90vh] flex flex-col overflow-hidden border dark:border-border"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between px-5 py-3 border-b shrink-0">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">{pdfPreviewRef}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <FileText className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                <span className="text-sm font-medium truncate">{pdfPreviewRef}</span>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setPdfPreviewRef(null)}>
-                <X className="h-4 w-4" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPdfPreviewRef(null)}
+                className="shrink-0 gap-1.5"
+                aria-label="Close PDF preview"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+                Close
               </Button>
             </div>
             <div className="flex-1 flex items-center justify-center bg-muted/30 p-8">
               <div className="text-center space-y-3">
-                <FileText className="h-12 w-12 text-muted-foreground/40 mx-auto" />
-                <p className="text-sm font-medium text-muted-foreground">PDF Preview</p>
-                <p className="text-xs text-muted-foreground">{pdfPreviewRef}</p>
+                <FileText className="h-16 w-16 text-muted-foreground/30 mx-auto" aria-hidden="true" />
+                <p className="text-base font-medium text-muted-foreground">PDF Preview</p>
+                <p className="text-sm text-muted-foreground">{pdfPreviewRef}</p>
                 <p className="text-xs text-muted-foreground/60">Full PDF viewer will connect to actual specification documents</p>
               </div>
             </div>

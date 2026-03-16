@@ -61,7 +61,9 @@ export function ProjectCard({
   /** Show priority badge on the card (V4 only) */
   showPriority?: boolean;
 }) {
-  const { preApproved, reviewRequired, actionMandatory, total, overallConfidence } = project.confidenceSummary;
+  const { preApproved, reviewRequired, actionMandatory, total } = project.confidenceSummary;
+  // Completion rate = pre-approved / total (same formula as overview page)
+  const completionPct = total > 0 ? Math.round((preApproved / total) * 100) : 0;
 
   const hasVersions = !!project.latestVersionId;
 
@@ -184,11 +186,11 @@ export function ProjectCard({
           ) : total > 0 ? (
             <>
               {/* Completed % */}
-              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap" aria-label={`${overallConfidence}% completed`}>
+              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap" aria-label={`${completionPct}% completed`}>
                 <span className={cn(
                   "font-bold text-[11px] tabular-nums",
-                  overallConfidence >= 80 ? "text-emerald-600 dark:text-emerald-400" : overallConfidence >= 50 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400"
-                )}>{overallConfidence}%</span>
+                  completionPct >= 80 ? "text-emerald-600 dark:text-emerald-400" : completionPct >= 50 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400"
+                )}>{completionPct}%</span>
                 <span className="font-medium">Completed</span>
               </span>
               <div className="h-3 w-px bg-border" aria-hidden="true" />

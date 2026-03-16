@@ -863,7 +863,7 @@ function DownloadReportSheet({
 
             {/* Tab 1: Material Matrix — overall matrix files with version history */}
             <TabsContent value="material-matrix" className="flex-1 min-h-0 flex flex-col mt-0 data-[state=inactive]:hidden">
-              {/* Header */}
+              {/* Header with select-all */}
               <div className="px-4 pt-3 pb-2 border-b shrink-0 bg-muted/20">
                 <div className="flex items-center gap-2">
                   <Layers className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -872,6 +872,23 @@ function DownloadReportSheet({
                     {currentMatrixFiles.length} {currentMatrixFiles.length === 1 ? "file" : "files"}
                   </Badge>
                 </div>
+                {currentMatrixFiles.length > 0 && (
+                  <label className="flex items-center gap-1.5 mt-2 cursor-pointer">
+                    <Checkbox
+                      checked={currentMatrixFiles.length > 0 && currentMatrixFiles.every((f) => selectedIds.has(f.id))}
+                      onCheckedChange={() => {
+                        const allChecked = currentMatrixFiles.every((f) => selectedIds.has(f.id));
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          currentMatrixFiles.forEach((f) => allChecked ? next.delete(f.id) : next.add(f.id));
+                          return next;
+                        });
+                      }}
+                      className="h-3.5 w-3.5"
+                    />
+                    <span className="text-xs text-muted-foreground">Select all</span>
+                  </label>
+                )}
               </div>
 
               {/* File list — scrollable */}
@@ -880,12 +897,22 @@ function DownloadReportSheet({
                   {currentMatrixFiles.length > 0 ? (
                     <>
                       {/* Current files */}
-                      {currentMatrixFiles.map((file) => (
-                        <div
+                      {currentMatrixFiles.map((file) => {
+                        const isChecked = selectedIds.has(file.id);
+                        return (
+                        <label
                           key={file.id}
                           role="listitem"
-                          className="flex items-center gap-3 px-4 py-3 border-b hover:bg-muted/30 transition-colors"
+                          className={cn(
+                            "flex items-center gap-3 px-4 py-3 border-b cursor-pointer transition-colors",
+                            isChecked ? "bg-nav-accent/5 border-l-2 border-l-nav-accent" : "hover:bg-muted/30 border-l-2 border-l-transparent"
+                          )}
                         >
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={() => toggleItem(file.id)}
+                            className="shrink-0"
+                          />
                           <div className="h-9 w-9 rounded-lg bg-status-pre-approved-bg flex items-center justify-center shrink-0">
                             <FileText className="h-4 w-4 text-status-pre-approved" aria-hidden="true" />
                           </div>
@@ -927,8 +954,9 @@ function DownloadReportSheet({
                               </Badge>
                             )}
                           </div>
-                        </div>
-                      ))}
+                        </label>
+                        );
+                      })}
 
                       {/* History section */}
                       {historicalMatrixFiles.length > 0 && (
@@ -1014,9 +1042,9 @@ function DownloadReportSheet({
                   <Button
                     variant="outline"
                     onClick={() => handleExport("xlsx")}
-                    disabled={currentMatrixFiles.length === 0 || exporting}
+                    disabled={selectedIds.size === 0 || exporting}
                     className="flex-1"
-                    aria-label="Export material matrix as Excel"
+                    aria-label={selectedIds.size === 0 ? "Select files to export as Excel" : `Export ${selectedIds.size} file${selectedIds.size !== 1 ? "s" : ""} as Excel`}
                   >
                     {exporting && exportFormat === "xlsx" ? (
                       <>
@@ -1026,15 +1054,15 @@ function DownloadReportSheet({
                     ) : (
                       <>
                         <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                        Export Excel
+                        Export Excel{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
                       </>
                     )}
                   </Button>
                   <Button
                     onClick={() => handleExport("pdf")}
-                    disabled={currentMatrixFiles.length === 0 || exporting}
+                    disabled={selectedIds.size === 0 || exporting}
                     className="flex-1 gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity"
-                    aria-label="Export material matrix as PDF"
+                    aria-label={selectedIds.size === 0 ? "Select files to export as PDF" : `Export ${selectedIds.size} file${selectedIds.size !== 1 ? "s" : ""} as PDF`}
                   >
                     {exporting && exportFormat === "pdf" ? (
                       <>
@@ -1044,7 +1072,7 @@ function DownloadReportSheet({
                     ) : (
                       <>
                         <FileText className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                        Export PDF
+                        Export PDF{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
                       </>
                     )}
                   </Button>
@@ -1054,10 +1082,45 @@ function DownloadReportSheet({
 
             {/* Tab 2: Project Specifications */}
             <TabsContent value="project-specs" className="flex-1 min-h-0 flex flex-col mt-0 data-[state=inactive]:hidden">
+              {/* Select all header */}
+              <div className="px-4 pt-3 pb-2 border-b shrink-0 bg-muted/20">
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <Checkbox
+                    checked={mockReportProjectSpecs.length > 0 && mockReportProjectSpecs.every((s) => selectedIds.has(s.id))}
+                    onCheckedChange={() => {
+                      const allChecked = mockReportProjectSpecs.every((s) => selectedIds.has(s.id));
+                      setSelectedIds((prev) => {
+                        const next = new Set(prev);
+                        mockReportProjectSpecs.forEach((s) => allChecked ? next.delete(s.id) : next.add(s.id));
+                        return next;
+                      });
+                    }}
+                    className="h-3.5 w-3.5"
+                  />
+                  <span className="text-xs text-muted-foreground">Select all</span>
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 ml-auto">
+                    {mockReportProjectSpecs.length} {mockReportProjectSpecs.length === 1 ? "file" : "files"}
+                  </Badge>
+                </label>
+              </div>
               <ScrollArea className="flex-1 min-h-0">
                 <div className="divide-y" role="list" aria-label="Project specification documents">
-                  {mockReportProjectSpecs.map((spec) => (
-                    <div key={spec.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors" role="listitem">
+                  {mockReportProjectSpecs.map((spec) => {
+                    const isChecked = selectedIds.has(spec.id);
+                    return (
+                    <label
+                      key={spec.id}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors",
+                        isChecked ? "bg-nav-accent/5 border-l-2 border-l-nav-accent" : "hover:bg-muted/30 border-l-2 border-l-transparent"
+                      )}
+                      role="listitem"
+                    >
+                      <Checkbox
+                        checked={isChecked}
+                        onCheckedChange={() => toggleItem(spec.id)}
+                        className="shrink-0"
+                      />
                       <div className="h-9 w-9 rounded-lg bg-ds-primary-100 flex items-center justify-center shrink-0">
                         <FileText className="h-4 w-4 text-ds-primary-800" aria-hidden="true" />
                       </div>
@@ -1071,34 +1134,85 @@ function DownloadReportSheet({
                           </span>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary">
-                        <Download className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                    </div>
-                  ))}
+                    </label>
+                    );
+                  })}
                 </div>
               </ScrollArea>
               <SheetFooter className="px-6 py-4 border-t shrink-0">
-                <Button
-                  className="w-full gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity"
-                  onClick={() => {
-                    toast.success("Project specifications downloaded", { description: `${mockReportProjectSpecs.length} file${mockReportProjectSpecs.length !== 1 ? "s" : ""} exported.` });
-                  }}
-                >
-                  <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                  Download All Specs ({mockReportProjectSpecs.length})
-                </Button>
+                <div className="flex items-center gap-3 w-full">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const count = selectedIds.size > 0 ? selectedIds.size : mockReportProjectSpecs.length;
+                      toast.success("Project specifications downloaded", { description: `${count} file${count !== 1 ? "s" : ""} exported.` });
+                    }}
+                    disabled={selectedIds.size === 0}
+                    className="flex-1"
+                  >
+                    <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                    Export Excel{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+                  </Button>
+                  <Button
+                    className="flex-1 gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity"
+                    disabled={selectedIds.size === 0}
+                    onClick={() => {
+                      const count = selectedIds.size > 0 ? selectedIds.size : mockReportProjectSpecs.length;
+                      toast.success("Project specifications downloaded", { description: `${count} file${count !== 1 ? "s" : ""} exported as PDF.` });
+                    }}
+                  >
+                    <FileText className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                    Export PDF{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+                  </Button>
+                </div>
               </SheetFooter>
             </TabsContent>
 
             {/* Tab 3: Generated Materials */}
             <TabsContent value="generated-materials" className="flex-1 min-h-0 flex flex-col mt-0 data-[state=inactive]:hidden">
+              {/* Select all header */}
+              {mockGeneratedMaterials.length > 0 && (
+                <div className="px-4 pt-3 pb-2 border-b shrink-0 bg-muted/20">
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <Checkbox
+                      checked={mockGeneratedMaterials.length > 0 && mockGeneratedMaterials.every((g) => selectedIds.has(g.id))}
+                      onCheckedChange={() => {
+                        const allChecked = mockGeneratedMaterials.every((g) => selectedIds.has(g.id));
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          mockGeneratedMaterials.forEach((g) => allChecked ? next.delete(g.id) : next.add(g.id));
+                          return next;
+                        });
+                      }}
+                      className="h-3.5 w-3.5"
+                    />
+                    <span className="text-xs text-muted-foreground">Select all</span>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 ml-auto">
+                      {mockGeneratedMaterials.length} {mockGeneratedMaterials.length === 1 ? "file" : "files"}
+                    </Badge>
+                  </label>
+                </div>
+              )}
               <ScrollArea className="flex-1 min-h-0">
                 <div className="divide-y" role="list" aria-label="Generated submittal materials">
                   {mockGeneratedMaterials.length > 0 ? (
-                    mockGeneratedMaterials.map((gen) => (
-                      <div key={gen.id} className="px-4 py-3 hover:bg-muted/30 transition-colors" role="listitem">
+                    mockGeneratedMaterials.map((gen) => {
+                      const isChecked = selectedIds.has(gen.id);
+                      return (
+                      <label
+                        key={gen.id}
+                        className={cn(
+                          "block px-4 py-3 cursor-pointer transition-colors",
+                          isChecked ? "bg-nav-accent/5 border-l-2 border-l-nav-accent" : "hover:bg-muted/30 border-l-2 border-l-transparent"
+                        )}
+                        role="listitem"
+                      >
                         <div className="flex items-center gap-3">
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={() => toggleItem(gen.id)}
+                            className="shrink-0"
+                          />
                           <div className="h-9 w-9 rounded-lg gradient-accent flex items-center justify-center shrink-0">
                             <FileText className="h-4 w-4 text-white" aria-hidden="true" />
                           </div>
@@ -1111,11 +1225,8 @@ function DownloadReportSheet({
                           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
                             {gen.revision}
                           </Badge>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary" onClick={() => toast.success(`Downloading ${gen.name}...`)}>
-                            <Download className="h-4 w-4" aria-hidden="true" />
-                          </Button>
                         </div>
-                        <div className="flex items-center gap-3 mt-2 ml-12 text-[11px] text-muted-foreground">
+                        <div className="flex items-center gap-3 mt-2 ml-[4.25rem] text-[11px] text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" aria-hidden="true" />
                             {new Date(gen.generatedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
@@ -1131,8 +1242,9 @@ function DownloadReportSheet({
                             </Badge>
                           )}
                         </div>
-                      </div>
-                    ))
+                      </label>
+                      );
+                    })
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <div className="w-14 h-14 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
@@ -1146,6 +1258,29 @@ function DownloadReportSheet({
                   )}
                 </div>
               </ScrollArea>
+              {mockGeneratedMaterials.length > 0 && (
+                <SheetFooter className="px-6 py-4 border-t shrink-0">
+                  <div className="flex items-center gap-3 w-full">
+                    <Button
+                      variant="outline"
+                      disabled={selectedIds.size === 0}
+                      onClick={() => toast.success(`Exporting ${selectedIds.size} generated material${selectedIds.size !== 1 ? "s" : ""} as Excel`)}
+                      className="flex-1"
+                    >
+                      <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                      Export Excel{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+                    </Button>
+                    <Button
+                      className="flex-1 gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity"
+                      disabled={selectedIds.size === 0}
+                      onClick={() => toast.success(`Exporting ${selectedIds.size} generated material${selectedIds.size !== 1 ? "s" : ""} as PDF`)}
+                    >
+                      <FileText className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                      Export PDF{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+                    </Button>
+                  </div>
+                </SheetFooter>
+              )}
             </TabsContent>
           </Tabs>
         )}

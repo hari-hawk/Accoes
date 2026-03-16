@@ -220,6 +220,83 @@ export function getV4ItemEvidence(item: V4ConformanceItem): V4ItemEvidence {
   };
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Per-project conformance data generator                                      */
+/* -------------------------------------------------------------------------- */
+
+/** Simple deterministic hash from string → number */
+function hashCode(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+/** Status rotation patterns per project — makes each project feel unique */
+const STATUS_PATTERNS: ValidationStatus[][] = [
+  ["pre_approved", "pre_approved", "review_required", "pre_approved", "action_mandatory", "pre_approved"],
+  ["review_required", "pre_approved", "pre_approved", "action_mandatory", "pre_approved", "review_required"],
+  ["pre_approved", "action_mandatory", "pre_approved", "pre_approved", "review_required", "pre_approved"],
+  ["pre_approved", "review_required", "review_required", "pre_approved", "pre_approved", "action_mandatory"],
+  ["action_mandatory", "pre_approved", "pre_approved", "review_required", "pre_approved", "pre_approved"],
+  ["pre_approved", "pre_approved", "pre_approved", "review_required", "action_mandatory", "review_required"],
+  ["review_required", "review_required", "pre_approved", "pre_approved", "pre_approved", "action_mandatory"],
+  ["pre_approved", "pre_approved", "action_mandatory", "review_required", "pre_approved", "pre_approved"],
+];
+
+/** Project-specific description suffixes for variety */
+const PROJECT_SUFFIXES: Record<string, string> = {
+  "proj-1": "Mayo Clinic Rochester",
+  "proj-2": "UC Davis Veterinary",
+  "proj-3": "NET Portland Campus",
+  "proj-4": "KPMG NYC Office",
+  "proj-5": "PSL Seattle Structural",
+  "proj-6": "DCJC Government Building",
+  "proj-7": "IEUA Water Reclamation",
+  "proj-8": "PF San Francisco",
+  "proj-9": "Test Facility",
+};
+
+/**
+ * Returns a unique set of conformance items for each project.
+ * Uses the base v4ConformanceData but varies:
+ * - AI statuses (different distribution per project)
+ * - Number of items (some projects skip certain items)
+ * - Item IDs (prefixed with project ID hash)
+ */
+export function getV4ConformanceDataForProject(projectId: string): V4ConformanceItem[] {
+  const hash = hashCode(projectId);
+  const patternIdx = hash % STATUS_PATTERNS.length;
+  const statusPattern = STATUS_PATTERNS[patternIdx];
+  const skipOffset = (hash % 7) + 2; // skip every Nth item (unique per project)
+  const suffix = PROJECT_SUFFIXES[projectId] ?? projectId;
+
+  return v4ConformanceData
+    .filter((_, idx) => {
+      // Each project shows a different subset (skip some items for variety)
+      // proj-1 (base) keeps all items
+      if (projectId === "proj-1") return true;
+      return (idx + hash) % skipOffset !== 0;
+    })
+    .map((item, idx) => ({
+      ...item,
+      id: `${projectId}-${item.id}`,
+      aiStatus: statusPattern[idx % statusPattern.length],
+      accoMaterialId: item.accoMaterialId.replace(/_XX$/, `_${String(hash % 100).padStart(2, "0")}`),
+    }));
+}
+
+/** Cache for per-project data to avoid recomputation */
+const projectDataCache = new Map<string, V4ConformanceItem[]>();
+
+export function getCachedProjectConformanceData(projectId: string): V4ConformanceItem[] {
+  if (!projectDataCache.has(projectId)) {
+    projectDataCache.set(projectId, getV4ConformanceDataForProject(projectId));
+  }
+  return projectDataCache.get(projectId)!;
+}
+
 /** Status counts — accepts optional filtered data array */
 export function getV4StatusCounts(data: V4ConformanceItem[] = v4ConformanceData) {
   let preApproved = 0;

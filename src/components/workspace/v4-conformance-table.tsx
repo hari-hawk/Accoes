@@ -27,7 +27,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -35,6 +34,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
 import {
   Sheet,
   SheetContent,
@@ -60,6 +64,7 @@ import {
   V4_MATERIAL_TYPES,
   getV4StatusCounts,
   getV4ItemEvidence,
+  getCachedProjectConformanceData,
   type V4ConformanceItem,
   type V4ItemEvidence,
 } from "@/data/mock-v4-conformance";
@@ -89,8 +94,15 @@ const V4_TOTAL_COLS = 14;
 /*  Evidence Detail Panel                                                       */
 /* -------------------------------------------------------------------------- */
 
-function V4EvidenceDetail({ item, onViewPdf }: { item: V4ConformanceItem; onViewPdf?: (ref: string) => void }) {
-  const [activeTab, setActiveTab] = useState<"spec" | "index">("spec");
+function V4EvidenceDetail({
+  item,
+  onViewPdf,
+  onStatusChange,
+}: {
+  item: V4ConformanceItem;
+  onViewPdf?: (ref: string) => void;
+  onStatusChange?: (itemId: string, status: ValidationStatus) => void;
+}) {
   const evidence = useMemo(() => getV4ItemEvidence(item), [item]);
 
   const spec = evidence.spec;
@@ -104,23 +116,57 @@ function V4EvidenceDetail({ item, onViewPdf }: { item: V4ConformanceItem; onView
       : "bg-rose-500";
 
   const scoreColor = spec.confidence >= 80
-    ? "text-emerald-600"
+    ? "text-emerald-600 dark:text-emerald-400"
     : spec.confidence >= 40
-      ? "text-amber-600"
-      : "text-rose-600";
+      ? "text-amber-600 dark:text-amber-400"
+      : "text-rose-600 dark:text-rose-400";
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
+      {/* Header — item info + status dropdown */}
       <div className="px-5 py-4 border-b space-y-3 shrink-0">
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground font-mono">{item.accoMaterialId}</p>
-          <h4 className="text-sm font-semibold leading-tight">{item.description}</h4>
-          <p className="text-xs text-muted-foreground">
-            <span className="font-semibold text-primary/80">{spec.specSection}</span>
-            {" — "}
-            {spec.specTitle}
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-1 min-w-0 flex-1">
+            <p className="text-xs text-muted-foreground font-mono">{item.accoMaterialId}</p>
+            <h4 className="text-sm font-semibold leading-tight">{item.description}</h4>
+            <p className="text-xs text-muted-foreground">
+              <span className="font-semibold text-primary/80">{spec.specSection}</span>
+              {" — "}
+              {spec.specTitle}
+            </p>
+          </div>
+
+          {/* Status filter/change dropdown */}
+          {onStatusChange && (
+            <Select
+              value={item.aiStatus}
+              onValueChange={(v) => onStatusChange(item.id, v as ValidationStatus)}
+            >
+              <SelectTrigger className="w-[160px] h-8 text-xs shrink-0">
+                <SelectValue placeholder="Change status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pre_approved" className="text-xs">
+                  <span className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-status-pre-approved shrink-0" />
+                    Pre-Approved
+                  </span>
+                </SelectItem>
+                <SelectItem value="review_required" className="text-xs">
+                  <span className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-status-review-required shrink-0" />
+                    Review Required
+                  </span>
+                </SelectItem>
+                <SelectItem value="action_mandatory" className="text-xs">
+                  <span className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-status-action-mandatory shrink-0" />
+                    Action Mandatory
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* Confidence bar */}
@@ -136,35 +182,35 @@ function V4EvidenceDetail({ item, onViewPdf }: { item: V4ConformanceItem; onView
           </div>
         </div>
 
-        {/* PS / PI tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "spec" | "index")}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="spec" className="text-xs">Project Specifications</TabsTrigger>
-            <TabsTrigger value="index" className="text-xs">Project Index</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        {/* Section labels */}
+        <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground pt-1">
+          <span>Project Specifications</span>
+          <span className="flex-1 border-b border-dashed border-muted-foreground/20" />
+          <span>Project Index</span>
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 min-h-0 overflow-hidden relative bg-muted/20">
-        <ScrollArea className="absolute inset-0">
-          <div className="p-5 space-y-4">
-            {activeTab === "spec" ? (
-              <>
+      {/* Resizable split content — 50/50 horizontal on md+, stacked vertical on mobile */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <ResizablePanelGroup orientation="horizontal" className="h-full">
+          {/* Left: Project Specifications */}
+          <ResizablePanel defaultSize={50} minSize={20}>
+            <ScrollArea className="h-full">
+              <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
                 {/* Match indicator */}
                 <div className="flex items-center gap-2">
                   {isMatch ? (
-                    <div className="flex items-center gap-2 text-emerald-600">
+                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="h-4 w-4" />
                       <span className="text-[13px] font-medium">Matches Specification</span>
                     </div>
                   ) : isPartial ? (
-                    <div className="flex items-center gap-2 text-amber-600">
+                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
                       <AlertTriangle className="h-4 w-4" />
                       <span className="text-[13px] font-medium">Partial Match</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 text-rose-600">
+                    <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
                       <AlertTriangle className="h-4 w-4" />
                       <span className="text-[13px] font-medium">Does Not Match</span>
                     </div>
@@ -218,10 +264,17 @@ function V4EvidenceDetail({ item, onViewPdf }: { item: V4ConformanceItem; onView
                     </div>
                   ))}
                 </div>
-              </>
-            ) : (
-              <>
-                {/* Index Matches */}
+              </div>
+            </ScrollArea>
+          </ResizablePanel>
+
+          {/* Draggable divider */}
+          <ResizableHandle withHandle />
+
+          {/* Right: Project Index */}
+          <ResizablePanel defaultSize={50} minSize={20}>
+            <ScrollArea className="h-full">
+              <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
                 <p className="text-[13px] font-medium">
                   Found {evidence.indexMatches.length} match{evidence.indexMatches.length !== 1 ? "es" : ""}
                 </p>
@@ -236,7 +289,7 @@ function V4EvidenceDetail({ item, onViewPdf }: { item: V4ConformanceItem; onView
                       </div>
                       <span className="text-xs text-muted-foreground tabular-nums">Score — {Math.round(match.matchScore * 100)}</span>
                     </div>
-                    <div className="grid grid-cols-2 divide-x">
+                    <div className="grid grid-cols-2 divide-x divide-border">
                       <div className="px-3.5 py-2.5">
                         <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-0.5">Category</p>
                         <p className="text-[13px]">{match.category}</p>
@@ -246,7 +299,7 @@ function V4EvidenceDetail({ item, onViewPdf }: { item: V4ConformanceItem; onView
                         <p className="text-[13px]">{match.subcategory}</p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 divide-x border-t">
+                    <div className="grid grid-cols-2 divide-x divide-border border-t">
                       <div className="px-3.5 py-2.5">
                         <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-0.5">Description</p>
                         <p className="text-[13px]">{match.itemDescription}</p>
@@ -262,10 +315,10 @@ function V4EvidenceDetail({ item, onViewPdf }: { item: V4ConformanceItem; onView
                     </div>
                   </div>
                 ))}
-              </>
-            )}
-          </div>
-        </ScrollArea>
+              </div>
+            </ScrollArea>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </div>
   );
@@ -616,27 +669,33 @@ export function V4ConformanceSection() {
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
   const [statusOverrides, setStatusOverrides] = useState<Record<string, ValidationStatus>>({});
 
-  /* Unique filter options */
+  /* Per-project conformance data — unique items for each project */
+  const projectConformanceData = useMemo(
+    () => getCachedProjectConformanceData(projectId),
+    [projectId]
+  );
+
+  /* Unique filter options (derived from project-specific data) */
   const uniqueTrades = useMemo(
-    () => [...new Set(v4ConformanceData.map((m) => m.trade))],
-    []
+    () => [...new Set(projectConformanceData.map((m) => m.trade))],
+    [projectConformanceData]
   );
   const uniqueCategories = useMemo(
-    () => [...new Set(v4ConformanceData.map((m) => m.indexCategory))],
-    []
+    () => [...new Set(projectConformanceData.map((m) => m.indexCategory))],
+    [projectConformanceData]
   );
   const uniqueSystems = useMemo(
-    () => [...new Set(v4ConformanceData.map((m) => m.systemCategory))],
-    []
+    () => [...new Set(projectConformanceData.map((m) => m.systemCategory))],
+    [projectConformanceData]
   );
   const uniqueMaterialTypes = useMemo(
-    () => [...new Set(v4ConformanceData.map((m) => m.materialType))],
-    []
+    () => [...new Set(projectConformanceData.map((m) => m.materialType))],
+    [projectConformanceData]
   );
 
   /* Filtering */
   const filteredData = useMemo(() => {
-    let result = v4ConformanceData;
+    let result = projectConformanceData;
 
     if (search) {
       const lower = search.toLowerCase();
@@ -693,7 +752,7 @@ export function V4ConformanceSection() {
     }
 
     return result;
-  }, [search, tradeFilter, categoryFilter, systemFilter, materialTypeFilter, allSystemFilter, statusFilter, sortBy]);
+  }, [projectConformanceData, search, tradeFilter, categoryFilter, systemFilter, materialTypeFilter, allSystemFilter, statusFilter, sortBy]);
 
   /* Apply status overrides so approve/revisit actions reflect in the table */
   const effectiveData = useMemo(() => {
@@ -719,10 +778,16 @@ export function V4ConformanceSection() {
   /* Status counts */
   const statusCounts = useMemo(() => getV4StatusCounts(effectiveData), [effectiveData]);
 
-  /* Selected item */
+  /* Selected item (with status override applied) */
   const selectedItem = useMemo(
-    () => (selectedId ? v4ConformanceData.find((m) => m.id === selectedId) ?? null : null),
-    [selectedId]
+    () => {
+      if (!selectedId) return null;
+      const base = projectConformanceData.find((m) => m.id === selectedId) ?? null;
+      if (!base) return null;
+      const overriddenStatus = statusOverrides[base.id];
+      return overriddenStatus ? { ...base, aiStatus: overriddenStatus } : base;
+    },
+    [selectedId, statusOverrides, projectConformanceData]
   );
 
   /* Select all */
@@ -1032,9 +1097,9 @@ export function V4ConformanceSection() {
 
       {/* Batch actions bar */}
       {checkedIds.size > 0 && (
-        <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-b bg-primary/5 dark:bg-primary/10 border-b-primary/10 px-4 sm:px-6 lg:px-12 py-2">
-          <span className="text-sm font-medium">{checkedIds.size} item(s) selected</span>
-          <div className="flex items-center gap-2">
+        <div className="shrink-0 flex flex-wrap items-center justify-between gap-2 sm:gap-3 border-b bg-primary/5 dark:bg-primary/10 border-b-primary/10 px-4 sm:px-6 lg:px-12 py-2">
+          <span className="text-xs sm:text-sm font-medium whitespace-nowrap">{checkedIds.size} item(s) selected</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <Button
               size="sm"
               onClick={() => {
@@ -1203,9 +1268,9 @@ export function V4ConformanceSection() {
         </Button>
       </div>
 
-      {/* Right-side overlay panel — Evidence Sheet */}
+      {/* Right-side overlay panel — Evidence Sheet (wider for split view) */}
       <Sheet open={!!selectedItem && !commentItemId} onOpenChange={(open) => { if (!open) setSelectedId(null); }}>
-        <SheetContent side="right" className="w-full sm:w-[80vw] lg:w-[50vw] sm:min-w-[540px] max-w-[840px] p-0 flex flex-col">
+        <SheetContent side="right" className="w-full sm:w-[90vw] lg:w-[70vw] xl:w-[65vw] sm:min-w-[640px] max-w-[1100px] p-0 flex flex-col">
           <SheetHeader className="sr-only">
             <SheetTitle>Material Evidence</SheetTitle>
           </SheetHeader>
@@ -1213,6 +1278,11 @@ export function V4ConformanceSection() {
             <V4EvidenceDetail
               item={selectedItem}
               onViewPdf={(ref) => setPdfPreviewRef(ref)}
+              onStatusChange={(itemId, status) => {
+                setStatusOverrides((prev) => ({ ...prev, [itemId]: status }));
+                setReviewedIds((prev) => new Set(prev).add(itemId));
+                toast.success(`Status updated to ${status.replace(/_/g, " ")}`);
+              }}
             />
           )}
         </SheetContent>
@@ -1226,7 +1296,7 @@ export function V4ConformanceSection() {
           </SheetHeader>
           {commentItemId && (
             <V4ItemComments
-              item={v4ConformanceData.find((m) => m.id === commentItemId) ?? null}
+              item={projectConformanceData.find((m) => m.id === commentItemId) ?? null}
             />
           )}
         </SheetContent>
@@ -1281,8 +1351,8 @@ export function V4ConformanceSection() {
 
       {/* PDF preview overlay — z-[60] to sit above Sheet (z-50) */}
       {pdfPreviewRef && (
-        <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-8">
-          <div className="relative bg-card rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-[60] bg-black/60 dark:bg-black/70 flex items-center justify-center p-4 sm:p-8">
+          <div className="relative bg-card rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden border dark:border-border">
             <div className="flex items-center justify-between px-5 py-3 border-b shrink-0">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-muted-foreground" />

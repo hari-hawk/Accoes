@@ -177,34 +177,35 @@ export function ProjectCard({
           </div>
         </div>
 
-        {/* Row 3: Completion rate + Status counts */}
-        <div className="mt-3.5 pt-3 border-t border-border/40 flex items-center gap-4 flex-wrap" aria-label="Validation breakdown">
+        {/* Row 3: Completion rate + Status counts — single compact line */}
+        <div className="mt-3.5 pt-3 border-t border-border/40 flex items-center gap-2.5" aria-label="Validation breakdown">
           {isExtracting ? (
             <span className="text-xs text-muted-foreground italic">Processing documents...</span>
           ) : total > 0 ? (
             <>
-              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground" aria-label={`${overallConfidence}% completion rate`}>
+              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap" aria-label={`${overallConfidence}% completion rate`}>
                 <span className={cn(
-                  "font-bold text-sm tabular-nums",
+                  "font-bold text-xs tabular-nums",
                   overallConfidence >= 80 ? "text-emerald-600 dark:text-emerald-400" : overallConfidence >= 50 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400"
                 )}>{overallConfidence}%</span>
-                Complete
               </span>
-              <div className="h-3.5 w-px bg-border" aria-hidden="true" />
-              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground" aria-label={`${preApproved} pre-approved`}>
-                <span className="h-2 w-2 rounded-full bg-status-pre-approved shrink-0" aria-hidden="true" />
-                <span className="font-bold text-sm text-foreground">{preApproved}</span>
-                Pre-Approved
+              <div className="h-3 w-px bg-border/60" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap" aria-label={`${preApproved} pre-approved`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-status-pre-approved shrink-0" aria-hidden="true" />
+                <span className="font-semibold text-xs tabular-nums text-foreground">{preApproved}</span>
+                Approved
               </span>
-              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground" aria-label={`${reviewRequired} review required`}>
-                <span className="h-2 w-2 rounded-full bg-status-review-required shrink-0" aria-hidden="true" />
-                <span className="font-bold text-sm text-foreground">{reviewRequired}</span>
-                Review Required
+              <div className="h-3 w-px bg-border/60" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap" aria-label={`${reviewRequired} review required`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-status-review-required shrink-0" aria-hidden="true" />
+                <span className="font-semibold text-xs tabular-nums text-foreground">{reviewRequired}</span>
+                Review
               </span>
-              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground" aria-label={`${actionMandatory} action required`}>
-                <span className="h-2 w-2 rounded-full bg-status-action-mandatory shrink-0" aria-hidden="true" />
-                <span className="font-bold text-sm text-foreground">{actionMandatory}</span>
-                Action Required
+              <div className="h-3 w-px bg-border/60" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap" aria-label={`${actionMandatory} action required`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-status-action-mandatory shrink-0" aria-hidden="true" />
+                <span className="font-semibold text-xs tabular-nums text-foreground">{actionMandatory}</span>
+                Action
               </span>
             </>
           ) : (

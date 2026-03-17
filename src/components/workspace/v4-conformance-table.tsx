@@ -104,6 +104,15 @@ function V4EvidenceDetail({
   onStatusChange?: (itemId: string, status: ValidationStatus) => void;
 }) {
   const evidence = useMemo(() => getV4ItemEvidence(item), [item]);
+  const [selectedRefs, setSelectedRefs] = useState<Set<number>>(new Set());
+  const [selectedMatches, setSelectedMatches] = useState<Set<number>>(new Set());
+
+  const toggleRef = useCallback((idx: number) => {
+    setSelectedRefs((prev) => { const next = new Set(prev); next.has(idx) ? next.delete(idx) : next.add(idx); return next; });
+  }, []);
+  const toggleMatch = useCallback((idx: number) => {
+    setSelectedMatches((prev) => { const next = new Set(prev); next.has(idx) ? next.delete(idx) : next.add(idx); return next; });
+  }, []);
 
   const spec = evidence.spec;
   const isMatch = spec.matchStatus === "matches";
@@ -243,13 +252,39 @@ function V4EvidenceDetail({
                   </ul>
                 </div>
 
-                {/* References */}
+                {/* References with checkboxes */}
                 <div className="space-y-2">
-                  <h4 className="text-[13px] font-medium">Relevant References ({spec.references.length})</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[13px] font-medium">Relevant References ({spec.references.length})</h4>
+                    {spec.references.length > 0 && (
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <Checkbox
+                          checked={spec.references.length > 0 && spec.references.every((_, i) => selectedRefs.has(i))}
+                          onCheckedChange={() => {
+                            const allChecked = spec.references.every((_, i) => selectedRefs.has(i));
+                            setSelectedRefs(allChecked ? new Set() : new Set(spec.references.map((_, i) => i)));
+                          }}
+                          className="h-3.5 w-3.5"
+                        />
+                        <span className="text-[11px] text-muted-foreground">Select all</span>
+                      </label>
+                    )}
+                  </div>
                   {spec.references.map((ref, i) => (
-                    <div key={i} className="rounded-md border bg-card p-3 space-y-2">
+                    <label
+                      key={i}
+                      className={cn(
+                        "rounded-md border bg-card p-3 space-y-2 block cursor-pointer transition-colors",
+                        selectedRefs.has(i) ? "ring-1 ring-primary/40 bg-primary/5" : "hover:bg-muted/30"
+                      )}
+                    >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
+                          <Checkbox
+                            checked={selectedRefs.has(i)}
+                            onCheckedChange={() => toggleRef(i)}
+                            className="shrink-0"
+                          />
                           <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                           <span className="text-xs font-medium text-muted-foreground truncate">{ref.source}</span>
                         </div>
@@ -257,7 +292,7 @@ function V4EvidenceDetail({
                           <button
                             type="button"
                             className="shrink-0 inline-flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
-                            onClick={() => onViewPdf(ref.source)}
+                            onClick={(e) => { e.preventDefault(); onViewPdf(ref.source); }}
                           >
                             <Eye className="h-3 w-3" />
                             View PDF
@@ -265,8 +300,18 @@ function V4EvidenceDetail({
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground italic leading-relaxed">&ldquo;{ref.excerpt}&rdquo;</p>
-                    </div>
+                    </label>
                   ))}
+                  {selectedRefs.size > 0 && (
+                    <Button
+                      size="sm"
+                      className="w-full gradient-action text-white border-0 shadow-action hover:opacity-90 text-xs h-8"
+                      onClick={() => toast.success(`Downloading ${selectedRefs.size} reference${selectedRefs.size !== 1 ? "s" : ""}...`)}
+                    >
+                      <Download className="mr-1.5 h-3.5 w-3.5" />
+                      Download Selected ({selectedRefs.size})
+                    </Button>
+                  )}
                 </div>
               </div>
             </ScrollArea>
@@ -290,13 +335,39 @@ function V4EvidenceDetail({
             </div>
             <ScrollArea className="h-[calc(100%-28px)]">
               <div className="p-3 sm:p-4 pt-2 space-y-3 sm:space-y-4">
-                <p className="text-[13px] font-medium">
-                  Found {evidence.indexMatches.length} match{evidence.indexMatches.length !== 1 ? "es" : ""}
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[13px] font-medium">
+                    Found {evidence.indexMatches.length} match{evidence.indexMatches.length !== 1 ? "es" : ""}
+                  </p>
+                  {evidence.indexMatches.length > 1 && (
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <Checkbox
+                        checked={evidence.indexMatches.length > 0 && evidence.indexMatches.every((_, i) => selectedMatches.has(i))}
+                        onCheckedChange={() => {
+                          const allChecked = evidence.indexMatches.every((_, i) => selectedMatches.has(i));
+                          setSelectedMatches(allChecked ? new Set() : new Set(evidence.indexMatches.map((_, i) => i)));
+                        }}
+                        className="h-3.5 w-3.5"
+                      />
+                      <span className="text-[11px] text-muted-foreground">Select all</span>
+                    </label>
+                  )}
+                </div>
                 {evidence.indexMatches.map((match, i) => (
-                  <div key={i} className="rounded-md border bg-card overflow-hidden">
+                  <label
+                    key={i}
+                    className={cn(
+                      "rounded-md border bg-card overflow-hidden block cursor-pointer transition-colors",
+                      selectedMatches.has(i) ? "ring-1 ring-primary/40" : "hover:ring-1 hover:ring-border"
+                    )}
+                  >
                     <div className="px-3.5 py-2.5 flex items-center justify-between border-b bg-muted/20">
                       <div className="flex items-center gap-2">
+                        <Checkbox
+                          checked={selectedMatches.has(i)}
+                          onCheckedChange={() => toggleMatch(i)}
+                          className="shrink-0"
+                        />
                         <span className="text-[13px] font-medium">Match {i + 1} of {evidence.indexMatches.length}</span>
                         <span className={cn("inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide", MATCH_TYPE_COLORS[match.matchType] ?? "bg-muted text-muted-foreground")}>
                           {match.matchType}
@@ -328,8 +399,18 @@ function V4EvidenceDetail({
                       <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-0.5">Reason</p>
                       <p className="text-[13px] leading-relaxed">{match.reason}</p>
                     </div>
-                  </div>
+                  </label>
                 ))}
+                {selectedMatches.size > 0 && (
+                  <Button
+                    size="sm"
+                    className="w-full gradient-action text-white border-0 shadow-action hover:opacity-90 text-xs h-8"
+                    onClick={() => toast.success(`Downloading ${selectedMatches.size} index match${selectedMatches.size !== 1 ? "es" : ""}...`)}
+                  >
+                    <Download className="mr-1.5 h-3.5 w-3.5" />
+                    Download Selected ({selectedMatches.size})
+                  </Button>
+                )}
               </div>
             </ScrollArea>
           </ResizablePanel>
@@ -669,8 +750,7 @@ export function V4ConformanceSection() {
   const [tradeFilter, setTradeFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [systemFilter, setSystemFilter] = useState<string>("all");
-  const [materialTypeFilter, setMaterialTypeFilter] = useState<string>("all");
-  const [allSystemFilter, setAllSystemFilter] = useState<string>("all");
+  const [subcategoryFilter, setSubcategoryFilter] = useState<string>("all");
   const [matrixFileFilter, setMatrixFileFilter] = useState<string>(initialMatrix);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("category");
@@ -690,23 +770,46 @@ export function V4ConformanceSection() {
     [projectId]
   );
 
-  /* Unique filter options (derived from project-specific data) */
+  /* Cascading filter options — each level filters based on parent selections */
   const uniqueTrades = useMemo(
     () => [...new Set(projectConformanceData.map((m) => m.trade))],
     [projectConformanceData]
   );
-  const uniqueCategories = useMemo(
-    () => [...new Set(projectConformanceData.map((m) => m.indexCategory))],
-    [projectConformanceData]
-  );
-  const uniqueSystems = useMemo(
-    () => [...new Set(projectConformanceData.map((m) => m.systemCategory))],
-    [projectConformanceData]
-  );
-  const uniqueMaterialTypes = useMemo(
-    () => [...new Set(projectConformanceData.map((m) => m.materialType))],
-    [projectConformanceData]
-  );
+  const uniqueCategories = useMemo(() => {
+    let pool = projectConformanceData;
+    if (tradeFilter !== "all") pool = pool.filter((m) => m.trade === tradeFilter);
+    return [...new Set(pool.map((m) => m.indexCategory))];
+  }, [projectConformanceData, tradeFilter]);
+  const uniqueSystems = useMemo(() => {
+    let pool = projectConformanceData;
+    if (tradeFilter !== "all") pool = pool.filter((m) => m.trade === tradeFilter);
+    if (categoryFilter !== "all") pool = pool.filter((m) => m.indexCategory === categoryFilter);
+    return [...new Set(pool.map((m) => m.systemCategory))];
+  }, [projectConformanceData, tradeFilter, categoryFilter]);
+  const uniqueSubcategories = useMemo(() => {
+    let pool = projectConformanceData;
+    if (tradeFilter !== "all") pool = pool.filter((m) => m.trade === tradeFilter);
+    if (categoryFilter !== "all") pool = pool.filter((m) => m.indexCategory === categoryFilter);
+    if (systemFilter !== "all") pool = pool.filter((m) => m.systemCategory === systemFilter);
+    return [...new Set(pool.map((m) => m.indexSubcategory))];
+  }, [projectConformanceData, tradeFilter, categoryFilter, systemFilter]);
+
+  /* Reset child filters when parent changes */
+  const handleTradeChange = useCallback((val: string) => {
+    setTradeFilter(val);
+    setCategoryFilter("all");
+    setSystemFilter("all");
+    setSubcategoryFilter("all");
+  }, []);
+  const handleCategoryChange = useCallback((val: string) => {
+    setCategoryFilter(val);
+    setSystemFilter("all");
+    setSubcategoryFilter("all");
+  }, []);
+  const handleSystemChange = useCallback((val: string) => {
+    setSystemFilter(val);
+    setSubcategoryFilter("all");
+  }, []);
 
   /* Filtering */
   const filteredData = useMemo(() => {
@@ -732,12 +835,8 @@ export function V4ConformanceSection() {
     if (systemFilter !== "all") {
       result = result.filter((m) => m.systemCategory === systemFilter);
     }
-    if (materialTypeFilter !== "all") {
-      result = result.filter((m) => m.materialType === materialTypeFilter);
-    }
-    if (allSystemFilter !== "all") {
-      const isAll = allSystemFilter === "yes";
-      result = result.filter((m) => m.allSystem === isAll);
+    if (subcategoryFilter !== "all") {
+      result = result.filter((m) => m.indexSubcategory === subcategoryFilter);
     }
     if (statusFilter !== "all") {
       result = result.filter((m) => m.aiStatus === statusFilter);
@@ -767,7 +866,7 @@ export function V4ConformanceSection() {
     }
 
     return result;
-  }, [projectConformanceData, search, tradeFilter, categoryFilter, systemFilter, materialTypeFilter, allSystemFilter, statusFilter, sortBy]);
+  }, [projectConformanceData, search, tradeFilter, categoryFilter, systemFilter, subcategoryFilter, statusFilter, sortBy]);
 
   /* Apply status overrides so approve/revisit actions reflect in the table */
   const effectiveData = useMemo(() => {
@@ -845,15 +944,14 @@ export function V4ConformanceSection() {
   }, []);
 
   const hasActiveFilters =
-    search !== "" || tradeFilter !== "all" || categoryFilter !== "all" || systemFilter !== "all" || materialTypeFilter !== "all" || allSystemFilter !== "all" || matrixFileFilter !== "all" || statusFilter !== "all" || sortBy !== "category";
+    search !== "" || tradeFilter !== "all" || categoryFilter !== "all" || systemFilter !== "all" || subcategoryFilter !== "all" || matrixFileFilter !== "all" || statusFilter !== "all" || sortBy !== "category";
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
     setTradeFilter("all");
     setCategoryFilter("all");
     setSystemFilter("all");
-    setMaterialTypeFilter("all");
-    setAllSystemFilter("all");
+    setSubcategoryFilter("all");
     setMatrixFileFilter("all");
     setStatusFilter("all");
     setSortBy("category");
@@ -919,7 +1017,7 @@ export function V4ConformanceSection() {
           </Popover>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2" role="search" aria-label="Filter controls">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2" role="search" aria-label="Filter controls">
           {/* Matrix File */}
           <div className="min-w-0">
             <Select value={matrixFileFilter} onValueChange={setMatrixFileFilter}>
@@ -937,7 +1035,7 @@ export function V4ConformanceSection() {
 
           {/* Trade */}
           <div className="min-w-0">
-            <Select value={tradeFilter} onValueChange={setTradeFilter}>
+            <Select value={tradeFilter} onValueChange={handleTradeChange}>
               <SelectTrigger className="w-full" aria-label="Filter by trade">
                 <SelectValue placeholder="All Trades" />
               </SelectTrigger>
@@ -950,10 +1048,10 @@ export function V4ConformanceSection() {
             </Select>
           </div>
 
-          {/* Index Category */}
+          {/* Index Category (cascading: filtered by Trade) */}
           <div className="min-w-0">
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full" aria-label="Filter by category">
+            <Select value={categoryFilter} onValueChange={handleCategoryChange}>
+              <SelectTrigger className="w-full" aria-label="Filter by index category">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
@@ -965,45 +1063,31 @@ export function V4ConformanceSection() {
             </Select>
           </div>
 
-          {/* All System */}
+          {/* System Category (cascading: filtered by Trade + Category) */}
           <div className="min-w-0">
-            <Select value={allSystemFilter} onValueChange={setAllSystemFilter}>
-              <SelectTrigger className="w-full" aria-label="Filter by all system">
+            <Select value={systemFilter} onValueChange={handleSystemChange}>
+              <SelectTrigger className="w-full" aria-label="Filter by system category">
                 <SelectValue placeholder="All Systems" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Systems</SelectItem>
-                <SelectItem value="yes">All-System Only</SelectItem>
-                <SelectItem value="no">System-Specific</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Material Type */}
-          <div className="min-w-0">
-            <Select value={materialTypeFilter} onValueChange={setMaterialTypeFilter}>
-              <SelectTrigger className="w-full" aria-label="Filter by material type">
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Material Types</SelectItem>
-                {uniqueMaterialTypes.map((mt) => (
-                  <SelectItem key={mt} value={mt}>{mt}</SelectItem>
+                {uniqueSystems.map((sys) => (
+                  <SelectItem key={sys} value={sys}>{sys}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* System Category */}
+          {/* Index Subcategory (cascading: filtered by Trade + Category + System) */}
           <div className="min-w-0">
-            <Select value={systemFilter} onValueChange={setSystemFilter}>
-              <SelectTrigger className="w-full" aria-label="Filter by system category">
-                <SelectValue placeholder="All System Cat." />
+            <Select value={subcategoryFilter} onValueChange={setSubcategoryFilter}>
+              <SelectTrigger className="w-full" aria-label="Filter by index subcategory">
+                <SelectValue placeholder="All Subcategories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All System Categories</SelectItem>
-                {uniqueSystems.map((sys) => (
-                  <SelectItem key={sys} value={sys}>{sys}</SelectItem>
+                <SelectItem value="all">All Subcategories</SelectItem>
+                {uniqueSubcategories.map((sub) => (
+                  <SelectItem key={sub} value={sub}>{sub}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -1037,31 +1121,25 @@ export function V4ConformanceSection() {
             {tradeFilter !== "all" && (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
                 {tradeFilter}
-                <button type="button" onClick={() => setTradeFilter("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove trade filter"><X className="h-2.5 w-2.5" /></button>
+                <button type="button" onClick={() => handleTradeChange("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove trade filter"><X className="h-2.5 w-2.5" /></button>
               </span>
             )}
             {categoryFilter !== "all" && (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
                 {categoryFilter}
-                <button type="button" onClick={() => setCategoryFilter("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove category filter"><X className="h-2.5 w-2.5" /></button>
-              </span>
-            )}
-            {allSystemFilter !== "all" && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
-                {allSystemFilter === "yes" ? "All-System" : "System-Specific"}
-                <button type="button" onClick={() => setAllSystemFilter("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove system filter"><X className="h-2.5 w-2.5" /></button>
-              </span>
-            )}
-            {materialTypeFilter !== "all" && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
-                {materialTypeFilter}
-                <button type="button" onClick={() => setMaterialTypeFilter("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove material type filter"><X className="h-2.5 w-2.5" /></button>
+                <button type="button" onClick={() => handleCategoryChange("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove category filter"><X className="h-2.5 w-2.5" /></button>
               </span>
             )}
             {systemFilter !== "all" && (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
                 {systemFilter}
-                <button type="button" onClick={() => setSystemFilter("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove system category filter"><X className="h-2.5 w-2.5" /></button>
+                <button type="button" onClick={() => handleSystemChange("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove system filter"><X className="h-2.5 w-2.5" /></button>
+              </span>
+            )}
+            {subcategoryFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary pl-2.5 pr-1 py-0.5 text-[11px] font-medium">
+                {subcategoryFilter}
+                <button type="button" onClick={() => setSubcategoryFilter("all")} className="h-4 w-4 rounded-full hover:bg-primary/20 flex items-center justify-center" aria-label="Remove subcategory filter"><X className="h-2.5 w-2.5" /></button>
               </span>
             )}
             {statusFilter !== "all" && (

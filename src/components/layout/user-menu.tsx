@@ -16,8 +16,10 @@ import {
 } from "@/components/ui/sidebar";
 import { RoleBadge } from "@/components/shared/role-badge";
 import { currentUser } from "@/data/mock-users";
+import { useAuth } from "@/providers/auth-provider";
 
 export function UserMenu() {
+  const { logout } = useAuth();
   const initials = currentUser.name
     .split(" ")
     .map((n) => n[0])
@@ -66,7 +68,7 @@ export function UserMenu() {
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={logout} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
             </DropdownMenuItem>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { DraftProvider } from "@/providers/draft-provider";
+import { AuthProvider } from "@/providers/auth-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -33,6 +34,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <AuthProvider>
           <DraftProvider>
             <TooltipProvider>{children}</TooltipProvider>
             <Toaster
@@ -55,6 +57,7 @@ export default function RootLayout({
               }}
             />
           </DraftProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

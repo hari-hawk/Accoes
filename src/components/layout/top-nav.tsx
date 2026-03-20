@@ -43,6 +43,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { currentUser } from "@/data/mock-users";
+import { useAuth } from "@/providers/auth-provider";
 
 const mainNavItems = [
   { title: "Project", href: "/project-v4", icon: Layers },
@@ -242,6 +243,7 @@ function SettingsPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (v
 export function TopNav() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const { logout } = useAuth();
 
   // Notification panel state
   const [notifOpen, setNotifOpen] = useState(false);
@@ -405,7 +407,7 @@ export function TopNav() {
                     Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive">
+                  <DropdownMenuItem className="text-destructive" onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign out
                   </DropdownMenuItem>

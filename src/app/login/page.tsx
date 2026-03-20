@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -18,9 +17,7 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 export default function LoginPage() {
-  const { loginWithGoogle, login, isLoading } = useAuth();
-  const [email, setEmail] = useState("");
-  const [signingIn, setSigningIn] = useState(false);
+  const { loginWithGoogle, isLoading } = useAuth();
   const [googleSigningIn, setGoogleSigningIn] = useState(false);
 
   const handleGoogleLogin = () => {
@@ -29,15 +26,6 @@ export default function LoginPage() {
     setTimeout(() => {
       loginWithGoogle();
     }, 1200);
-  };
-
-  const handleEmailLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    setSigningIn(true);
-    setTimeout(() => {
-      login(email.trim());
-    }, 800);
   };
 
   if (isLoading) {
@@ -148,21 +136,22 @@ export default function LoginPage() {
         `}</style>
       </div>
 
-      {/* Right panel — login form */}
+      {/* Right panel — Google SSO */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-background">
-        <div className="w-full max-w-[400px] space-y-8">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-3 justify-center mb-2">
-            <div className="h-10 w-10 rounded-lg gradient-hero flex items-center justify-center">
-              <span className="text-sm font-bold tracking-tight text-white">ACCO</span>
+        <div className="w-full max-w-[380px] text-center space-y-8">
+          {/* Logo */}
+          <div className="flex items-center gap-3 justify-center">
+            <div className="h-12 w-12 rounded-full bg-[#00529B] flex items-center justify-center shadow-md">
+              <span className="text-xs font-bold tracking-tight text-white">acco</span>
             </div>
-            <span className="text-lg font-bold tracking-tight">Submittals</span>
+            <span className="text-2xl font-bold tracking-tight text-[#00529B]">AI</span>
           </div>
 
-          <div className="space-y-2 text-center lg:text-left">
-            <h2 className="text-2xl font-bold tracking-tight">Welcome back</h2>
+          {/* Heading */}
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold tracking-tight">Welcome to ACCO AI</h2>
             <p className="text-sm text-muted-foreground">
-              Sign in to your account to continue
+              Sign in to continue
             </p>
           </div>
 
@@ -172,93 +161,18 @@ export default function LoginPage() {
             size="lg"
             className="w-full h-12 text-sm font-medium gap-3 border-border/80 hover:bg-muted/50 transition-all"
             onClick={handleGoogleLogin}
-            disabled={googleSigningIn || signingIn}
+            disabled={googleSigningIn}
           >
             {googleSigningIn ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
               <GoogleIcon className="h-5 w-5" />
             )}
-            {googleSigningIn ? "Signing in..." : "Continue with Google"}
+            {googleSigningIn ? "Signing in..." : "Sign in with Google"}
           </Button>
 
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-3 text-muted-foreground">
-                or continue with email
-              </span>
-            </div>
-          </div>
-
-          {/* Email login form */}
-          <form onSubmit={handleEmailLogin} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email address
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-11"
-                autoComplete="email"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </label>
-                <button
-                  type="button"
-                  className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
-                >
-                  Forgot password?
-                </button>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                className="h-11"
-                autoComplete="current-password"
-                defaultValue="password123"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full h-12 gradient-action text-white border-0 shadow-action hover:opacity-90 transition-opacity font-medium"
-              disabled={signingIn || googleSigningIn}
-            >
-              {signingIn ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                "Sign in"
-              )}
-            </Button>
-          </form>
-
-          <p className="text-center text-xs text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <button
-              type="button"
-              className="text-primary hover:text-primary/80 font-medium transition-colors"
-            >
-              Contact your administrator
-            </button>
+          <p className="text-xs text-muted-foreground">
+            Use your authorized account to sign in
           </p>
         </div>
       </div>

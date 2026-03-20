@@ -50,53 +50,102 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left panel — branding */}
-      <div className="hidden lg:flex lg:w-[45%] xl:w-[40%] relative overflow-hidden">
-        {/* Deep blue gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#00529B] via-[#003075] to-[#001a44]" />
-        {/* Subtle grid pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
-        {/* Content */}
-        <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16 text-white">
-          <div>
-            {/* Logo */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-10 w-10 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                <span className="text-sm font-bold tracking-tight">ACCO</span>
-              </div>
-              <span className="text-lg font-bold tracking-tight">Submittals</span>
+      {/* Left panel — branding with hero image */}
+      <div className="hidden lg:flex lg:w-[60%] relative overflow-hidden">
+        {/* Background image — industrial HVAC/mechanical */}
+        <div
+          className="absolute inset-0 bg-cover bg-center scale-105"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=2070&auto=format&fit=crop')",
+            animation: "slowZoom 20s ease-in-out infinite alternate",
+          }}
+        />
+        {/* Dark gradient overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#001a44]/90 via-[#00529B]/50 to-[#003075]/40" />
+        {/* Subtle vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,26,68,0.4)_100%)]" />
+
+        {/* Animated content */}
+        <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16 text-white w-full">
+          {/* Logo — top */}
+          <div
+            className="flex items-center gap-3"
+            style={{ animation: "fadeSlideDown 0.8s ease-out both" }}
+          >
+            <div className="h-11 w-11 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/25 shadow-lg">
+              <span className="text-sm font-bold tracking-tight">ACCO</span>
+            </div>
+            <div>
+              <span className="text-lg font-bold tracking-tight block leading-tight">Submittals</span>
+              <span className="text-[10px] text-white/50 uppercase tracking-widest">Engineered Systems</span>
             </div>
           </div>
 
+          {/* Main content — center-bottom */}
           <div className="space-y-6">
-            <h1 className="text-3xl xl:text-4xl font-bold leading-tight">
+            <h1
+              className="text-3xl xl:text-[2.75rem] font-bold leading-[1.15] tracking-tight"
+              style={{ animation: "fadeSlideUp 0.7s ease-out 0.5s both" }}
+            >
               AI-Powered Submittal
               <br />
-              Validation Platform
+              <span className="text-[#FFB800]">Validation Platform</span>
             </h1>
-            <p className="text-white/70 text-base xl:text-lg leading-relaxed max-w-md">
+
+            <p
+              className="text-white/70 text-base xl:text-lg leading-relaxed max-w-lg"
+              style={{ animation: "fadeSlideUp 0.7s ease-out 0.7s both" }}
+            >
               Streamline your construction material submittals with intelligent conformance checking, automated spec matching, and real-time collaboration.
             </p>
 
             {/* Feature highlights */}
-            <div className="space-y-3 pt-4">
+            <div className="space-y-3 pt-2">
               {[
-                "Automated conformance validation",
-                "Multi-trade material matrix support",
-                "Real-time team collaboration",
-              ].map((feature) => (
-                <div key={feature} className="flex items-center gap-3">
-                  <div className="h-1.5 w-1.5 rounded-full bg-[#FFB800]" />
-                  <span className="text-sm text-white/80">{feature}</span>
+                { text: "Automated conformance validation", icon: "M9 12.75 11.25 15 15 9.75" },
+                { text: "Multi-trade material matrix support", icon: "M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6Z" },
+                { text: "Real-time team collaboration", icon: "M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-3.741-2.77" },
+              ].map((feature, i) => (
+                <div
+                  key={feature.text}
+                  className="flex items-center gap-3 group"
+                  style={{ animation: `fadeSlideUp 0.6s ease-out ${0.9 + i * 0.15}s both` }}
+                >
+                  <div className="h-7 w-7 rounded-lg bg-[#FFB800]/20 border border-[#FFB800]/30 flex items-center justify-center shrink-0 group-hover:bg-[#FFB800]/30 transition-colors">
+                    <svg className="h-3.5 w-3.5 text-[#FFB800]" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d={feature.icon} />
+                    </svg>
+                  </div>
+                  <span className="text-sm text-white/80 font-medium">{feature.text}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <p className="text-xs text-white/40">
+          {/* Footer */}
+          <p
+            className="text-xs text-white/35"
+            style={{ animation: "fadeSlideUp 0.6s ease-out 1.4s both" }}
+          >
             &copy; {new Date().getFullYear()} ACCO Engineered Systems. All rights reserved.
           </p>
         </div>
+
+        {/* CSS Animations */}
+        <style jsx>{`
+          @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes fadeSlideDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes slowZoom {
+            from { transform: scale(1.05); }
+            to { transform: scale(1.12); }
+          }
+        `}</style>
       </div>
 
       {/* Right panel — login form */}

@@ -213,7 +213,7 @@ function SubmittalPackagesCard() {
               <th className="text-left px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Rev #</th>
               <th className="text-left px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
               <th className="text-left px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">PKG Status</th>
-              <th className="px-5 py-2.5"></th>
+              <th className="text-left px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y">

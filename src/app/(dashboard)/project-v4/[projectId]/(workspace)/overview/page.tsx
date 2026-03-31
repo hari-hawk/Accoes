@@ -132,6 +132,129 @@ interface MockUploadFile {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Binder Icon (custom SVG)                                                    */
+/* -------------------------------------------------------------------------- */
+
+function BinderIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M6 2h12a2 2 0 012 2v16a2 2 0 01-2 2H6" />
+      <line x1="6" y1="2" x2="6" y2="22" />
+      <circle cx="6" cy="6" r="1" fill="currentColor" />
+      <circle cx="6" cy="12" r="1" fill="currentColor" />
+      <circle cx="6" cy="18" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Mock Submittal Packages data                                                */
+/* -------------------------------------------------------------------------- */
+
+interface SubmittalPackage {
+  id: string;
+  pkgNumber: number;
+  name: string;
+  revision: number;
+  date: string;
+  status: "Approved" | "Active" | "Rejected" | "Under Review";
+  pdfStatus: "Download" | "Pending" | "Processing";
+}
+
+const mockSubmittalPackages: SubmittalPackage[] = [
+  { id: "sp-1", pkgNumber: 1, name: "test packagese", revision: 3, date: "2026-03-30T00:00:00Z", status: "Approved", pdfStatus: "Download" },
+  { id: "sp-2", pkgNumber: 2, name: "test 2", revision: 1, date: "2026-03-30T00:00:00Z", status: "Active", pdfStatus: "Pending" },
+];
+
+/* -------------------------------------------------------------------------- */
+/*  Submittal Packages Section                                                  */
+/* -------------------------------------------------------------------------- */
+
+function SubmittalPackagesCard() {
+  const statusStyles: Record<SubmittalPackage["status"], string> = {
+    Approved: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400",
+    Active: "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400",
+    Rejected: "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400",
+    "Under Review": "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400",
+  };
+
+  const pdfStatusStyles: Record<SubmittalPackage["pdfStatus"], string> = {
+    Download: "bg-red-600 text-white",
+    Pending: "bg-red-600 text-white",
+    Processing: "bg-amber-500 text-white",
+  };
+
+  return (
+    <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+      {/* Header */}
+      <div className="px-5 py-4 border-b flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <BinderIcon className="h-4 w-4 text-primary" />
+          <h3 className="font-semibold text-sm">Submittal Packages</h3>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-muted/20">
+              <th className="text-left px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">PKG #</th>
+              <th className="text-left px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Name / Description</th>
+              <th className="text-left px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Rev #</th>
+              <th className="text-left px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+              <th className="text-left px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">PKG Status</th>
+              <th className="px-5 py-2.5"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {mockSubmittalPackages.map((pkg) => (
+              <tr key={pkg.id} className="hover:bg-muted/30 transition-colors">
+                <td className="px-5 py-3 text-primary font-semibold">{pkg.pkgNumber}</td>
+                <td className="px-5 py-3">{pkg.name}</td>
+                <td className="px-5 py-3 font-bold">REV {pkg.revision}</td>
+                <td className="px-5 py-3 text-muted-foreground">
+                  {new Date(pkg.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                </td>
+                <td className="px-5 py-3">
+                  <Badge className={cn("text-[11px] px-2 py-0.5", statusStyles[pkg.status])}>
+                    {pkg.status}
+                  </Badge>
+                </td>
+                <td className="px-5 py-3">
+                  <div className="flex items-center gap-2">
+                    <Badge className={cn("text-[10px] px-1.5 py-0.5 rounded", pdfStatusStyles[pkg.pdfStatus])}>
+                      PDF
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">{pkg.pdfStatus}</span>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer note */}
+      <div className="px-5 py-3 border-t bg-muted/10">
+        <p className="text-xs text-muted-foreground italic">
+          Pkg # auto-generated · Name, rev # and status are editable inline
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Project Specifications Section — with preview, download, multi-select,     */
 /*  export, and re-upload                                                      */
 /* -------------------------------------------------------------------------- */
@@ -852,8 +975,11 @@ export default function ProjectV4OverviewPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left column: Project Specifications + Material Matrix */}
+        {/* Left column: Submittal Packages + Material Matrix + Project Specs */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Submittal Packages */}
+          <SubmittalPackagesCard />
+
           {/* Material Index Grid — primary action, shown first */}
           <MaterialIndexGridCard
             onUpload={() => setUploadDialogOpen(true)}
